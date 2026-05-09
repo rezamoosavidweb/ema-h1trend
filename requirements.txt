@@ -1,0 +1,66 @@
+# ---------------------------------------------------------------------------
+# Scalping System dependencies
+#
+# Pinned to known-good versions on Python 3.12 / 3.13.  Some packages
+# (vectorbt, pandas-ta) are listed under "optional" because they have
+# fragile NumPy 2.x compatibility — the system runs without them.
+# ---------------------------------------------------------------------------
+
+# Core scientific stack
+numpy>=1.26
+pandas>=2.2
+scipy>=1.11
+numba>=0.59             # Optional but speeds up indicator hot-loops
+pyarrow>=15.0           # Parquet engine for the OHLCV cache (auto-fallback to pickle)
+
+# Indicator library (best-effort install)
+ta>=0.11
+
+# Technical-analysis helpers (vectorbt is optional — heavy dep, comment
+# out if it conflicts with NumPy 2.x in your environment)
+# vectorbt>=0.26
+# pandas-ta>=0.3.14b
+# backtesting>=0.3.3
+
+# Data sources
+ccxt>=4.3
+yfinance>=0.2.40
+
+# MetaTrader 5 (Windows only)
+MetaTrader5>=5.0.45 ; platform_system == "Windows"
+
+# Visualisation
+plotly>=5.22
+kaleido>=0.2          # Static image export for plotly
+matplotlib>=3.8
+seaborn>=0.13
+
+# Live / async
+websockets>=12.0
+aiohttp>=3.9
+
+# Configuration / persistence
+pydantic>=2.7
+pydantic-settings>=2.3
+PyYAML>=6.0
+SQLAlchemy>=2.0
+
+# API / dashboard
+fastapi>=0.110
+uvicorn[standard]>=0.30
+
+# Optimisation
+optuna>=3.5
+
+# Testing
+pytest>=8.1
+
+# Notebooks (optional)
+jupyterlab>=4.0
+ipykernel>=6.29
+
+backtesting>=0.3.3
+
+pandas_ta
+backtrader
+mplfinance
