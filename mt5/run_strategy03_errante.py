@@ -13,6 +13,9 @@ Behavior matches notebooks/03_strategy03_crypto.ipynb pending-stop logic:
 Environment (optional):
   MT5_LOGIN, MT5_PASSWORD, MT5_SERVER — only if you want the script to log in programmatically.
   MT5_TERMINAL_PATH — directory containing terminal64.exe if auto-detection fails.
+  MT5_SIGNAL_LOG_CSV — path to append strategy-only signals (model entry/sl/tp); empty disables.
+    Default file: mt5/strategy03_signals.csv next to this script.
+  MT5_DEFAULT_SCAN_BARS — bars to scan for first_default_signlas.csv (default 200).
 
 Use 64-bit Python only (MetaTrader 5 matches 64-bit). If rates fail: open an M5 chart once,
 add the symbol to Market Watch, then run  python run_strategy03_errante.py --find-symbol ETH
@@ -25,6 +28,7 @@ with risk sizing — aligned with strategy03_crypto notebook.
 from __future__ import annotations
 
 import argparse
+import csv
 import math
 import os
 import struct
@@ -33,7 +37,12 @@ import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-# Add this script's folder to sys.path so the sibling module strategy03_crypto_core imports cleanly.
+# Repo root so `strategies.ema_trend` imports (when cwd is mt5/ or elsewhere).
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+# mt5/ on path for any sibling-only modules
 _SCRIPT_DIR = Path(__file__).resolve().parent
 if str(_SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPT_DIR))
@@ -48,7 +57,7 @@ except ImportError:
 
 import pandas as pd
 
-from strategy03_crypto_core import (
+from strategies.ema_trend.crypto_core import (
     MIN_WARMUP_BARS_H1,
     MIN_WARMUP_BARS_M5,
     add_emas,
@@ -59,6 +68,7 @@ from strategy03_crypto_core import (
     min_bars_needed_for_signal,
     rates_to_ohlcv_df,
 )
+from strategies.ema_trend.backtest import run_backtest
 
 # --- Strategy parameters (notebook-aligned) ---
 LOOKBACK_BARS = 5  # M5 bars in the swing window (HH/LL); signal bar itself is outside the window.
@@ -76,6 +86,44 @@ HISTORY_BARS_H1 = max(500, MIN_WARMUP_BARS_H1 + _FETCH_BUFFER)
 # MQL5 order filling mode; some MetaTrader5 wheels omit SYMBOL_FILLING_* → use getattr fallbacks.
 _FILL_IOC = getattr(mt5, "SYMBOL_FILLING_IOC", 2)
 _FILL_FOK = getattr(mt5, "SYMBOL_FILLING_FOK", 1)
+
+# Strategy-only signal log (model prices from compute_pending_setup — not broker-clamped fills).
+SIGNAL_CSV_FIELDS = (
+    "logged_at_utc",
+    "symbol",
+    "magic",
+    "signal_bar_utc",
+    "bar_index",
+    "trend",
+    "side",
+    "model_entry",
+    "model_sl",
+    "model_tp",
+    "setup_qty",
+    "balance",
+    "risk_per_trade",
+    "risk_cash",
+    "pip_size",
+    "lookback_bars",
+    "rr",
+    "pending_offset_ticks",
+    "dry_run",
+)
+
+
+def append_strategy_signal_csv(path: Path | None, row: dict[str, object]) -> None:
+    """Append one row of pure strategy output for comparison with broker history."""
+    if path is None:
+        return
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    write_header = not path.exists() or path.stat().st_size == 0
+    with path.open("a", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=SIGNAL_CSV_FIELDS, extrasaction="ignore")
+        if write_header:
+            w.writeheader()
+        out = {k: row.get(k, "") for k in SIGNAL_CSV_FIELDS}
+        w.writerow(out)
 
 
 def pick_filling_mode(si) -> int:
@@ -400,6 +448,244 @@ def build_m5_context(symbol: str, pip_size: float) -> tuple[str, pd.DataFrame, i
     return sym, m5_ctx, i
 
 
+FIRST_DEFAULT_SIGNALS_FILENAME = "first_default_signlas.csv"
+
+FIRST_DEFAULT_FIELDS = (
+    "exported_at_utc",
+    "symbol",
+    "bar_index",
+    "signal_bar_utc",
+    "trend",
+    "has_signal",
+    "side",
+    "model_entry",
+    "model_sl",
+    "model_tp",
+    "setup_qty",
+    "balance_used",
+    "pip_size",
+    "lookback_bars",
+    "rr",
+    "pending_offset_ticks",
+    "risk_per_trade",
+)
+
+
+def write_first_default_signals_csv(
+    *,
+    symbol: str,
+    pip_size: float,
+    balance: float,
+    risk_per_trade: float,
+    scan_bars: int,
+    out_path: Path,
+) -> int:
+    """
+    Overwrite CSV with one row per closed M5 bar in the last ``scan_bars`` rows (minimum index LOOKBACK_BARS).
+    Uses ``compute_pending_setup`` at each bar with the same balance for all rows (default scan for comparison).
+    Returns number of rows written.
+    """
+    sym, m5_ctx, _ = build_m5_context(symbol, pip_size)
+    n = len(m5_ctx)
+    if n <= LOOKBACK_BARS:
+        out_path = Path(out_path)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        with out_path.open("w", newline="", encoding="utf-8") as f:
+            w = csv.DictWriter(f, fieldnames=FIRST_DEFAULT_FIELDS, extrasaction="ignore")
+            w.writeheader()
+        return 0
+
+    start_i = max(LOOKBACK_BARS, n - int(scan_bars))
+    exported_at = datetime.now(timezone.utc).isoformat()
+    rows: list[dict[str, object]] = []
+
+    for i in range(start_i, n):
+        row_s = m5_ctx.iloc[i]
+        trend = row_s.get("trend", "flat")
+        bt = m5_ctx.index[i]
+        bt_iso = bt.isoformat() if hasattr(bt, "isoformat") else str(bt)
+
+        setup = compute_pending_setup(
+            m5_ctx,
+            bar_index=i,
+            lookback_bars=LOOKBACK_BARS,
+            pending_offset_ticks=PENDING_OFFSET_TICKS,
+            pip_size=pip_size,
+            rr=RR,
+            balance=balance,
+            risk_per_trade=risk_per_trade,
+        )
+
+        base = {
+            "exported_at_utc": exported_at,
+            "symbol": sym,
+            "bar_index": i,
+            "signal_bar_utc": bt_iso,
+            "trend": trend,
+            "balance_used": balance,
+            "pip_size": pip_size,
+            "lookback_bars": LOOKBACK_BARS,
+            "rr": RR,
+            "pending_offset_ticks": PENDING_OFFSET_TICKS,
+            "risk_per_trade": risk_per_trade,
+        }
+
+        if setup is None:
+            rows.append(
+                {
+                    **base,
+                    "has_signal": False,
+                    "side": "",
+                    "model_entry": "",
+                    "model_sl": "",
+                    "model_tp": "",
+                    "setup_qty": "",
+                }
+            )
+        else:
+            rows.append(
+                {
+                    **base,
+                    "has_signal": True,
+                    "side": setup["side"],
+                    "model_entry": setup["entry"],
+                    "model_sl": setup["sl"],
+                    "model_tp": setup["tp"],
+                    "setup_qty": setup["qty"],
+                }
+            )
+
+    out_path = Path(out_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with out_path.open("w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=FIRST_DEFAULT_FIELDS, extrasaction="ignore")
+        w.writeheader()
+        for r in rows:
+            w.writerow({k: r.get(k, "") for k in FIRST_DEFAULT_FIELDS})
+
+    return len(rows)
+
+
+def _summarize_backtest(
+    trades_df: "pd.DataFrame",
+    start_balance: float,
+    equity: "pd.Series",
+) -> "pd.DataFrame":
+    """Compute the same summary metrics as the notebook's summarize_results."""
+    import numpy as np
+
+    def max_drawdown_pct(eq: "pd.Series") -> float:
+        if eq is None or len(eq) < 2:
+            return 0.0
+        eq = eq.astype(float).dropna()
+        if eq.empty:
+            return 0.0
+        peak = eq.cummax()
+        dd = (eq - peak) / peak.replace(0, float("nan"))
+        return float(abs(dd.min()) * 100.0)
+
+    if trades_df.empty:
+        return pd.DataFrame([{
+            "trades": 0,
+            "win_rate_%": 0.0,
+            "net_pnl": 0.0,
+            "avg_pnl": 0.0,
+            "profit_factor": float("nan"),
+            "max_drawdown_%": round(max_drawdown_pct(equity), 2),
+            "start_balance": start_balance,
+            "end_balance": start_balance,
+            "return_%": 0.0,
+        }])
+
+    wins = trades_df[trades_df["pnl"] > 0]["pnl"]
+    losses = trades_df[trades_df["pnl"] < 0]["pnl"]
+    gross_profit = float(wins.sum()) if not wins.empty else 0.0
+    gross_loss = float(losses.abs().sum()) if not losses.empty else 0.0
+    pf = gross_profit / gross_loss if gross_loss > 0 else float("nan")
+    end_balance = float(trades_df["balance_after"].iloc[-1])
+
+    return pd.DataFrame([{
+        "trades": int(len(trades_df)),
+        "win_rate_%": round((trades_df["pnl"] > 0).mean() * 100, 2),
+        "net_pnl": round(float(trades_df["pnl"].sum()), 2),
+        "avg_pnl": round(float(trades_df["pnl"].mean()), 2),
+        "profit_factor": round(pf, 3) if not (pf != pf) else float("nan"),
+        "max_drawdown_%": round(max_drawdown_pct(equity), 2),
+        "start_balance": round(start_balance, 2),
+        "end_balance": round(end_balance, 2),
+        "return_%": round(((end_balance / start_balance) - 1) * 100, 2),
+    }])
+
+
+def run_backtest_cmd(
+    *,
+    symbol: str,
+    pip_size: float,
+    start_balance: float,
+    risk_per_trade: float,
+    backtest_bars: int,
+    out_dir: Path,
+) -> None:
+    """
+    Walk-forward backtest on MT5 data using the same engine as the notebook.
+
+    Fetches closed M5/H1 bars, trims to ``backtest_bars``, runs run_backtest(),
+    prints a summary, and writes trades.csv + metrics.csv to ``out_dir``.
+    """
+    sym, m5_ctx, _ = build_m5_context(symbol, pip_size)
+
+    total = len(m5_ctx)
+    if backtest_bars > 0 and total > backtest_bars:
+        m5_ctx = m5_ctx.iloc[-backtest_bars:].copy()
+
+    print(
+        f"Backtest: symbol={sym} bars={len(m5_ctx)} "
+        f"(fetched {total}, trimmed to last {backtest_bars}) "
+        f"start_balance={start_balance} risk={risk_per_trade}",
+        flush=True,
+    )
+
+    trades_df, equity_curve = run_backtest(
+        m5_ctx,
+        start_balance=start_balance,
+        lookback_bars=LOOKBACK_BARS,
+        pending_offset_ticks=PENDING_OFFSET_TICKS,
+        pip_size=pip_size,
+        rr=RR,
+        risk_per_trade=risk_per_trade,
+        pending_expiry_min=PENDING_EXPIRY_MIN,
+        entry_timeframe_minutes=5,
+    )
+
+    if not trades_df.empty:
+        trades_df = trades_df.copy()
+        trades_df["exit_minus_entry"] = trades_df["exit"] - trades_df["entry"]
+        trades_df["cumulative_pnl"] = trades_df["pnl"].cumsum()
+
+    summary = _summarize_backtest(trades_df, start_balance, equity_curve)
+
+    print(f"\n{'='*55}")
+    print(summary.to_string(index=False))
+    print(f"{'='*55}")
+    if not trades_df.empty:
+        print(trades_df.to_string(index=False))
+    else:
+        print("No trades executed in this window.")
+    print()
+
+    out_dir = Path(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    trades_path = out_dir / "trades.csv"
+    metrics_path = out_dir / "metrics.csv"
+
+    trades_df.to_csv(trades_path, index=False)
+    summary.to_csv(metrics_path, index=False)
+
+    print(f"Saved trades  -> {trades_path}")
+    print(f"Saved metrics -> {metrics_path}")
+
+
 def ours_orders_and_positions(symbol: str, magic: int):
     """Positions and pending orders on symbol whose magic matches this bot."""
     positions = mt5.positions_get(symbol=symbol) or []
@@ -495,6 +781,7 @@ def run_cycle(
     dry_run: bool,
     replace_pending: bool,
     verbose: bool = False,
+    signal_log_csv: Path | None = None,
 ) -> None:
     """
     One full strategy pass: balance, M5+H1 context, compute setup; if flat and allowed, place pending.
@@ -587,6 +874,31 @@ def run_cycle(
         f"(model entry={setup['entry']:.5f}) vol={volume} dry_run={dry_run}"
     )
 
+    append_strategy_signal_csv(
+        signal_log_csv,
+        {
+            "logged_at_utc": datetime.now(timezone.utc).isoformat(),
+            "symbol": symbol,
+            "magic": magic,
+            "signal_bar_utc": bar_time.isoformat(),
+            "bar_index": i,
+            "trend": m5_ctx.iloc[i]["trend"],
+            "side": setup["side"],
+            "model_entry": setup["entry"],
+            "model_sl": setup["sl"],
+            "model_tp": setup["tp"],
+            "setup_qty": setup["qty"],
+            "balance": balance,
+            "risk_per_trade": risk_per_trade,
+            "risk_cash": risk_cash,
+            "pip_size": pip_size,
+            "lookback_bars": LOOKBACK_BARS,
+            "rr": RR,
+            "pending_offset_ticks": PENDING_OFFSET_TICKS,
+            "dry_run": dry_run,
+        },
+    )
+
     if dry_run:
         return
 
@@ -627,7 +939,65 @@ def main() -> None:
         action="store_true",
         help="Log resolved broker symbol each cycle",
     )
+    p.add_argument(
+        "--signal-log",
+        default=os.environ.get("MT5_SIGNAL_LOG_CSV", str(_SCRIPT_DIR / "strategy03_signals.csv")),
+        metavar="PATH",
+        help="CSV file: append strategy signal rows (model entry/sl/tp from logic, not broker sends). Empty disables.",
+    )
+    p.add_argument(
+        "--first-default-csv",
+        default=str(_SCRIPT_DIR / FIRST_DEFAULT_SIGNALS_FILENAME),
+        metavar="PATH",
+        help=f"On startup, overwrite with scan of last N M5 bars ({FIRST_DEFAULT_SIGNALS_FILENAME}).",
+    )
+    p.add_argument(
+        "--default-scan-bars",
+        type=int,
+        default=int(os.environ.get("MT5_DEFAULT_SCAN_BARS", "200")),
+        metavar="N",
+        help="How many recent closed M5 bars to evaluate for first-default CSV (default 200).",
+    )
+    p.add_argument(
+        "--skip-first-default-csv",
+        action="store_true",
+        help="Do not write first_default_signlas.csv on startup.",
+    )
+    p.add_argument(
+        "--backtest",
+        action="store_true",
+        help=(
+            "Run walk-forward backtest on MT5 history using the same engine as the notebook "
+            "(run_backtest from strategies.ema_trend.backtest). Prints summary and saves "
+            "trades.csv + metrics.csv to --backtest-out. Skips live trading."
+        ),
+    )
+    p.add_argument(
+        "--backtest-bars",
+        type=int,
+        default=200,
+        metavar="N",
+        help="Number of recent closed M5 bars to simulate (matches notebook BARS=200).",
+    )
+    p.add_argument(
+        "--start-balance",
+        type=float,
+        default=10000.0,
+        metavar="BALANCE",
+        help="Starting balance for backtest P&L simulation (matches notebook START_BALANCE).",
+    )
+    p.add_argument(
+        "--backtest-out",
+        default=str(_SCRIPT_DIR / "backtest_results"),
+        metavar="DIR",
+        help="Directory to write trades.csv and metrics.csv from --backtest run.",
+    )
     args = p.parse_args()
+
+    sig_arg = (args.signal_log or "").strip()
+    signal_log_csv: Path | None = Path(sig_arg) if sig_arg else None
+
+    first_default_csv_path = Path((args.first_default_csv or "").strip()) if not args.skip_first_default_csv else None
 
     # Without --pip-size, default tick step comes from symbol prefix (BTC/ETH/…).
     pip_size = args.pip_size if args.pip_size is not None else default_crypto_tick(args.symbol)
@@ -648,6 +1018,38 @@ def main() -> None:
                 print(f"  {n}")
             return
 
+        # Walk-forward backtest on MT5 history — same engine as the notebook.
+        if args.backtest:
+            run_backtest_cmd(
+                symbol=args.symbol,
+                pip_size=pip_size,
+                start_balance=args.start_balance,
+                risk_per_trade=args.risk,
+                backtest_bars=args.backtest_bars,
+                out_dir=Path(args.backtest_out),
+            )
+            return
+
+        ai = mt5.account_info()
+        if ai is None:
+            raise RuntimeError(f"account_info failed: {mt5.last_error()}")
+        balance = float(ai.balance)
+
+        if first_default_csv_path is not None:
+            nwritten = write_first_default_signals_csv(
+                symbol=args.symbol,
+                pip_size=pip_size,
+                balance=balance,
+                risk_per_trade=args.risk,
+                scan_bars=args.default_scan_bars,
+                out_path=first_default_csv_path,
+            )
+            print(
+                f"First-default signal scan: {nwritten} rows -> {first_default_csv_path} "
+                f"(last {args.default_scan_bars} M5 bars, balance={balance})",
+                flush=True,
+            )
+
         if args.once:
             # Single pass — useful for tests or cron.
             run_cycle(
@@ -658,6 +1060,7 @@ def main() -> None:
                 dry_run=args.dry_run,
                 replace_pending=args.replace_pending,
                 verbose=args.verbose,
+                signal_log_csv=signal_log_csv,
             )
             return
 
@@ -675,6 +1078,7 @@ def main() -> None:
                 dry_run=args.dry_run,
                 replace_pending=args.replace_pending,
                 verbose=args.verbose,
+                signal_log_csv=signal_log_csv,
             )
             sleep_until_next_m5_close()
     finally:
