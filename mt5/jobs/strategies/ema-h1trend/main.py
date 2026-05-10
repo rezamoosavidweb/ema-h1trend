@@ -1,6 +1,8 @@
 # ==============================================================================
 # SECTION 1 - Imports and parameters
 import warnings
+import time
+from datetime import datetime, timezone
 
 warnings.filterwarnings("ignore")
 
@@ -182,215 +184,260 @@ print(
     flush=True,
 )
 
-
-m5 = fetch_mt5(_mt5_symbol, TF_ENTRY, BARS_ENTRY)
-h1 = fetch_mt5(_mt5_symbol, TF_TREND, BARS_TREND)
-
-
-print("M5 head:\n", m5.head(3))
-print("H1 head:\n", h1.head(3))
-
-# ==============================================================================
-
-# SECTION 3 - Build EMA 21/13/8 on both timeframes
+def main():  
+    m5 = fetch_mt5(_mt5_symbol, TF_ENTRY, BARS_ENTRY)
+    h1 = fetch_mt5(_mt5_symbol, TF_TREND, BARS_TREND)
 
 
-m5 = add_emas(m5)
-h1 = add_emas(h1)
+    print("M5 head:\n", m5.head(3))
+    print("H1 head:\n", h1.head(3))
 
-print("EMA columns added.\n")
-print(h1[["close", f"ema_{EMA_FAST}", f"ema_{EMA_MID}", f"ema_{EMA_SLOW}"]].tail(5))
+    # ==============================================================================
 
-# ==============================================================================
-
-# SECTION 4 - H1 trend direction confirmation
-# Bull trend: EMA8 > EMA13 > EMA21 and close > EMA21
-# Bear trend: EMA8 < EMA13 < EMA21 and close < EMA21
-
-m5_ctx = merge_h1_trend_onto_m5(m5, h1)
-
-print(m5_ctx["trend"].value_counts(dropna=False))
+    # SECTION 3 - Build EMA 21/13/8 on both timeframes
 
 
-# ==============================================================================
+    m5 = add_emas(m5)
+    h1 = add_emas(h1)
 
-# SECTION 5 - Strategy engine (pending stop orders + expiry + TP/SL)
-entry_signals_df = list_setup_signals(
-    m5_ctx,
-    start_balance=START_BALANCE,
-    lookback_bars=LOOKBACK_BARS,
-    pending_offset_ticks=PENDING_OFFSET_PIPS,
-    pip_size=PIP_SIZE,
-    rr=RR,
-    risk_per_trade=RISK_PER_TRADE,
-)
-print(f"\n\nTotal entry signals: {len(entry_signals_df)}")
-if not entry_signals_df.empty:
-    print(entry_signals_df[["signal_bar_time", "side", "entry"]])
-else:
-    print("(no setup rows in this window)")
+    print("EMA columns added.\n")
+    print(h1[["close", f"ema_{EMA_FAST}", f"ema_{EMA_MID}", f"ema_{EMA_SLOW}"]].tail(5))
+
+    # ==============================================================================
+
+    # SECTION 4 - H1 trend direction confirmation
+    # Bull trend: EMA8 > EMA13 > EMA21 and close > EMA21
+    # Bear trend: EMA8 < EMA13 < EMA21 and close < EMA21
+
+    m5_ctx = merge_h1_trend_onto_m5(m5, h1)
+
+    print(m5_ctx["trend"].value_counts(dropna=False))
 
 
-# ==============================================================================
-# ==============================================================================
-# SECTION 6 - Sync MT5 pending orders with latest signal
+    # ==============================================================================
 
-expiry_bars = max(1, int(PENDING_EXPIRY_MIN / ENTRY_TF_MINUTES))
-
-# reconnect MT5
-r3.mt5_connect(_login, _password, _server)
-r3.assert_terminal_ready()
-
-try:
-
-    # --------------------------------------------------------------------------
-    # Get latest signal
-    if entry_signals_df.empty:
-        print("No signals.")
-        sys.exit(0)
-
-    last_signal = entry_signals_df.iloc[-1]
-
-    signal_time = pd.to_datetime(last_signal["signal_bar_time"])
-    current_time = m5_ctx.index[-1]
-
-    bars_passed = int(
-        (current_time - signal_time).total_seconds()
-        / 60
-        / ENTRY_TF_MINUTES
+    # SECTION 5 - Strategy engine (pending stop orders + expiry + TP/SL)
+    entry_signals_df = list_setup_signals(
+        m5_ctx,
+        start_balance=START_BALANCE,
+        lookback_bars=LOOKBACK_BARS,
+        pending_offset_ticks=PENDING_OFFSET_PIPS,
+        pip_size=PIP_SIZE,
+        rr=RR,
+        risk_per_trade=RISK_PER_TRADE,
     )
-
-    print(
-        f"\nLatest signal:"
-        f"\nside={last_signal['side']}"
-        f"\nentry={last_signal['entry']}"
-        f"\nsignal_time={signal_time}"
-        f"\nbars_passed={bars_passed}"
-        f"\nexpiry_bars={expiry_bars}\n"
-    )
-
-    # --------------------------------------------------------------------------
-    # Get current pending orders from MT5
-    mt5_orders = mt5.orders_get(symbol=_mt5_symbol)
-
-    pending_order = None
-
-    if mt5_orders:
-        for o in mt5_orders:
-            # فقط اردرهای همین استراتژی
-            if o.magic != MAGIC:
-                continue
-
-            if o.type in (
-                mt5.ORDER_TYPE_BUY_STOP,
-                mt5.ORDER_TYPE_SELL_STOP,
-            ):
-                print("-------------------------------------------------------------------------------------------------------------------------------")
-                print(f"Current Pending order found: ticket:{o.ticket} / type:{o.type} / price_open:{o.price_open} / sl:{o.sl} / tp:{o.tp} / magic:{o.magic} / comment:{o.comment}")
-                print("-------------------------------------------------------------------------------------------------------------------------------")
-                pending_order = o
-                break
-
-    # --------------------------------------------------------------------------
-    # EXPIRED SIGNAL
-    if bars_passed >= expiry_bars:
-
-        print("Signal expired.")
-
-        if pending_order is not None:
-
-            print(f"Removing pending order #{pending_order.ticket}")
-
-            request = {
-                "action": mt5.TRADE_ACTION_REMOVE,
-                "order": pending_order.ticket,
-            }
-
-            result = mt5.order_send(request)
-
-            print("REMOVE RESULT:", result)
-
-        else:
-            print("No pending order to remove.")
-
-    # --------------------------------------------------------------------------
-    # VALID SIGNAL
+    print(f"\n\nTotal entry signals: {len(entry_signals_df)}")
+    if not entry_signals_df.empty:
+        print(entry_signals_df[["signal_bar_time", "side", "entry"]])
     else:
+        print("(no setup rows in this window)")
 
-        print("Signal valid.")
 
-        desired_entry = float(last_signal["entry"])
+    # ==============================================================================
+    # ==============================================================================
+    # SECTION 6 - Sync MT5 pending orders with latest signal
 
-        # ----------------------------------------------------------------------
-        # Rebuild SL/TP from dataframe row
-        desired_sl = float(last_signal["sl"])
-        desired_tp = float(last_signal["tp"])
+    expiry_bars = max(1, int(PENDING_EXPIRY_MIN / ENTRY_TF_MINUTES))
 
-        side = last_signal["side"]
+    # reconnect MT5
+    r3.mt5_connect(_login, _password, _server)
+    r3.assert_terminal_ready()
 
-        desired_type = (
-            mt5.ORDER_TYPE_BUY_STOP
-            if side == "buy"
-            else mt5.ORDER_TYPE_SELL_STOP
+    try:
+
+        # --------------------------------------------------------------------------
+        # Get latest signal
+        if entry_signals_df.empty:
+            print("No signals.")
+            sys.exit(0)
+
+        last_signal = entry_signals_df.iloc[-1]
+
+        signal_time = pd.to_datetime(last_signal["signal_bar_time"])
+        current_time = m5_ctx.index[-1]
+
+        bars_passed = int(
+            (current_time - signal_time).total_seconds()
+            / 60
+            / ENTRY_TF_MINUTES
         )
 
-        # ----------------------------------------------------------------------
-        # NO EXISTING PENDING -> CREATE
-        if pending_order is None:
+        print(
+            f"\nLatest signal:"
+            f"\nside={last_signal['side']}"
+            f"\nentry={last_signal['entry']}"
+            f"\nsignal_time={signal_time}"
+            f"\nbars_passed={bars_passed}"
+            f"\nexpiry_bars={expiry_bars}\n"
+        )
 
-            print("Creating new pending order...")
+        # --------------------------------------------------------------------------
+        # Get current pending orders from MT5
+        mt5_orders = mt5.orders_get(symbol=_mt5_symbol)
 
-            request = {
-                "action": mt5.TRADE_ACTION_PENDING,
-                "symbol": _mt5_symbol,
-                "volume": 0.01,
-                "type": desired_type,
-                "price": desired_entry,
-                "sl": desired_sl,
-                "tp": desired_tp,
-                "magic": MAGIC,
-                "comment": "ema_trend_python",
-                "type_time": mt5.ORDER_TIME_GTC,
-                "type_filling": mt5.ORDER_FILLING_RETURN,
-            }
+        pending_order = None
 
-            result = mt5.order_send(request)
+        if mt5_orders:
+            for o in mt5_orders:
+                # فقط اردرهای همین استراتژی
+                if o.magic != MAGIC:
+                    continue
 
-            print("----------------------------------------------------------------------------------------------------------------------")
-            print(f"New Pending order created: ticket:{result.order} / type:{result.type} / price_open:{result.price_open} / sl:{result.sl} / tp:{result.tp} / magic:{result.magic} / comment:{result.comment}")
-            print("----------------------------------------------------------------------------------------------------------------------")
-        # ----------------------------------------------------------------------
-        # EXISTING PENDING -> COMPARE
-        else:
+                if o.type in (
+                    mt5.ORDER_TYPE_BUY_STOP,
+                    mt5.ORDER_TYPE_SELL_STOP,
+                ):
+                    print("-------------------------------------------------------------------------------------------------------------------------------")
+                    print(f"Current Pending order found: ticket:{o.ticket} / type:{o.type} / price_open:{o.price_open} / sl:{o.sl} / tp:{o.tp} / magic:{o.magic} / comment:{o.comment}")
+                    print("-------------------------------------------------------------------------------------------------------------------------------")
+                    pending_order = o
+                    break
 
-            print(f"Existing pending #{pending_order.ticket}")
+        # --------------------------------------------------------------------------
+        # EXPIRED SIGNAL
+        if bars_passed >= expiry_bars:
 
-            same_entry = abs(pending_order.price_open - desired_entry) < PIP_SIZE
-            same_sl = abs(pending_order.sl - desired_sl) < PIP_SIZE
-            same_tp = abs(pending_order.tp - desired_tp) < PIP_SIZE
-            same_type = pending_order.type == desired_type
+            print("Signal expired.")
 
-            if same_entry and same_sl and same_tp and same_type:
+            if pending_order is not None:
 
-
-                print("-------------------------------------------------------------------------------------------------------------------------------")
-                print(f"Pending order already up-to-date and dont need update: ticket:{pending_order.ticket} / type:{pending_order.type} / price_open:{pending_order.price_open} / sl:{pending_order.sl} / tp:{pending_order.tp} / magic:{pending_order.magic} / comment:{pending_order.comment}")
-                print("-------------------------------------------------------------------------------------------------------------------------------")
-            else:
-
-                print("Pending changed -> modifying...")
+                print(f"Removing pending order #{pending_order.ticket}")
 
                 request = {
-                    "action": mt5.TRADE_ACTION_MODIFY,
+                    "action": mt5.TRADE_ACTION_REMOVE,
                     "order": pending_order.ticket,
-                    "price": desired_entry,
-                    "sl": desired_sl,
-                    "tp": desired_tp,
                 }
 
                 result = mt5.order_send(request)
+
+                print("REMOVE RESULT:", result)
+
+            else:
+                print("No pending order to remove.")
+
+        # --------------------------------------------------------------------------
+        # VALID SIGNAL
+        else:
+
+            print("Signal valid.")
+
+            desired_entry = float(last_signal["entry"])
+
+            # ----------------------------------------------------------------------
+            # Rebuild SL/TP from dataframe row
+            desired_sl = float(last_signal["sl"])
+            desired_tp = float(last_signal["tp"])
+
+            side = last_signal["side"]
+
+            desired_type = (
+                mt5.ORDER_TYPE_BUY_STOP
+                if side == "buy"
+                else mt5.ORDER_TYPE_SELL_STOP
+            )
+
+            # ----------------------------------------------------------------------
+            # NO EXISTING PENDING -> CREATE
+            if pending_order is None:
+
+                print("Creating new pending order...")
+
+                request = {
+                    "action": mt5.TRADE_ACTION_PENDING,
+                    "symbol": _mt5_symbol,
+                    "volume": 0.01,
+                    "type": desired_type,
+                    "price": desired_entry,
+                    "sl": desired_sl,
+                    "tp": desired_tp,
+                    "magic": MAGIC,
+                    "comment": "ema_trend_python",
+                    "type_time": mt5.ORDER_TIME_GTC,
+                    "type_filling": mt5.ORDER_FILLING_RETURN,
+                }
+
+                result = mt5.order_send(request)
+
                 print("----------------------------------------------------------------------------------------------------------------------")
-                print(f"Pending order modified: ticket:{result.order} / type:{result.type} / price_open:{result.price_open} / sl:{result.sl} / tp:{result.tp} / magic:{result.magic} / comment:{result.comment}")
+                print(f"New Pending order created: ticket:{result.order} / type:{result.type} / price_open:{result.price_open} / sl:{result.sl} / tp:{result.tp} / magic:{result.magic} / comment:{result.comment}")
                 print("----------------------------------------------------------------------------------------------------------------------")
-finally:
-    mt5.shutdown()
+            # ----------------------------------------------------------------------
+            # EXISTING PENDING -> COMPARE
+            else:
+
+                print(f"Existing pending #{pending_order.ticket}")
+
+                same_entry = abs(pending_order.price_open - desired_entry) < PIP_SIZE
+                same_sl = abs(pending_order.sl - desired_sl) < PIP_SIZE
+                same_tp = abs(pending_order.tp - desired_tp) < PIP_SIZE
+                same_type = pending_order.type == desired_type
+
+                if same_entry and same_sl and same_tp and same_type:
+
+
+                    print("-------------------------------------------------------------------------------------------------------------------------------")
+                    print(f"Pending order already up-to-date and dont need update: ticket:{pending_order.ticket} / type:{pending_order.type} / price_open:{pending_order.price_open} / sl:{pending_order.sl} / tp:{pending_order.tp} / magic:{pending_order.magic} / comment:{pending_order.comment}")
+                    print("-------------------------------------------------------------------------------------------------------------------------------")
+                else:
+
+                    print("Pending changed -> modifying...")
+
+                    request = {
+                        "action": mt5.TRADE_ACTION_MODIFY,
+                        "order": pending_order.ticket,
+                        "price": desired_entry,
+                        "sl": desired_sl,
+                        "tp": desired_tp,
+                    }
+
+                    result = mt5.order_send(request)
+                    print("----------------------------------------------------------------------------------------------------------------------")
+                    print(f"Pending order modified: ticket:{result.order} / type:{result.type} / price_open:{result.price_open} / sl:{result.sl} / tp:{result.tp} / magic:{result.magic} / comment:{result.comment}")
+                    print("----------------------------------------------------------------------------------------------------------------------")
+    finally:
+        mt5.shutdown()  
+  
+    
+    
+def sleep_until_next_candle(tf_minutes: int = 5):
+    now = datetime.now(timezone.utc)
+
+    total_seconds = now.minute * 60 + now.second
+
+    candle_seconds = tf_minutes * 60
+
+    next_close = ((total_seconds // candle_seconds) + 1) * candle_seconds
+
+    wait_seconds = next_close - total_seconds
+
+    if wait_seconds <= 0:
+        wait_seconds += candle_seconds
+
+    print(
+        f"\n[{now.strftime('%Y-%m-%d %H:%M:%S UTC')}] "
+        f"Sleeping {wait_seconds} sec until next {tf_minutes}m candle..."
+    )
+
+    time.sleep(wait_seconds + 1)
+    
+    
+# loop
+while True:
+
+    try:
+
+        print("\n" + "=" * 120)
+        print("RUNNING STRATEGY...")
+        print("=" * 120)
+        main()
+        
+    except Exception as e:
+        print("ERROR:", e)
+
+    finally:
+        try:
+            mt5.shutdown()
+        except:
+            pass
+
+    sleep_until_next_candle(ENTRY_TF_MINUTES)
