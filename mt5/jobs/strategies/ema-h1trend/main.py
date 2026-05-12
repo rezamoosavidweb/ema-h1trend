@@ -1,6 +1,8 @@
 # ==============================================================================
 # Live trading bot: EMA H1 Trend + M5 Entry  |  Pending stop orders  |  MT5
 # ==============================================================================
+import argparse
+import hashlib
 import warnings
 import time
 import logging
@@ -13,8 +15,8 @@ import os
 import sys
 from pathlib import Path
 
-# Repo root must be derived from __file__ so imports work when cwd is mt5/.
-_REPO_ROOT = Path(__file__).resolve().parent.parent
+# Repo root: main.py lives 5 levels deep (mt5/jobs/strategies/ema-h1trend/main.py)
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent.parent
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
@@ -23,12 +25,16 @@ import matplotlib.pyplot as plt
 
 from strategies.ema_trend.setup import list_setup_signals
 from strategies.ema_trend.crypto_core import (
-    EMA_FAST, EMA_MID, EMA_SLOW,
-    default_crypto_tick, add_emas, merge_h1_trend_onto_m5,
+    EMA_FAST,
+    EMA_MID,
+    EMA_SLOW,
+    default_crypto_tick,
+    add_emas,
+    merge_h1_trend_onto_m5,
 )
 import MetaTrader5 as mt5
 
-_SCRIPT_DIR = Path(__file__).resolve().parent
+_SCRIPT_DIR = Path(__file__).resolve().parent.parent.parent.parent  # mt5/
 if str(_SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPT_DIR))
 
@@ -46,7 +52,7 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
     handlers=[logging.StreamHandler(sys.stdout)],
 )
-logging.Formatter.converter = time.gmtime   # force UTC in log timestamps
+logging.Formatter.converter = time.gmtime  # force UTC in log timestamps
 log = logging.getLogger(__name__)
 
 
@@ -61,28 +67,30 @@ TF_ENTRY: str = "M5"
 TF_TREND: str = "H1"
 
 MT5_TF: dict[str, int] = {
-    "M1":  mt5.TIMEFRAME_M1,
-    "M5":  mt5.TIMEFRAME_M5,
+    "M1": mt5.TIMEFRAME_M1,
+    "M5": mt5.TIMEFRAME_M5,
     "M15": mt5.TIMEFRAME_M15,
     "M30": mt5.TIMEFRAME_M30,
-    "H1":  mt5.TIMEFRAME_H1,
-    "H4":  mt5.TIMEFRAME_H4,
-    "D1":  mt5.TIMEFRAME_D1,
+    "H1": mt5.TIMEFRAME_H1,
+    "H4": mt5.TIMEFRAME_H4,
+    "D1": mt5.TIMEFRAME_D1,
 }
 
-LOOKBACK_BARS: int     = 5
-ENTRY_TF_MINUTES: int  = 5
-MAGIC: int             = 20260510
+LOOKBACK_BARS: int = 5
+ENTRY_TF_MINUTES: int = 5
+MAGIC: int = 20260510
 
 # Pending stop distance beyond swing high/low  = PENDING_OFFSET_TICKS * PIP_SIZE
 PENDING_OFFSET_TICKS: float = 3.0
-PENDING_EXPIRY_MIN: int     = 60
-RR: float                   = 1.0       # TP:SL = 1:1
-RISK_PER_TRADE: float       = 0.01
+PENDING_EXPIRY_MIN: int = 60
+RR: float = 1.0  # TP:SL = 1:1
+RISK_PER_TRADE: float = 0.01
 
 # PIP_SIZE is tick/step size for crypto (no MT5 connection needed — pure symbol string).
-PIP_SIZE: float          = default_crypto_tick(SYMBOL)
-PENDING_OFFSET_PIPS: float = float(PENDING_OFFSET_TICKS)   # alias expected by backtest engine
+PIP_SIZE: float = default_crypto_tick(SYMBOL)
+PENDING_OFFSET_PIPS: float = float(
+    PENDING_OFFSET_TICKS
+)  # alias expected by backtest engine
 
 START_BALANCE: float = 10_000.0
 
@@ -91,13 +99,14 @@ BARS_ENTRY: int = 100
 BARS_TREND: int = 100
 
 # MT5 reconnect policy
-MT5_CONNECT_RETRIES: int    = 3
-MT5_CONNECT_RETRY_DELAY: int = 10   # seconds between retries
+MT5_CONNECT_RETRIES: int = 3
+MT5_CONNECT_RETRY_DELAY: int = 10  # seconds between retries
 
 
 # ==============================================================================
 # Environment helpers
 # ==============================================================================
+
 
 def _parse_env_int(name: str) -> int | None:
     v = os.environ.get(name)
@@ -109,26 +118,37 @@ def _parse_env_int(name: str) -> int | None:
         return None
 
 
-_login:    Optional[int] = _parse_env_int("MT5_LOGIN")
+_login: Optional[int] = _parse_env_int("MT5_LOGIN")
 _password: Optional[str] = os.environ.get("MT5_PASSWORD")
-_server:   Optional[str] = os.environ.get("MT5_SERVER")
+_server: Optional[str] = os.environ.get("MT5_SERVER")
 
 
 # ==============================================================================
 # Data helpers
 # ==============================================================================
 
+
 def _standardize_ohlcv(df: pd.DataFrame) -> pd.DataFrame:
     """Normalise column names and ensure a DatetimeIndex. Unchanged from original."""
     rename_map = {
-        "Open": "open", "High": "high", "Low": "low", "Close": "close", "Volume": "volume",
-        "o": "open", "h": "high", "l": "low", "c": "close", "v": "volume",
+        "Open": "open",
+        "High": "high",
+        "Low": "low",
+        "Close": "close",
+        "Volume": "volume",
+        "o": "open",
+        "h": "high",
+        "l": "low",
+        "c": "close",
+        "v": "volume",
         "tick_volume": "volume",
     }
     df = df.rename(columns=rename_map)
 
     if not isinstance(df.index, pd.DatetimeIndex):
-        dt_cols = [c for c in ["time", "datetime", "date", "timestamp"] if c in df.columns]
+        dt_cols = [
+            c for c in ["time", "datetime", "date", "timestamp"] if c in df.columns
+        ]
         if dt_cols:
             dt_col = dt_cols[0]
             df[dt_col] = pd.to_datetime(df[dt_col], utc=False, errors="coerce")
@@ -169,7 +189,9 @@ def _resolve_mt5_symbol(requested: str) -> str:
             hu = h.upper()
             if hu == ru or hu.startswith(ru + ".") or hu.startswith(ru + "#"):
                 resolved = r3.ensure_symbol(h)
-                log.info("MT5: using broker symbol %r (requested %r)", resolved, requested)
+                log.info(
+                    "MT5: using broker symbol %r (requested %r)", resolved, requested
+                )
                 return resolved
         raise RuntimeError(
             f"Symbol {requested!r} not found in MT5. Candidates: {hints or '(none)'}. "
@@ -181,6 +203,7 @@ def _resolve_mt5_symbol(requested: str) -> str:
 # MT5 connection
 # ==============================================================================
 
+
 def connect_mt5() -> bool:
     """Connect to MT5 and verify the terminal is ready. Retries up to MT5_CONNECT_RETRIES times."""
     for attempt in range(1, MT5_CONNECT_RETRIES + 1):
@@ -190,7 +213,12 @@ def connect_mt5() -> bool:
             log.info("MT5 connected (attempt %d/%d).", attempt, MT5_CONNECT_RETRIES)
             return True
         except Exception as exc:
-            log.warning("MT5 connect attempt %d/%d failed: %s", attempt, MT5_CONNECT_RETRIES, exc)
+            log.warning(
+                "MT5 connect attempt %d/%d failed: %s",
+                attempt,
+                MT5_CONNECT_RETRIES,
+                exc,
+            )
             if attempt < MT5_CONNECT_RETRIES:
                 time.sleep(MT5_CONNECT_RETRY_DELAY)
     log.error("MT5 connection failed after %d attempts.", MT5_CONNECT_RETRIES)
@@ -200,6 +228,7 @@ def connect_mt5() -> bool:
 # ==============================================================================
 # Data fetching
 # ==============================================================================
+
 
 def fetch_data(mt5_symbol: str) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Fetch BARS_ENTRY M5 bars and BARS_TREND H1 bars from MT5."""
@@ -218,8 +247,8 @@ def fetch_data(mt5_symbol: str) -> tuple[pd.DataFrame, pd.DataFrame]:
                 f"No data from MT5 for {mt5_symbol} {tf}. last_error={last_error}{hint}"
             )
         df = pd.DataFrame(rates)
-        df["time"]      = pd.to_datetime(df["time"], unit="s", utc=True)
-        df["symbol"]    = mt5_symbol
+        df["time"] = pd.to_datetime(df["time"], unit="s", utc=True)
+        df["symbol"] = mt5_symbol
         df["timeframe"] = tf
         return _standardize_ohlcv(df)
 
@@ -234,6 +263,7 @@ def fetch_data(mt5_symbol: str) -> tuple[pd.DataFrame, pd.DataFrame]:
 # Context building
 # ==============================================================================
 
+
 def build_context(m5: pd.DataFrame, h1: pd.DataFrame) -> pd.DataFrame:
     """Add EMAs on both timeframes and merge H1 trend direction onto M5."""
     m5 = add_emas(m5)
@@ -241,18 +271,24 @@ def build_context(m5: pd.DataFrame, h1: pd.DataFrame) -> pd.DataFrame:
 
     log.info(
         "H1 EMA tail:\n%s",
-        h1[["close", f"ema_{EMA_FAST}", f"ema_{EMA_MID}", f"ema_{EMA_SLOW}"]].tail(3).to_string(),
+        h1[["close", f"ema_{EMA_FAST}", f"ema_{EMA_MID}", f"ema_{EMA_SLOW}"]]
+        .tail(3)
+        .to_string(),
     )
 
     m5_ctx = merge_h1_trend_onto_m5(m5, h1)
 
-    log.info("M5 trend distribution:\n%s", m5_ctx["trend"].value_counts(dropna=False).to_string())
+    log.info(
+        "M5 trend distribution:\n%s",
+        m5_ctx["trend"].value_counts(dropna=False).to_string(),
+    )
     return m5_ctx
 
 
 # ==============================================================================
 # Signal generation
 # ==============================================================================
+
 
 def generate_signals(m5_ctx: pd.DataFrame) -> pd.DataFrame:
     """Run the setup signal engine. Parameters and call signature unchanged from original."""
@@ -268,7 +304,9 @@ def generate_signals(m5_ctx: pd.DataFrame) -> pd.DataFrame:
 
     log.info("Total entry signals: %d", len(signals))
     if not signals.empty:
-        log.info("Signals:\n%s", signals[["signal_bar_time", "side", "entry"]].to_string())
+        log.info(
+            "Signals:\n%s", signals[["signal_bar_time", "side", "entry"]].to_string()
+        )
     else:
         log.info("(no setup rows in this window)")
 
@@ -279,18 +317,23 @@ def generate_signals(m5_ctx: pd.DataFrame) -> pd.DataFrame:
 # Volume normalisation
 # ==============================================================================
 
+
 def normalize_volume(mt5_symbol: str, raw_volume: float) -> float:
     """Round raw_volume to the nearest valid step and clamp to [volume_min, volume_max]."""
     info = mt5.symbol_info(mt5_symbol)
     if info is None:
-        log.warning("symbol_info unavailable for %s — using raw volume %.4f", mt5_symbol, raw_volume)
+        log.warning(
+            "symbol_info unavailable for %s — using raw volume %.4f",
+            mt5_symbol,
+            raw_volume,
+        )
         return raw_volume
 
     vol_step = info.volume_step if info.volume_step > 0 else 0.01
-    vol_min  = info.volume_min  if info.volume_min  > 0 else 0.01
-    vol_max  = info.volume_max  if info.volume_max  > 0 else 100.0
+    vol_min = info.volume_min if info.volume_min > 0 else 0.01
+    vol_max = info.volume_max if info.volume_max > 0 else 100.0
 
-    steps  = max(1, round(raw_volume / vol_step))
+    steps = max(1, round(raw_volume / vol_step))
     volume = round(steps * vol_step, 8)
     volume = max(vol_min, min(vol_max, volume))
     return volume
@@ -299,6 +342,7 @@ def normalize_volume(mt5_symbol: str, raw_volume: float) -> float:
 # ==============================================================================
 # Pending order helpers
 # ==============================================================================
+
 
 def get_existing_pending_order(mt5_symbol: str):
     """Return the first BUY_STOP or SELL_STOP for this strategy's MAGIC, or None."""
@@ -312,7 +356,13 @@ def get_existing_pending_order(mt5_symbol: str):
         if o.type in (mt5.ORDER_TYPE_BUY_STOP, mt5.ORDER_TYPE_SELL_STOP):
             log.info(
                 "Existing pending order | ticket=%d type=%d price_open=%.5f sl=%.5f tp=%.5f magic=%d comment=%s",
-                o.ticket, o.type, o.price_open, o.sl, o.tp, o.magic, o.comment,
+                o.ticket,
+                o.type,
+                o.price_open,
+                o.sl,
+                o.tp,
+                o.magic,
+                o.comment,
             )
             return o
 
@@ -327,19 +377,22 @@ def create_pending_order(
     desired_tp: float,
     volume: float,
 ) -> None:
-    """Send a new pending stop order. Request payload is identical to the original."""
+    """Send a new pending stop order."""
+    si = mt5.symbol_info(mt5_symbol)
+    filling = r3.pick_filling_mode(si) if si is not None else mt5.ORDER_FILLING_RETURN
+
     request = {
-        "action":       mt5.TRADE_ACTION_PENDING,
-        "symbol":       mt5_symbol,
-        "volume":       volume,
-        "type":         desired_type,
-        "price":        desired_entry,
-        "sl":           desired_sl,
-        "tp":           desired_tp,
-        "magic":        MAGIC,
-        "comment":      "ema_trend_python",
-        "type_time":    mt5.ORDER_TIME_GTC,
-        "type_filling": mt5.ORDER_FILLING_RETURN,
+        "action": mt5.TRADE_ACTION_PENDING,
+        "symbol": mt5_symbol,
+        "volume": volume,
+        "type": desired_type,
+        "price": desired_entry,
+        "sl": desired_sl,
+        "tp": desired_tp,
+        "magic": MAGIC,
+        "comment": "ema_trend_python",
+        "type_time": mt5.ORDER_TIME_GTC,
+        "type_filling": filling,
     }
 
     result = mt5.order_send(request)
@@ -350,7 +403,8 @@ def create_pending_order(
 
     log.info(
         "Pending order CREATED | ticket=%d result=%s",
-        result.order, result,
+        result.order,
+        result,
     )
 
 
@@ -363,40 +417,53 @@ def modify_pending_order(
     """Modify price/SL/TP on an existing pending order. Request payload identical to original."""
     request = {
         "action": mt5.TRADE_ACTION_MODIFY,
-        "order":  pending_order.ticket,
-        "price":  desired_entry,
-        "sl":     desired_sl,
-        "tp":     desired_tp,
+        "order": pending_order.ticket,
+        "price": desired_entry,
+        "sl": desired_sl,
+        "tp": desired_tp,
     }
 
     result = mt5.order_send(request)
 
     if result is None or result.retcode != mt5.TRADE_RETCODE_DONE:
-        log.error("modify_pending_order FAILED | ticket=%d result=%s", pending_order.ticket, result)
+        log.error(
+            "modify_pending_order FAILED | ticket=%d result=%s",
+            pending_order.ticket,
+            result,
+        )
         return
 
-    log.info("Pending order MODIFIED | ticket=%d result=%s", pending_order.ticket, result)
+    log.info(
+        "Pending order MODIFIED | ticket=%d result=%s", pending_order.ticket, result
+    )
 
 
 def remove_pending_order(pending_order) -> None:
     """Cancel a pending order. Request payload identical to original."""
     request = {
         "action": mt5.TRADE_ACTION_REMOVE,
-        "order":  pending_order.ticket,
+        "order": pending_order.ticket,
     }
 
     result = mt5.order_send(request)
 
     if result is None or result.retcode != mt5.TRADE_RETCODE_DONE:
-        log.error("remove_pending_order FAILED | ticket=%d result=%s", pending_order.ticket, result)
+        log.error(
+            "remove_pending_order FAILED | ticket=%d result=%s",
+            pending_order.ticket,
+            result,
+        )
         return
 
-    log.info("Pending order REMOVED | ticket=%d result=%s", pending_order.ticket, result)
+    log.info(
+        "Pending order REMOVED | ticket=%d result=%s", pending_order.ticket, result
+    )
 
 
 # ==============================================================================
 # Order synchronisation  (core trading logic — unchanged from original)
 # ==============================================================================
+
 
 def sync_pending_orders(
     mt5_symbol: str,
@@ -414,23 +481,31 @@ def sync_pending_orders(
     """
     expiry_bars = max(1, int(PENDING_EXPIRY_MIN / ENTRY_TF_MINUTES))
 
+    # If we're already in a position, do nothing until it closes.
+    open_positions = [p for p in (mt5.positions_get(symbol=mt5_symbol) or []) if p.magic == MAGIC]
+    if open_positions:
+        log.info("Position already open (%d) — skipping pending order sync.", len(open_positions))
+        return
+
     if entry_signals_df.empty:
         log.info("No signals — skipping order sync.")
         return
 
-    last_signal  = entry_signals_df.iloc[-1]
-    signal_time  = pd.to_datetime(last_signal["signal_bar_time"])
+    last_signal = entry_signals_df.iloc[-1]
+    signal_time = pd.to_datetime(last_signal["signal_bar_time"])
     current_time = m5_ctx.index[-1]
 
     bars_passed = int(
-        (current_time - signal_time).total_seconds()
-        / 60
-        / ENTRY_TF_MINUTES
+        (current_time - signal_time).total_seconds() / 60 / ENTRY_TF_MINUTES
     )
 
     log.info(
         "Latest signal | side=%s  entry=%.5f  signal_time=%s  bars_passed=%d  expiry_bars=%d",
-        last_signal["side"], last_signal["entry"], signal_time, bars_passed, expiry_bars,
+        last_signal["side"],
+        last_signal["entry"],
+        signal_time,
+        bars_passed,
+        expiry_bars,
     )
 
     pending_order = get_existing_pending_order(mt5_symbol)
@@ -452,10 +527,35 @@ def sync_pending_orders(
     # ------------------------------------------------------------------
     log.info("Signal VALID.")
 
-    desired_entry = float(last_signal["entry"])
-    desired_sl    = float(last_signal["sl"])
-    desired_tp    = float(last_signal["tp"])
-    side          = last_signal["side"]
+    raw_entry = float(last_signal["entry"])
+    raw_sl = float(last_signal["sl"])
+    raw_tp = float(last_signal["tp"])
+    side = last_signal["side"]
+
+    si = mt5.symbol_info(mt5_symbol)
+    if si is None:
+        log.error("symbol_info failed for %s — skipping.", mt5_symbol)
+        return
+
+    prepared = r3.prepare_pending_prices_for_market(
+        mt5_symbol, side, raw_entry, raw_sl, raw_tp, si
+    )
+    if prepared is None:
+        log.error("Price adjustment failed (geometry invalid) — skipping order.")
+        return
+    desired_entry, desired_sl, desired_tp = prepared
+
+    # Validate post-adjustment geometry: price may have moved past the signal entry,
+    # making TP trivially close or on the wrong side of entry.
+    original_sl_dist = abs(raw_entry - raw_sl)
+    tp_dist = (desired_tp - desired_entry) if side == "buy" else (desired_entry - desired_tp)
+    if tp_dist < original_sl_dist * 0.5:
+        log.warning(
+            "Stale signal — price moved past entry (entry %.5f adj to %.5f, tp_dist=%.5f, "
+            "min=%.5f). Skipping order.",
+            raw_entry, desired_entry, tp_dist, original_sl_dist * 0.5,
+        )
+        return
 
     desired_type = (
         mt5.ORDER_TYPE_BUY_STOP if side == "buy" else mt5.ORDER_TYPE_SELL_STOP
@@ -465,23 +565,42 @@ def sync_pending_orders(
     if pending_order is None:
         log.info("No existing pending order — creating new...")
         volume = normalize_volume(mt5_symbol, 0.01)
-        create_pending_order(mt5_symbol, desired_type, desired_entry, desired_sl, desired_tp, volume)
+        create_pending_order(
+            mt5_symbol, desired_type, desired_entry, desired_sl, desired_tp, volume
+        )
         return
 
     # EXISTING PENDING -> COMPARE and possibly MODIFY
     log.info("Checking existing pending #%d for changes...", pending_order.ticket)
 
     same_entry = abs(pending_order.price_open - desired_entry) < PIP_SIZE
-    same_sl    = abs(pending_order.sl         - desired_sl)    < PIP_SIZE
-    same_tp    = abs(pending_order.tp         - desired_tp)    < PIP_SIZE
-    same_type  = pending_order.type == desired_type
+    same_sl = abs(pending_order.sl - desired_sl) < PIP_SIZE
+    same_tp = abs(pending_order.tp - desired_tp) < PIP_SIZE
+    same_type = pending_order.type == desired_type
 
     if same_entry and same_sl and same_tp and same_type:
         log.info(
             "Pending order already up-to-date — no update needed | "
             "ticket=%d type=%d price_open=%.5f sl=%.5f tp=%.5f magic=%d comment=%s",
-            pending_order.ticket, pending_order.type, pending_order.price_open,
-            pending_order.sl, pending_order.tp, pending_order.magic, pending_order.comment,
+            pending_order.ticket,
+            pending_order.type,
+            pending_order.price_open,
+            pending_order.sl,
+            pending_order.tp,
+            pending_order.magic,
+            pending_order.comment,
+        )
+    elif not same_type:
+        # TRADE_ACTION_MODIFY cannot change order type — must cancel and replace.
+        log.info(
+            "Order type changed (existing=%d desired=%d) — removing and recreating...",
+            pending_order.type,
+            desired_type,
+        )
+        remove_pending_order(pending_order)
+        volume = normalize_volume(mt5_symbol, pending_order.volume_current or 0.01)
+        create_pending_order(
+            mt5_symbol, desired_type, desired_entry, desired_sl, desired_tp, volume
         )
     else:
         log.info("Pending order changed — modifying...")
@@ -492,21 +611,24 @@ def sync_pending_orders(
 # Sleep until next M5 candle boundary
 # ==============================================================================
 
+
 def sleep_until_next_candle(tf_minutes: int = 5) -> None:
     """Sleep until the next candle-close boundary (UTC). Logic unchanged from original."""
     now = datetime.now(timezone.utc)
 
-    total_seconds  = now.minute * 60 + now.second
+    total_seconds = now.minute * 60 + now.second
     candle_seconds = tf_minutes * 60
-    next_close     = ((total_seconds // candle_seconds) + 1) * candle_seconds
-    wait_seconds   = next_close - total_seconds
+    next_close = ((total_seconds // candle_seconds) + 1) * candle_seconds
+    wait_seconds = next_close - total_seconds
 
     if wait_seconds <= 0:
         wait_seconds += candle_seconds
 
     log.info(
         "[%s] Sleeping %ds until next %dm candle...",
-        now.strftime("%Y-%m-%d %H:%M:%S UTC"), wait_seconds, tf_minutes,
+        now.strftime("%Y-%m-%d %H:%M:%S UTC"),
+        wait_seconds,
+        tf_minutes,
     )
 
     time.sleep(wait_seconds + 1)
@@ -515,6 +637,7 @@ def sleep_until_next_candle(tf_minutes: int = 5) -> None:
 # ==============================================================================
 # Single strategy cycle
 # ==============================================================================
+
 
 def run_cycle(mt5_symbol: str) -> None:
     """
@@ -531,9 +654,9 @@ def run_cycle(mt5_symbol: str) -> None:
         raise RuntimeError("MT5 connection failed — skipping cycle.")
 
     try:
-        m5, h1         = fetch_data(mt5_symbol)
-        m5_ctx         = build_context(m5, h1)
-        entry_signals  = generate_signals(m5_ctx)
+        m5, h1 = fetch_data(mt5_symbol)
+        m5_ctx = build_context(m5, h1)
+        entry_signals = generate_signals(m5_ctx)
         sync_pending_orders(mt5_symbol, entry_signals, m5_ctx)
     finally:
         mt5.shutdown()
@@ -544,6 +667,13 @@ def run_cycle(mt5_symbol: str) -> None:
 # Entry point
 # ==============================================================================
 
+
+def _symbol_default_magic(symbol: str) -> int:
+    """Derive a stable 8-digit magic from the symbol name so parallel instances don't collide."""
+    h = int(hashlib.md5(symbol.upper().encode()).hexdigest()[:8], 16)
+    return 10_000_000 + (h % 89_999_999)
+
+
 def main() -> None:
     """
     Resolve the broker symbol once, then run the production loop.
@@ -553,7 +683,46 @@ def main() -> None:
       - After each cycle (success or error) sleeps until the next M5 candle boundary.
       - Guards against processing the same candle twice (restart safety).
       - Reconnects MT5 automatically on drop.
+
+    Run multiple symbols in separate terminals:
+      python main.py --symbol BTCUSD
+      python main.py --symbol ETHUSD
+      python main.py --symbol BNBUSD
     """
+    global SYMBOL, MAGIC, RISK_PER_TRADE, PIP_SIZE, PENDING_OFFSET_PIPS
+
+    p = argparse.ArgumentParser(description="EMA H1 Trend strategy — MT5 pending stops")
+    p.add_argument(
+        "--symbol",
+        default=os.environ.get("MT5_SYMBOL", "BTCUSD").strip(),
+        help="Symbol to trade (e.g. BTCUSD, ETHUSD). Overrides MT5_SYMBOL env var.",
+    )
+    p.add_argument(
+        "--magic",
+        type=int,
+        default=None,
+        help="Magic number for order isolation. Default: auto-derived from symbol so parallel instances don't conflict.",
+    )
+    p.add_argument(
+        "--risk",
+        type=float,
+        default=RISK_PER_TRADE,
+        help=f"Fraction of balance risked per trade (default {RISK_PER_TRADE}).",
+    )
+    p.add_argument(
+        "--pip-size",
+        type=float,
+        default=None,
+        help="Price increment for offset (PIP_SIZE). Default: auto-detected from symbol name.",
+    )
+    args = p.parse_args()
+
+    SYMBOL = args.symbol.strip()
+    MAGIC = args.magic if args.magic is not None else _symbol_default_magic(SYMBOL)
+    RISK_PER_TRADE = args.risk
+    PIP_SIZE = args.pip_size if args.pip_size is not None else default_crypto_tick(SYMBOL)
+    PENDING_OFFSET_PIPS = float(PENDING_OFFSET_TICKS)
+
     # One-time symbol resolution (needs a brief MT5 connection)
     if not connect_mt5():
         log.error("Cannot start: initial MT5 connection failed.")
@@ -565,10 +734,18 @@ def main() -> None:
         mt5.shutdown()
 
     log.info(
-        "Symbol requested=%r  MT5=%r  Trend=%s  Entry=%s  "
-        "PIP_SIZE=%.6f  offset_ticks=%.1f  BARS_ENTRY=%d  BARS_TREND=%d",
-        SYMBOL, mt5_symbol, TF_TREND, TF_ENTRY,
-        PIP_SIZE, PENDING_OFFSET_TICKS, BARS_ENTRY, BARS_TREND,
+        "Symbol requested=%r  MT5=%r  magic=%d  Trend=%s  Entry=%s  "
+        "PIP_SIZE=%.6f  risk=%.4f  offset_ticks=%.1f  BARS_ENTRY=%d  BARS_TREND=%d",
+        SYMBOL,
+        mt5_symbol,
+        MAGIC,
+        TF_TREND,
+        TF_ENTRY,
+        PIP_SIZE,
+        RISK_PER_TRADE,
+        PENDING_OFFSET_TICKS,
+        BARS_ENTRY,
+        BARS_TREND,
     )
 
     last_processed_candle: Optional[pd.Timestamp] = None
