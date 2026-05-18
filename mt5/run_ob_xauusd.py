@@ -40,8 +40,9 @@ except ImportError:
     raise
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
-_REPO_ROOT = Path(__file__).resolve().parent.parent
-LOG_PATH = _REPO_ROOT / "logs" / "XAUUSD.json"
+_REPO_ROOT    = Path(__file__).resolve().parent.parent
+LOG_PATH      = _REPO_ROOT / "logs" / "XAUUSD.json"
+SEEN_OBS_PATH = _REPO_ROOT / "logs" / "seen_obs_XAUUSD.json"
 
 # ── Config (matches notebook) ─────────────────────────────────────────────────
 SYMBOL                   = "XAUUSD"
@@ -52,7 +53,8 @@ DISPLACEMENT_ATR_MULT    = 1.5
 OB_EXPIRY_BARS           = 100
 REJECTION_WICK_RATIO     = 0.3          # lower wick / range threshold
 RISK_REWARD              = 2.0
-SL_BUFFER                = 0.5          # extra points beyond OB edge for SL
+SL_BUFFER                = 0.0          # extra points beyond OB edge for SL
+SLIPPAGE_MAX_POINTS      = 3.0          # skip order if market price > this far from OB entry level
 RISK_PER_TRADE           = 0.01         # 1% of balance (used when --lot not given)
 MAGIC                    = 8088080      # unique magic number — separates this bot's orders
 M5_SECONDS               = 300
@@ -75,6 +77,27 @@ def log(event: str, data: dict | None = None) -> None:
     # Console summary
     short = {k: v for k, v in (data or {}).items() if k not in ("ob_bar_idx",)}
     print(f"[{entry['ts']}] {event} | {short}")
+
+
+# ── seen_obs persistence ───────────────────────────────────────────────────────
+
+def load_seen_obs() -> set:
+    """Load previously traded (ob_time, direction) pairs from disk."""
+    if not SEEN_OBS_PATH.exists():
+        return set()
+    try:
+        with SEEN_OBS_PATH.open("r", encoding="utf-8") as f:
+            data = json.load(f)
+        return {tuple(item) for item in data}
+    except Exception:
+        return set()
+
+
+def save_seen_obs(seen_obs: set) -> None:
+    """Persist the set of traded OB keys to disk."""
+    SEEN_OBS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with SEEN_OBS_PATH.open("w", encoding="utf-8") as f:
+        json.dump([list(item) for item in seen_obs], f)
 
 
 # ── Strategy logic (verbatim from notebook) ───────────────────────────────────
@@ -188,7 +211,7 @@ def find_signal(df: pd.DataFrame, order_blocks: List[OrderBlock]) -> Optional[di
     last_idx = n - 1
     last_bar = df.iloc[last_idx]
 
-    for ob in order_blocks:
+    for ob in reversed(order_blocks):
         # OB must be before last bar, and not expired
         if ob.ob_bar_idx >= last_idx:
             continue
@@ -494,7 +517,17 @@ def run_cycle(symbol: str, fixed_lot: Optional[float], dry_run: bool, seen_obs: 
     # 4. Skip if we already have an open position
     positions = get_our_positions(symbol)
     if positions:
-        log("skip", {"reason": "position_open", "open_positions": len(positions)})
+        log("skip", {
+            "reason":         "position_open",
+            "open_positions": len(positions),
+            "missed_signal":  {
+                "direction": signal["direction"],
+                "ob_time":   signal["ob_time"],
+                "entry":     signal["entry"],
+                "sl":        signal["sl"],
+                "tp":        signal["tp"],
+            },
+        })
         return
 
     log("signal", signal)
@@ -502,6 +535,7 @@ def run_cycle(symbol: str, fixed_lot: Optional[float], dry_run: bool, seen_obs: 
     if dry_run:
         log("dry_run", {"msg": "no_order_sent"})
         seen_obs.add(ob_key)
+        save_seen_obs(seen_obs)
         return
 
     # 5. Size and send order
@@ -519,9 +553,28 @@ def run_cycle(symbol: str, fixed_lot: Optional[float], dry_run: bool, seen_obs: 
         log("skip", {"reason": "volume_too_small", "volume": volume, "min": si.volume_min})
         return
 
+    # 6. Slippage guard — abort if current market price is too far from the OB entry level
+    tick = mt5.symbol_info_tick(symbol)
+    if tick:
+        if signal["direction"] == "BUY":
+            slippage = tick.ask - signal["entry"]   # positive = price moved above OB
+        else:
+            slippage = signal["entry"] - tick.bid   # positive = price moved below OB
+        if slippage > SLIPPAGE_MAX_POINTS:
+            log("skip", {
+                "reason":       "slippage_exceeded",
+                "direction":    signal["direction"],
+                "ob_entry":     signal["entry"],
+                "market_price": tick.ask if signal["direction"] == "BUY" else tick.bid,
+                "slippage_pts": round(slippage, 2),
+                "max_pts":      SLIPPAGE_MAX_POINTS,
+            })
+            return
+
     ticket = send_market_order(symbol, side, volume, signal["sl"], signal["tp"])
     if ticket:
         seen_obs.add(ob_key)
+        save_seen_obs(seen_obs)
         log("order_placed", {
             "ticket":    ticket,
             "direction": signal["direction"],
@@ -577,7 +630,7 @@ def main() -> None:
         "log_path":                str(LOG_PATH),
     })
 
-    seen_obs: set = set()   # tracks (ob_bar_idx, direction) already acted on this session
+    seen_obs: set = load_seen_obs()   # persisted across restarts
 
     try:
         if args.once:
