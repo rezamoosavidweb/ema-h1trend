@@ -101,7 +101,7 @@ REJECTION_WICK_RATIO     = 0.3
 RISK_REWARD              = 2.0
 
 # Extra buffer beyond the OB edge for the SL (0 = exactly at OB edge)
-SL_BUFFER                = 0.0
+SL_BUFFER                = 0.5
 
 # ── [CHANGE 2] Slippage thresholds ───────────────────────────────────────────
 # SLIPPAGE_REDUCE_THRESHOLD: when slippage exceeds this but stays below MAX,
