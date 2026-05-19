@@ -33,7 +33,7 @@ CHANGES vs previous version
 [CHANGE 3] Three-tier slippage response (replaces single hard cut-off)
     Before: slippage > 3 pts -> skip signal entirely
     Now:
-      <= 3.0 pts  -> enter at full lot, original SL and TP
+      <= 3.0 pts  -> enter at full lot, TP recalculated from fill price (RR=2)
       3.0-6.0 pts -> enter with reduced lot + TP recalculated from fill price
       > 6.0 pts   -> skip (too far from OB, structural thesis weakened)
     The SL always stays at the structural OB edge regardless of slippage.
@@ -67,13 +67,12 @@ except ImportError:
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from telegram_bot.mt5_notifier import Mt5Notifier  # noqa: E402
 
-
 # ══════════════════════════════════════════════════════════════════════════════
 # PATHS
 # ══════════════════════════════════════════════════════════════════════════════
 
-_REPO_ROOT    = Path(__file__).resolve().parent.parent   # mt5/ -> repo root
-LOG_PATH      = _REPO_ROOT / "logs" / "XAUUSD.json"      # JSON Lines log
+_REPO_ROOT = Path(__file__).resolve().parent.parent  # mt5/ -> repo root
+LOG_PATH = _REPO_ROOT / "logs" / "XAUUSD.json"  # JSON Lines log
 SEEN_OBS_PATH = _REPO_ROOT / "logs" / "seen_obs_XAUUSD.json"  # OB dedup state
 
 
@@ -81,56 +80,57 @@ SEEN_OBS_PATH = _REPO_ROOT / "logs" / "seen_obs_XAUUSD.json"  # OB dedup state
 # STRATEGY CONFIG  (all parameters in one place — matches notebook exactly)
 # ══════════════════════════════════════════════════════════════════════════════
 
-SYMBOL                   = "XAUUSD"
+SYMBOL = "XAUUSD"
 
 # Number of M5 bars to fetch — large enough to warm up ATR and find displacements
-HISTORY_BARS             = 600
+HISTORY_BARS = 600
 
 # EWM period for ATR (Average True Range)
-ATR_PERIOD               = 14
+ATR_PERIOD = 14
 
 # Minimum consecutive same-direction candles to qualify as a displacement
 DISPLACEMENT_MIN_CANDLES = 4
 
 # Displacement move must be at least this multiple of the mean ATR
-DISPLACEMENT_ATR_MULT    = 1.5
+DISPLACEMENT_ATR_MULT = 1.5
 
 # Ignore an OB that is older than this many bars
-OB_EXPIRY_BARS           = 100
+OB_EXPIRY_BARS = 100
 
 # lower_wick / range threshold for a bullish rejection candle
 # upper_wick / range threshold for a bearish rejection candle
-REJECTION_WICK_RATIO     = 0.3
+REJECTION_WICK_RATIO = 0.3
 
 # Risk-to-reward ratio — TP = entry + risk * RISK_REWARD
-RISK_REWARD              = 2.0
+RISK_REWARD = 2.0
 
 # Extra buffer beyond the OB edge for the SL (0 = exactly at OB edge)
-SL_BUFFER                = 0.05
+SL_BUFFER = 0.5
 
 # ── [CHANGE 2] Slippage thresholds ───────────────────────────────────────────
 # SLIPPAGE_REDUCE_THRESHOLD: when slippage exceeds this but stays below MAX,
 #   scale the lot down and recalculate TP from the actual fill price.
 #   Previously this value equalled MAX, so any slippage > 3 pts was a hard skip.
-SLIPPAGE_REDUCE_THRESHOLD = 3.0   # pts — above this: reduce lot proportionally
+SLIPPAGE_REDUCE_THRESHOLD = 3.0  # pts — above this: reduce lot proportionally
 
 # SLIPPAGE_MAX_POINTS: skip the trade entirely if slippage exceeds this value.
 #   Raised from 3.0 to 6.0 so that more signals are captured (via lot scaling).
-SLIPPAGE_MAX_POINTS       = 6.0   # pts — above this: skip entirely  [CHANGE 2]
+SLIPPAGE_MAX_POINTS = 6.0  # pts — above this: skip entirely  [CHANGE 2]
 
 # Fraction of balance to risk per trade when --lot is not specified
-RISK_PER_TRADE           = 0.01   # 1 % of balance
+RISK_PER_TRADE = 0.01  # 1 % of balance
 
 # Unique magic number — isolates this bot's orders from manual trades in MT5
-MAGIC                    = 8088080
+MAGIC = 8088080
 
 # Duration of one M5 candle in seconds
-M5_SECONDS               = 300
+M5_SECONDS = 300
 
 
 # ══════════════════════════════════════════════════════════════════════════════
 # LOGGING
 # ══════════════════════════════════════════════════════════════════════════════
+
 
 def log(event: str, data: dict | None = None) -> None:
     """
@@ -145,8 +145,8 @@ def log(event: str, data: dict | None = None) -> None:
     LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
 
     entry = {
-        "event":  event,
-        "ts":     datetime.now(timezone.utc).isoformat(),
+        "event": event,
+        "ts": datetime.now(timezone.utc).isoformat(),
         "symbol": SYMBOL,
     }
     if data:
@@ -163,6 +163,7 @@ def log(event: str, data: dict | None = None) -> None:
 # ══════════════════════════════════════════════════════════════════════════════
 # SEEN OBS PERSISTENCE  (deduplication across restarts)
 # ══════════════════════════════════════════════════════════════════════════════
+
 
 def load_seen_obs() -> set:
     """
@@ -198,6 +199,7 @@ def save_seen_obs(seen_obs: set) -> None:
 # STRATEGY LOGIC  (exact replica of notebook 08_order_block_reaction)
 # ══════════════════════════════════════════════════════════════════════════════
 
+
 def add_candle_features(df: pd.DataFrame) -> pd.DataFrame:
     """
     Compute per-candle derived columns and append them to the DataFrame.
@@ -221,22 +223,22 @@ def add_candle_features(df: pd.DataFrame) -> pd.DataFrame:
         df["high"] - df["low"],
         np.maximum(
             abs(df["high"] - df["close"].shift(1)),
-            abs(df["low"]  - df["close"].shift(1)),
+            abs(df["low"] - df["close"].shift(1)),
         ),
     )
 
     # ATR: exponential moving average of TR (same formula as notebook)
-    df["atr"]        = df["tr"].ewm(span=ATR_PERIOD, adjust=False).mean()
+    df["atr"] = df["tr"].ewm(span=ATR_PERIOD, adjust=False).mean()
 
     # Candle shape metrics
-    df["body"]       = abs(df["close"] - df["open"])
-    df["body_top"]   = df[["open", "close"]].max(axis=1)
-    df["body_bot"]   = df[["open", "close"]].min(axis=1)
-    df["upper_wick"] = df["high"]  - df["body_top"]
+    df["body"] = abs(df["close"] - df["open"])
+    df["body_top"] = df[["open", "close"]].max(axis=1)
+    df["body_bot"] = df[["open", "close"]].min(axis=1)
+    df["upper_wick"] = df["high"] - df["body_top"]
     df["lower_wick"] = df["body_bot"] - df["low"]
-    df["range"]      = df["high"]  - df["low"]
-    df["is_bull"]    = df["close"] > df["open"]
-    df["is_bear"]    = df["close"] < df["open"]
+    df["range"] = df["high"] - df["low"]
+    df["is_bull"] = df["close"] > df["open"]
+    df["is_bear"] = df["close"] < df["open"]
 
     return df
 
@@ -253,11 +255,12 @@ class Displacement:
     Doji candles (close == open) break a run because they are neither bullish
     nor bearish.
     """
-    start_idx:    int    # DataFrame index of the first candle in the run
-    end_idx:      int    # DataFrame index of the last candle in the run
-    direction:    str    # 'UP' (bullish run) or 'DOWN' (bearish run)
-    total_move:   float  # total price distance covered (pts)
-    candle_count: int    # number of candles in the run
+
+    start_idx: int  # DataFrame index of the first candle in the run
+    end_idx: int  # DataFrame index of the last candle in the run
+    direction: str  # 'UP' (bullish run) or 'DOWN' (bearish run)
+    total_move: float  # total price distance covered (pts)
+    candle_count: int  # number of candles in the run
 
 
 def detect_displacements(df: pd.DataFrame) -> List[Displacement]:
@@ -280,12 +283,10 @@ def detect_displacements(df: pd.DataFrame) -> List[Displacement]:
                 j += 1
 
             if j - i >= DISPLACEMENT_MIN_CANDLES:
-                seg  = df.iloc[i:j]
+                seg = df.iloc[i:j]
                 move = seg["close"].iloc[-1] - seg["open"].iloc[0]
                 if move >= DISPLACEMENT_ATR_MULT * seg["atr"].mean():
-                    displacements.append(
-                        Displacement(i, j - 1, "UP", move, j - i)
-                    )
+                    displacements.append(Displacement(i, j - 1, "UP", move, j - i))
             i = j
 
         elif df.iloc[i]["is_bear"]:
@@ -295,12 +296,10 @@ def detect_displacements(df: pd.DataFrame) -> List[Displacement]:
                 j += 1
 
             if j - i >= DISPLACEMENT_MIN_CANDLES:
-                seg  = df.iloc[i:j]
+                seg = df.iloc[i:j]
                 move = seg["open"].iloc[0] - seg["close"].iloc[-1]
                 if move >= DISPLACEMENT_ATR_MULT * seg["atr"].mean():
-                    displacements.append(
-                        Displacement(i, j - 1, "DOWN", move, j - i)
-                    )
+                    displacements.append(Displacement(i, j - 1, "DOWN", move, j - i))
             i = j
 
         else:
@@ -328,11 +327,12 @@ class OrderBlock:
       Bullish OB: entry = ob_high (top of zone), SL = ob_low (bottom of zone)
       Bearish OB: entry = ob_low  (bottom of zone), SL = ob_high (top of zone)
     """
-    ob_bar_idx:   int    # DataFrame index of the OB candle
-    ob_type:      str    # 'bullish' or 'bearish'
-    ob_high:      float  # High of the OB candle
-    ob_low:       float  # Low of the OB candle
-    ob_time:      object # Timestamp of the OB candle (used for dedup and logging)
+
+    ob_bar_idx: int  # DataFrame index of the OB candle
+    ob_type: str  # 'bullish' or 'bearish'
+    ob_high: float  # High of the OB candle
+    ob_low: float  # Low of the OB candle
+    ob_time: object  # Timestamp of the OB candle (used for dedup and logging)
     displaced_by: float  # Size of the displacement that confirmed this OB (pts)
 
 
@@ -353,7 +353,7 @@ def find_order_blocks(
     obs: List[OrderBlock] = []
 
     for disp in displacements:
-        start_i   = disp.start_idx
+        start_i = disp.start_idx
         look_back = max(0, start_i - 20)  # search at most 20 bars back
 
         if disp.direction == "UP":
@@ -361,11 +361,16 @@ def find_order_blocks(
             for k in range(start_i - 1, look_back - 1, -1):
                 if df.iloc[k]["is_bear"]:
                     bar = df.iloc[k]
-                    obs.append(OrderBlock(
-                        k, "bullish",
-                        bar["high"], bar["low"],
-                        bar["time"], disp.total_move,
-                    ))
+                    obs.append(
+                        OrderBlock(
+                            k,
+                            "bullish",
+                            bar["high"],
+                            bar["low"],
+                            bar["time"],
+                            disp.total_move,
+                        )
+                    )
                     break  # only the most recent bearish candle is needed
 
         else:  # direction == "DOWN"
@@ -373,11 +378,16 @@ def find_order_blocks(
             for k in range(start_i - 1, look_back - 1, -1):
                 if df.iloc[k]["is_bull"]:
                     bar = df.iloc[k]
-                    obs.append(OrderBlock(
-                        k, "bearish",
-                        bar["high"], bar["low"],
-                        bar["time"], disp.total_move,
-                    ))
+                    obs.append(
+                        OrderBlock(
+                            k,
+                            "bearish",
+                            bar["high"],
+                            bar["low"],
+                            bar["time"],
+                            disp.total_move,
+                        )
+                    )
                     break
 
     return obs
@@ -426,7 +436,7 @@ def find_signal(
 
     Returns a signal dict with full trade parameters, or None if no signal.
     """
-    n        = len(df)
+    n = len(df)
     last_idx = n - 1
     last_bar = df.iloc[last_idx]
 
@@ -443,7 +453,7 @@ def find_signal(
 
         # ── Bullish OB -> BUY signal ─────────────────────────────────────────
         if ob.ob_type == "bullish":
-            displaced   = False
+            displaced = False
             invalidated = False
 
             for k in range(ob.ob_bar_idx + 1, last_idx):
@@ -469,27 +479,27 @@ def find_signal(
                     # SL    = ob_low  : lower edge of OB (thesis fails if price closes here)
                     # TP    = entry + risk * RR
                     entry = ob.ob_high
-                    sl    = ob.ob_low - SL_BUFFER
-                    risk  = entry - sl
-                    tp    = entry + risk * RISK_REWARD
+                    sl = ob.ob_low - SL_BUFFER
+                    risk = entry - sl
+                    tp = entry + risk * RISK_REWARD
 
                     return {
-                        "direction":    "BUY",
-                        "ob_type":      ob.ob_type,
-                        "ob_high":      ob.ob_high,
-                        "ob_low":       ob.ob_low,
-                        "ob_time":      str(ob.ob_time),
-                        "retest_time":  str(last_bar["time"]),
-                        "entry":        round(entry, 2),
-                        "sl":           round(sl,    2),
-                        "tp":           round(tp,    2),
-                        "ob_bar_idx":   ob.ob_bar_idx,
+                        "direction": "BUY",
+                        "ob_type": ob.ob_type,
+                        "ob_high": ob.ob_high,
+                        "ob_low": ob.ob_low,
+                        "ob_time": str(ob.ob_time),
+                        "retest_time": str(last_bar["time"]),
+                        "entry": round(entry, 2),
+                        "sl": round(sl, 2),
+                        "tp": round(tp, 2),
+                        "ob_bar_idx": ob.ob_bar_idx,
                         "displaced_by": round(ob.displaced_by, 2),
                     }
 
         # ── Bearish OB -> SELL signal ────────────────────────────────────────
         else:
-            displaced   = False
+            displaced = False
             invalidated = False
 
             for k in range(ob.ob_bar_idx + 1, last_idx):
@@ -512,30 +522,31 @@ def find_signal(
                     # SL    = ob_high : upper edge of OB (thesis fails if price closes here)
                     # TP    = entry - risk * RR
                     entry = ob.ob_low
-                    sl    = ob.ob_high + SL_BUFFER
-                    risk  = sl - entry
-                    tp    = entry - risk * RISK_REWARD
+                    sl = ob.ob_high + SL_BUFFER
+                    risk = sl - entry
+                    tp = entry - risk * RISK_REWARD
 
                     return {
-                        "direction":    "SELL",
-                        "ob_type":      ob.ob_type,
-                        "ob_high":      ob.ob_high,
-                        "ob_low":       ob.ob_low,
-                        "ob_time":      str(ob.ob_time),
-                        "retest_time":  str(last_bar["time"]),
-                        "entry":        round(entry, 2),
-                        "sl":           round(sl,    2),
-                        "tp":           round(tp,    2),
-                        "ob_bar_idx":   ob.ob_bar_idx,
+                        "direction": "SELL",
+                        "ob_type": ob.ob_type,
+                        "ob_high": ob.ob_high,
+                        "ob_low": ob.ob_low,
+                        "ob_time": str(ob.ob_time),
+                        "retest_time": str(last_bar["time"]),
+                        "entry": round(entry, 2),
+                        "sl": round(sl, 2),
+                        "tp": round(tp, 2),
+                        "ob_bar_idx": ob.ob_bar_idx,
                         "displaced_by": round(ob.displaced_by, 2),
                     }
 
-    return None   # no signal found on this bar
+    return None  # no signal found on this bar
 
 
 # ══════════════════════════════════════════════════════════════════════════════
 # MT5 HELPERS
 # ══════════════════════════════════════════════════════════════════════════════
+
 
 def mt5_connect() -> None:
     """
@@ -546,14 +557,14 @@ def mt5_connect() -> None:
     Otherwise the function assumes the terminal is already open and logged in.
     """
     kwargs: dict = {}
-    login    = os.environ.get("MT5_LOGIN")
+    login = os.environ.get("MT5_LOGIN")
     password = os.environ.get("MT5_PASSWORD")
-    server   = os.environ.get("MT5_SERVER")
+    server = os.environ.get("MT5_SERVER")
 
     if login and password and server:
-        kwargs["login"]    = int(login)
+        kwargs["login"] = int(login)
         kwargs["password"] = password
-        kwargs["server"]   = server
+        kwargs["server"] = server
 
     path = os.environ.get("MT5_TERMINAL_PATH")
     if path:
@@ -660,7 +671,7 @@ def pick_filling(si) -> int:
     """
     ioc = getattr(mt5, "SYMBOL_FILLING_IOC", 2)
     fok = getattr(mt5, "SYMBOL_FILLING_FOK", 1)
-    fm  = int(si.filling_mode)
+    fm = int(si.filling_mode)
     if fm & ioc:
         return mt5.ORDER_FILLING_IOC
     if fm & fok:
@@ -685,7 +696,7 @@ def snap(price: float, si, mode: str = "nearest") -> float:
     x = price / t
 
     if mode == "up":
-        v = math.ceil(x  - 1e-12) * t
+        v = math.ceil(x - 1e-12) * t
     elif mode == "down":
         v = math.floor(x + 1e-12) * t
     else:
@@ -703,17 +714,17 @@ def normalize_vol(vol: float, si) -> float:
     A calculated volume of 0.0079 rounds down to the minimum 0.01.
     """
     step = float(si.volume_step or 0.01)
-    vmin = float(si.volume_min  or 0.01)
-    vmax = float(si.volume_max  or 100.0)
+    vmin = float(si.volume_min or 0.01)
+    vmax = float(si.volume_max or 100.0)
     v = math.floor(vol / step + 1e-12) * step
     return float(max(vmin, min(vmax, v)))
 
 
 def calc_volume(
-    symbol:  str,
-    side:    str,
-    entry:   float,
-    sl:      float,
+    symbol: str,
+    side: str,
+    entry: float,
+    sl: float,
     balance: float,
 ) -> float:
     """
@@ -730,7 +741,7 @@ def calc_volume(
     initial sizing, or the actual market price when adjusting for slippage
     in the three-tier logic [CHANGE 3].
     """
-    otype  = mt5.ORDER_TYPE_BUY if side == "buy" else mt5.ORDER_TYPE_SELL
+    otype = mt5.ORDER_TYPE_BUY if side == "buy" else mt5.ORDER_TYPE_SELL
     pnl_1l = mt5.order_calc_profit(otype, symbol, 1.0, entry, sl)
 
     if pnl_1l is None or abs(pnl_1l) < 1e-9:
@@ -738,16 +749,16 @@ def calc_volume(
         return 0.01
 
     risk_cash = balance * RISK_PER_TRADE
-    si        = mt5.symbol_info(symbol)
+    si = mt5.symbol_info(symbol)
     return normalize_vol(risk_cash / abs(pnl_1l), si)
 
 
 def send_market_order(
     symbol: str,
-    side:   str,
+    side: str,
     volume: float,
-    sl:     float,
-    tp:     float,
+    sl: float,
+    tp: float,
 ) -> Optional[int]:
     """
     Send a market order to MT5 and return the ticket number on success.
@@ -758,7 +769,7 @@ def send_market_order(
       3. Send the order via mt5.order_send().
       4. Return None for market-closed (retcode 10018) or any other error.
     """
-    si   = mt5.symbol_info(symbol)
+    si = mt5.symbol_info(symbol)
     tick = mt5.symbol_info_tick(symbol)
 
     if si is None or tick is None:
@@ -772,12 +783,12 @@ def send_market_order(
     # BUY:  SL rounds down (protective), TP rounds up (targets more)
     # SELL: SL rounds up  (protective), TP rounds down (targets more)
     sl_snapped = snap(sl, si, "down" if side == "buy" else "up")
-    tp_snapped = snap(tp, si, "up"   if side == "buy" else "down")
+    tp_snapped = snap(tp, si, "up" if side == "buy" else "down")
 
     # Enforce the broker's minimum stop distance (trade_stops_level * point)
-    point     = float(si.point or 10 ** (-si.digits))
+    point = float(si.point or 10 ** (-si.digits))
     stops_pts = int(getattr(si, "trade_stops_level", 0) or 0)
-    min_dist  = stops_pts * point
+    min_dist = stops_pts * point
 
     if side == "buy":
         if price - sl_snapped < min_dist:
@@ -791,29 +802,32 @@ def send_market_order(
             tp_snapped = snap(price - min_dist - point, si, "down")
 
     req = {
-        "action":       mt5.TRADE_ACTION_DEAL,
-        "symbol":       symbol,
-        "volume":       volume,
-        "type":         otype,
-        "price":        price,
-        "sl":           sl_snapped,
-        "tp":           tp_snapped,
-        "magic":        MAGIC,
-        "comment":      "ob_reaction",
+        "action": mt5.TRADE_ACTION_DEAL,
+        "symbol": symbol,
+        "volume": volume,
+        "type": otype,
+        "price": price,
+        "sl": sl_snapped,
+        "tp": tp_snapped,
+        "magic": MAGIC,
+        "comment": "ob_reaction",
         "type_filling": pick_filling(si),
         # Maximum allowed price deviation in points before the broker rejects the order
-        "deviation":    int(os.environ.get("MT5_DEVIATION_POINTS", "50")),
+        "deviation": int(os.environ.get("MT5_DEVIATION_POINTS", "50")),
     }
 
     r = mt5.order_send(req)
 
     if r is None:
-        log("order_error", {
-            "error":     str(mt5.last_error()),
-            "req_price": price,
-            "sl":        sl_snapped,
-            "tp":        tp_snapped,
-        })
+        log(
+            "order_error",
+            {
+                "error": str(mt5.last_error()),
+                "req_price": price,
+                "sl": sl_snapped,
+                "tp": tp_snapped,
+            },
+        )
         return None
 
     if r.retcode == 10018:
@@ -822,11 +836,14 @@ def send_market_order(
         return None
 
     if r.retcode != mt5.TRADE_RETCODE_DONE:
-        log("order_error", {
-            "retcode":   r.retcode,
-            "comment":   r.comment,
-            "req_price": price,
-        })
+        log(
+            "order_error",
+            {
+                "retcode": r.retcode,
+                "comment": r.comment,
+                "req_price": price,
+            },
+        )
         return None
 
     return r.order
@@ -837,20 +854,18 @@ def get_our_positions(symbol: str) -> list:
     Return only open positions belonging to this bot (filtered by magic number).
     Prevents the bot from seeing positions opened manually or by other bots.
     """
-    return [
-        p for p in (mt5.positions_get(symbol=symbol) or [])
-        if p.magic == MAGIC
-    ]
+    return [p for p in (mt5.positions_get(symbol=symbol) or []) if p.magic == MAGIC]
 
 
 # ══════════════════════════════════════════════════════════════════════════════
 # POSITION-CLOSE DETECTOR
 # ══════════════════════════════════════════════════════════════════════════════
 
+
 def _check_closed_positions(
-    symbol:       str,
+    symbol: str,
     open_tickets: set,
-    notifier:     "Mt5Notifier",
+    notifier: "Mt5Notifier",
 ) -> None:
     """
     Compare previously tracked open tickets against current live positions.
@@ -868,7 +883,7 @@ def _check_closed_positions(
 
     from datetime import timedelta
 
-    now_utc  = datetime.now(timezone.utc)
+    now_utc = datetime.now(timezone.utc)
     look_back = now_utc - timedelta(hours=24)
 
     deals = mt5.history_deals_get(look_back, now_utc) or []
@@ -881,16 +896,19 @@ def _check_closed_positions(
 
     ai = mt5.account_info()
     balance = float(ai.balance) if ai else 0.0
-    equity  = float(ai.equity)  if ai else 0.0
+    equity = float(ai.equity) if ai else 0.0
 
     for ticket in closed:
         profit = profit_by_position.get(ticket, 0.0)
-        log("position_closed_detected", {
-            "ticket":  ticket,
-            "profit":  round(profit, 2),
-            "balance": round(balance, 2),
-            "equity":  round(equity,  2),
-        })
+        log(
+            "position_closed_detected",
+            {
+                "ticket": ticket,
+                "profit": round(profit, 2),
+                "balance": round(balance, 2),
+                "equity": round(equity, 2),
+            },
+        )
         notifier.notify_position_closed(ticket, profit, balance, equity)
 
     open_tickets -= closed  # remove closed tickets from tracking set
@@ -900,12 +918,13 @@ def _check_closed_positions(
 # MAIN CYCLE
 # ══════════════════════════════════════════════════════════════════════════════
 
+
 def run_cycle(
-    symbol:       str,
-    fixed_lot:    Optional[float],
-    dry_run:      bool,
-    seen_obs:     set,
-    notifier:     "Mt5Notifier",
+    symbol: str,
+    fixed_lot: Optional[float],
+    dry_run: bool,
+    seen_obs: set,
+    notifier: "Mt5Notifier",
     open_tickets: set,
 ) -> None:
     """
@@ -939,30 +958,36 @@ def run_cycle(
         return
 
     # ── Step 2: Strategy analysis ────────────────────────────────────────────
-    df            = add_candle_features(df)
+    df = add_candle_features(df)
     displacements = detect_displacements(df)
-    obs           = find_order_blocks(df, displacements)
-    signal        = find_signal(df, obs)
+    obs = find_order_blocks(df, displacements)
+    signal = find_signal(df, obs)
 
     # How old is the newest closed bar?
     last_bar_time = df.iloc[-1]["time"]
-    age_minutes   = (datetime.now(timezone.utc) - last_bar_time).total_seconds() / 60
+    age_minutes = (datetime.now(timezone.utc) - last_bar_time).total_seconds() / 60
 
     # Log cycle state for monitoring and debugging
-    log("cycle", {
-        "bars":          len(df),
-        "displacements": len(displacements),
-        "order_blocks":  len(obs),
-        "last_bar_time": str(last_bar_time),
-        "data_age_min":  round(age_minutes, 1),
-        "signal":        signal is not None,
-    })
+    log(
+        "cycle",
+        {
+            "bars": len(df),
+            "displacements": len(displacements),
+            "order_blocks": len(obs),
+            "last_bar_time": str(last_bar_time),
+            "data_age_min": round(age_minutes, 1),
+            "signal": signal is not None,
+        },
+    )
 
     # ── Step 3: Stale data guard ─────────────────────────────────────────────
     # If the newest bar is older than 15 minutes the market is closed or the
     # data feed is broken — do not trade on stale information.
     if age_minutes > 15:
-        _skip_data = {"reason": "market_closed_or_stale", "data_age_min": round(age_minutes, 1)}
+        _skip_data = {
+            "reason": "market_closed_or_stale",
+            "data_age_min": round(age_minutes, 1),
+        }
         log("skip", _skip_data)
         notifier.notify_skip(_skip_data)
         return
@@ -975,7 +1000,11 @@ def run_cycle(
     # bars arrive) to identify whether this OB was already traded.
     ob_key = (signal["ob_time"], signal["direction"])
     if ob_key in seen_obs:
-        _skip_data = {"reason": "already_traded", "ob_time": signal["ob_time"], "direction": signal["direction"]}
+        _skip_data = {
+            "reason": "already_traded",
+            "ob_time": signal["ob_time"],
+            "direction": signal["direction"],
+        }
         log("skip", _skip_data)
         notifier.notify_skip(_skip_data)
         return
@@ -986,14 +1015,14 @@ def run_cycle(
     positions = get_our_positions(symbol)
     if positions:
         _skip_data = {
-            "reason":         "position_open",
+            "reason": "position_open",
             "open_positions": len(positions),
             "missed_signal": {
                 "direction": signal["direction"],
-                "ob_time":   signal["ob_time"],
-                "entry":     signal["entry"],
-                "sl":        signal["sl"],
-                "tp":        signal["tp"],
+                "ob_time": signal["ob_time"],
+                "entry": signal["entry"],
+                "sl": signal["sl"],
+                "tp": signal["tp"],
             },
         }
         log("skip", _skip_data)
@@ -1014,9 +1043,9 @@ def run_cycle(
     # ── Step 6: Initial lot sizing ───────────────────────────────────────────
     # Size the position from the ideal OB entry level (ob_high or ob_low).
     # The slippage check in Step 7 may reduce this if the market has moved.
-    ai      = mt5.account_info()
+    ai = mt5.account_info()
     balance = float(ai.balance) if ai else 1000.0
-    side    = "buy" if signal["direction"] == "BUY" else "sell"
+    side = "buy" if signal["direction"] == "BUY" else "sell"
 
     if fixed_lot is not None:
         # User specified a fixed lot — use it as-is, no auto-sizing
@@ -1030,7 +1059,11 @@ def run_cycle(
     # Reject if the calculated lot is below the broker minimum
     si = mt5.symbol_info(symbol)
     if si and volume_original < si.volume_min:
-        _skip_data = {"reason": "volume_too_small", "volume": volume_original, "min": si.volume_min}
+        _skip_data = {
+            "reason": "volume_too_small",
+            "volume": volume_original,
+            "min": si.volume_min,
+        }
         log("skip", _skip_data)
         notifier.notify_skip(_skip_data)
         return
@@ -1046,7 +1079,8 @@ def run_cycle(
     #
     # Three tiers:
     #   Tier 1 (slippage <= SLIPPAGE_REDUCE_THRESHOLD = 3.0 pts):
-    #       Enter at full lot with the original SL and TP.
+    #       Enter at full lot. SL stays at OB edge. TP recalculated from
+    #       fill price to keep RR = 2.
     #
     #   Tier 2 (3.0 < slippage <= SLIPPAGE_MAX_POINTS = 6.0 pts):
     #       Enter with a reduced lot so that the dollar risk from the actual
@@ -1071,19 +1105,19 @@ def run_cycle(
     else:
         slippage = signal["entry"] - market_price
 
-    # Defaults — overridden only in Tier 2
+    # volume stays at volume_original for Tier 1; tp_final is always recalculated
     volume_final = volume_original
-    tp_final     = signal["tp"]
+    tp_final = signal["tp"]
 
     # ── Tier 3: hard skip ────────────────────────────────────────────────────
     if slippage > SLIPPAGE_MAX_POINTS:
         _skip_data = {
-            "reason":       "slippage_exceeded",
-            "direction":    signal["direction"],
-            "ob_entry":     signal["entry"],
+            "reason": "slippage_exceeded",
+            "direction": signal["direction"],
+            "ob_entry": signal["entry"],
             "market_price": round(market_price, 2),
             "slippage_pts": round(slippage, 2),
-            "max_pts":      SLIPPAGE_MAX_POINTS,
+            "max_pts": SLIPPAGE_MAX_POINTS,
         }
         log("skip", _skip_data)
         notifier.notify_skip(_skip_data)
@@ -1093,9 +1127,7 @@ def run_cycle(
     elif slippage > SLIPPAGE_REDUCE_THRESHOLD and fixed_lot is None:
         # Recalculate lot using market_price as the effective entry so that
         # the risk from fill to SL remains exactly RISK_PER_TRADE % of balance.
-        volume_final = calc_volume(
-            symbol, side, market_price, signal["sl"], balance
-        )
+        volume_final = calc_volume(symbol, side, market_price, signal["sl"], balance)
 
         # Recalculate TP from market_price to keep RR = RISK_REWARD.
         # Using the original TP would shrink the effective RR below 2.
@@ -1106,28 +1138,35 @@ def run_cycle(
             tp_final = round(market_price - risk_from_fill * RISK_REWARD, 2)
 
         _adj_data = {
-            "direction":       signal["direction"],
-            "ob_entry":        signal["entry"],
-            "market_price":    round(market_price, 2),
-            "slippage_pts":    round(slippage, 2),
-            "sl_unchanged":    signal["sl"],
+            "direction": signal["direction"],
+            "ob_entry": signal["entry"],
+            "market_price": round(market_price, 2),
+            "slippage_pts": round(slippage, 2),
+            "sl_unchanged": signal["sl"],
             "volume_original": volume_original,
             "volume_adjusted": volume_final,
-            "tp_original":     signal["tp"],
-            "tp_adjusted":     tp_final,
+            "tp_original": signal["tp"],
+            "tp_adjusted": tp_final,
         }
         log("slippage_adjusted", _adj_data)
         notifier.notify_slippage_adjusted(_adj_data)
 
-    # ── Tier 1: no adjustment needed (slippage <= 3.0 pts or fixed lot) ─────
-    # volume_final and tp_final already hold the original values — nothing to do.
+    # ── Tier 1: full lot, recalculate TP from actual fill price (RR=2) ─────────
+    else:
+        risk_from_fill = abs(market_price - signal["sl"])
+        if signal["direction"] == "BUY":
+            tp_final = round(market_price + risk_from_fill * RISK_REWARD, 2)
+        else:
+            tp_final = round(market_price - risk_from_fill * RISK_REWARD, 2)
+        # volume_final stays at volume_original — no lot adjustment for Tier 1
 
     # ── Step 8: Send order ───────────────────────────────────────────────────
     ticket = send_market_order(
-        symbol, side,
-        volume_final,  # adjusted lot (or original if Tier 1)
+        symbol,
+        side,
+        volume_final,  # full lot (Tier 1) or reduced lot (Tier 2)
         signal["sl"],  # SL always stays at the structural OB edge
-        tp_final,      # adjusted TP (or original if Tier 1)
+        tp_final,  # recalculated from fill price in both Tier 1 and Tier 2
     )
 
     if ticket:
@@ -1137,30 +1176,34 @@ def run_cycle(
         open_tickets.add(ticket)  # track for position-close detection
 
         _placed_data = {
-            "ticket":       ticket,
-            "direction":    signal["direction"],
-            "volume":       volume_final,
-            "sl":           signal["sl"],
-            "tp":           tp_final,
+            "ticket": ticket,
+            "direction": signal["direction"],
+            "volume": volume_final,
+            "sl": signal["sl"],
+            "tp": tp_final,
             "slippage_pts": round(slippage, 2),
-            "ob_entry":     signal["entry"],
-            "ob_high":      signal["ob_high"],
-            "ob_low":       signal["ob_low"],
-            "ob_time":      signal["ob_time"],
+            "ob_entry": signal["entry"],
+            "ob_high": signal["ob_high"],
+            "ob_low": signal["ob_low"],
+            "ob_time": signal["ob_time"],
         }
         log("order_placed", _placed_data)
         notifier.notify_order_placed(_placed_data)
     else:
-        log("order_failed", {
-            "direction": signal["direction"],
-            "sl":        signal["sl"],
-            "tp":        tp_final,
-        })
+        log(
+            "order_failed",
+            {
+                "direction": signal["direction"],
+                "sl": signal["sl"],
+                "tp": tp_final,
+            },
+        )
 
 
 # ══════════════════════════════════════════════════════════════════════════════
 # TIMING
 # ══════════════════════════════════════════════════════════════════════════════
+
 
 def sleep_until_next_m5(extra: float = 0.1) -> None:
     """
@@ -1181,7 +1224,7 @@ def sleep_until_next_m5(extra: float = 0.1) -> None:
       next_close = (floor(now / 300) + 1) * 300   (Unix seconds)
       delay      = next_close - now + extra
     """
-    now   = time.time()
+    now = time.time()
     delay = max(1.0, (int(now // M5_SECONDS) + 1) * M5_SECONDS - now + extra)
     print(f"  -> sleeping {delay:.0f}s until next M5 close ...")
     time.sleep(delay)
@@ -1190,6 +1233,7 @@ def sleep_until_next_m5(extra: float = 0.1) -> None:
 # ══════════════════════════════════════════════════════════════════════════════
 # ENTRY POINT
 # ══════════════════════════════════════════════════════════════════════════════
+
 
 def main() -> None:
     """
@@ -1203,16 +1247,25 @@ def main() -> None:
       --dry-run : Log signals but send no orders
     """
     p = argparse.ArgumentParser(description="Order Block Reaction Bot — XAUUSD M5")
-    p.add_argument("--symbol",  default=SYMBOL,
-                   help="MT5 symbol name (default: XAUUSD)")
-    p.add_argument("--lot",     type=float, default=None,
-                   help="Fixed lot size; omit for automatic 1%% risk sizing")
-    p.add_argument("--risk",    type=float, default=0.01,
-                   help="Risk fraction for auto-sizing (default: 0.01)")
-    p.add_argument("--once",    action="store_true",
-                   help="Run one evaluation then exit")
-    p.add_argument("--dry-run", action="store_true",
-                   help="Log signals only — do not send any orders")
+    p.add_argument("--symbol", default=SYMBOL, help="MT5 symbol name (default: XAUUSD)")
+    p.add_argument(
+        "--lot",
+        type=float,
+        default=None,
+        help="Fixed lot size; omit for automatic 1%% risk sizing",
+    )
+    p.add_argument(
+        "--risk",
+        type=float,
+        default=0.01,
+        help="Risk fraction for auto-sizing (default: 0.01)",
+    )
+    p.add_argument("--once", action="store_true", help="Run one evaluation then exit")
+    p.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Log signals only — do not send any orders",
+    )
     args = p.parse_args()
 
     global RISK_PER_TRADE
@@ -1223,28 +1276,31 @@ def main() -> None:
     symbol = resolve_symbol(args.symbol)
 
     # Log all active parameters at startup for auditing and debugging
-    log("bot_start", {
-        "symbol":                    symbol,
-        "lot":                       args.lot,
-        "risk_per_trade":            RISK_PER_TRADE,
-        "dry_run":                   args.dry_run,
-        "displacement_min_candles":  DISPLACEMENT_MIN_CANDLES,
-        "displacement_atr_mult":     DISPLACEMENT_ATR_MULT,
-        "ob_expiry_bars":            OB_EXPIRY_BARS,
-        "rejection_wick_ratio":      REJECTION_WICK_RATIO,
-        "risk_reward":               RISK_REWARD,
-        "sl_buffer":                 SL_BUFFER,
-        "slippage_reduce_threshold": SLIPPAGE_REDUCE_THRESHOLD,  # [CHANGE 2+3]
-        "slippage_max_points":       SLIPPAGE_MAX_POINTS,         # [CHANGE 2+3]
-        "magic":                     MAGIC,
-        "log_path":                  str(LOG_PATH),
-    })
+    log(
+        "bot_start",
+        {
+            "symbol": symbol,
+            "lot": args.lot,
+            "risk_per_trade": RISK_PER_TRADE,
+            "dry_run": args.dry_run,
+            "displacement_min_candles": DISPLACEMENT_MIN_CANDLES,
+            "displacement_atr_mult": DISPLACEMENT_ATR_MULT,
+            "ob_expiry_bars": OB_EXPIRY_BARS,
+            "rejection_wick_ratio": REJECTION_WICK_RATIO,
+            "risk_reward": RISK_REWARD,
+            "sl_buffer": SL_BUFFER,
+            "slippage_reduce_threshold": SLIPPAGE_REDUCE_THRESHOLD,  # [CHANGE 2+3]
+            "slippage_max_points": SLIPPAGE_MAX_POINTS,  # [CHANGE 2+3]
+            "magic": MAGIC,
+            "log_path": str(LOG_PATH),
+        },
+    )
 
     # Restore OBs already traded in previous sessions
     seen_obs: set = load_seen_obs()
 
     # Telegram notifier (reads token/chat_id from .env; no-ops if unconfigured)
-    notifier     = Mt5Notifier()
+    notifier = Mt5Notifier()
     open_tickets: set = set()
 
     try:
@@ -1255,7 +1311,7 @@ def main() -> None:
         print(f"Order Block Bot running on {symbol} M5. Press Ctrl+C to stop.")
         while True:
             run_cycle(symbol, args.lot, args.dry_run, seen_obs, notifier, open_tickets)
-            sleep_until_next_m5(extra=0.1)   # [CHANGE 1]
+            sleep_until_next_m5(extra=0.1)  # [CHANGE 1]
 
     except KeyboardInterrupt:
         print("\nStopped by user.")
