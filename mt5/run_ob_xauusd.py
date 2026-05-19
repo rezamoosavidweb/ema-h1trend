@@ -33,9 +33,9 @@ CHANGES vs previous version
 [CHANGE 3] Three-tier slippage response (replaces single hard cut-off)
     Before: slippage > 3 pts -> skip signal entirely
     Now:
-      <= 3.0 pts  -> enter at full lot, TP recalculated from fill price (RR=2)
-      3.0-6.0 pts -> enter with reduced lot + TP recalculated from fill price
-      > 6.0 pts   -> skip (too far from OB, structural thesis weakened)
+      <= 4.0 pts  -> LIMIT order at exact OB price (original SL & TP, no RR distortion)
+      4.0-6.0 pts -> market order with reduced lot + TP recalculated from fill (RR=2)
+      >= 6.0 pts  -> skip (too far from OB, structural thesis weakened)
     The SL always stays at the structural OB edge regardless of slippage.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
@@ -49,7 +49,7 @@ import os
 import sys
 import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import List, Optional
 
@@ -107,15 +107,17 @@ RISK_REWARD = 2.0
 # Extra buffer beyond the OB edge for the SL (0 = exactly at OB edge)
 SL_BUFFER = 0.5
 
-# ── [CHANGE 2] Slippage thresholds ───────────────────────────────────────────
-# SLIPPAGE_REDUCE_THRESHOLD: when slippage exceeds this but stays below MAX,
-#   scale the lot down and recalculate TP from the actual fill price.
-#   Previously this value equalled MAX, so any slippage > 3 pts was a hard skip.
-SLIPPAGE_REDUCE_THRESHOLD = 3.0  # pts — above this: reduce lot proportionally
+# ── Slippage thresholds ───────────────────────────────────────────────────────
+# SLIPPAGE_LIMIT_THRESHOLD: when slippage is at or below this value, place a
+#   limit order at the exact OB price so we fill at the structural level.
+SLIPPAGE_LIMIT_THRESHOLD  = 4.0   # pts — at or below: limit order at OB price
 
-# SLIPPAGE_MAX_POINTS: skip the trade entirely if slippage exceeds this value.
-#   Raised from 3.0 to 6.0 so that more signals are captured (via lot scaling).
-SLIPPAGE_MAX_POINTS = 6.0  # pts — above this: skip entirely  [CHANGE 2]
+# SLIPPAGE_MAX_POINTS: skip the trade entirely when slippage reaches this value.
+#   Between LIMIT_THRESHOLD and MAX: market order with reduced lot.
+SLIPPAGE_MAX_POINTS       = 6.0   # pts — at or above: skip entirely
+
+# How long a limit order stays live before MT5 auto-cancels it (one M5 bar).
+LIMIT_ORDER_EXPIRY_MINUTES = 5
 
 # Fraction of balance to risk per trade when --lot is not specified
 RISK_PER_TRADE = 0.01  # 1 % of balance
@@ -849,6 +851,74 @@ def send_market_order(
     return r.order
 
 
+def send_limit_order(
+    symbol: str,
+    side: str,
+    volume: float,
+    limit_price: float,
+    sl: float,
+    tp: float,
+) -> Optional[int]:
+    """
+    Place a buy-limit or sell-limit pending order at limit_price.
+
+    The order expires after LIMIT_ORDER_EXPIRY_MINUTES (one M5 bar) so it
+    does not linger if the market never retraces to the OB price.
+    """
+    si = mt5.symbol_info(symbol)
+    if si is None:
+        log("order_error", {"reason": "no_symbol_info"})
+        return None
+
+    otype = mt5.ORDER_TYPE_BUY_LIMIT if side == "buy" else mt5.ORDER_TYPE_SELL_LIMIT
+
+    sl_snapped    = snap(sl,          si, "down" if side == "buy" else "up")
+    tp_snapped    = snap(tp,          si, "up"   if side == "buy" else "down")
+    price_snapped = snap(limit_price, si)
+
+    expiry = datetime.now(timezone.utc) + timedelta(minutes=LIMIT_ORDER_EXPIRY_MINUTES)
+
+    req = {
+        "action":       mt5.TRADE_ACTION_PENDING,
+        "symbol":       symbol,
+        "volume":       volume,
+        "type":         otype,
+        "price":        price_snapped,
+        "sl":           sl_snapped,
+        "tp":           tp_snapped,
+        "magic":        MAGIC,
+        "comment":      "ob_reaction_limit",
+        "type_filling": pick_filling(si),
+        "type_time":    mt5.ORDER_TIME_SPECIFIED,
+        "expiration":   int(expiry.timestamp()),
+    }
+
+    r = mt5.order_send(req)
+
+    if r is None:
+        log("order_error", {
+            "error":       str(mt5.last_error()),
+            "limit_price": price_snapped,
+            "sl":          sl_snapped,
+            "tp":          tp_snapped,
+        })
+        return None
+
+    if r.retcode == 10018:
+        log("market_closed", {"comment": r.comment, "limit_price": price_snapped})
+        return None
+
+    if r.retcode != mt5.TRADE_RETCODE_DONE:
+        log("order_error", {
+            "retcode":     r.retcode,
+            "comment":     r.comment,
+            "limit_price": price_snapped,
+        })
+        return None
+
+    return r.order
+
+
 def get_our_positions(symbol: str) -> list:
     """
     Return only open positions belonging to this bot (filtered by magic number).
@@ -1068,36 +1138,31 @@ def run_cycle(
         notifier.notify_skip(_skip_data)
         return
 
-    # ── Step 7: Slippage measurement and three-tier response [CHANGE 3] ──────
+    # ── Step 7: Slippage measurement and three-tier response ─────────────────
     #
     # Slippage definition:
-    #   BUY:  slippage = tick.ask - ob_high
-    #         Positive -> market is above the OB (worse than ideal entry)
-    #
-    #   SELL: slippage = ob_low - tick.bid
-    #         Positive -> market is below the OB (worse than ideal entry)
+    #   BUY:  slippage = tick.ask - ob_high  (positive = market above OB)
+    #   SELL: slippage = ob_low - tick.bid   (positive = market below OB)
     #
     # Three tiers:
-    #   Tier 1 (slippage <= SLIPPAGE_REDUCE_THRESHOLD = 3.0 pts):
-    #       Enter at full lot. SL stays at OB edge. TP recalculated from
-    #       fill price to keep RR = 2.
+    #   Tier 1 (slippage <= SLIPPAGE_LIMIT_THRESHOLD = 4.0 pts):
+    #       Place a LIMIT order at the exact OB price. The order is valid for
+    #       LIMIT_ORDER_EXPIRY_MINUTES so it fills only if price retraces.
+    #       Original SL and TP are used — no RR distortion.
     #
-    #   Tier 2 (3.0 < slippage <= SLIPPAGE_MAX_POINTS = 6.0 pts):
-    #       Enter with a reduced lot so that the dollar risk from the actual
-    #       fill price to the structural SL remains exactly RISK_PER_TRADE %.
-    #       Recalculate TP from the fill price to preserve RR = 2.
-    #       SL stays at the OB edge — the structural thesis is still valid.
+    #   Tier 2 (4.0 < slippage < SLIPPAGE_MAX_POINTS = 6.0 pts):
+    #       Market order with a reduced lot so that dollar risk from the fill
+    #       price to the structural SL stays at RISK_PER_TRADE %.
+    #       TP is recalculated from the fill price to keep RR = 2.
     #
-    #   Tier 3 (slippage > SLIPPAGE_MAX_POINTS = 6.0 pts):
+    #   Tier 3 (slippage >= SLIPPAGE_MAX_POINTS = 6.0 pts):
     #       Skip entirely — too far from the OB for the thesis to hold.
 
     tick = mt5.symbol_info_tick(symbol)
     if tick is None:
-        # Cannot read current price — safer to skip than to order blind
         log("error", {"msg": "could not read tick for slippage check"})
         return
 
-    # Best estimate of the price at which the order will fill
     market_price = tick.ask if signal["direction"] == "BUY" else tick.bid
 
     if signal["direction"] == "BUY":
@@ -1105,99 +1170,112 @@ def run_cycle(
     else:
         slippage = signal["entry"] - market_price
 
-    # volume stays at volume_original for Tier 1; tp_final is always recalculated
-    volume_final = volume_original
-    tp_final = signal["tp"]
-
     # ── Tier 3: hard skip ────────────────────────────────────────────────────
-    if slippage > SLIPPAGE_MAX_POINTS:
+    if slippage >= SLIPPAGE_MAX_POINTS:
         _skip_data = {
-            "reason": "slippage_exceeded",
-            "direction": signal["direction"],
-            "ob_entry": signal["entry"],
+            "reason":       "slippage_exceeded",
+            "direction":    signal["direction"],
+            "ob_entry":     signal["entry"],
             "market_price": round(market_price, 2),
             "slippage_pts": round(slippage, 2),
-            "max_pts": SLIPPAGE_MAX_POINTS,
+            "max_pts":      SLIPPAGE_MAX_POINTS,
         }
         log("skip", _skip_data)
         notifier.notify_skip(_skip_data)
         return
 
-    # ── Tier 2: reduce lot + recalculate TP ─────────────────────────────────
-    elif slippage > SLIPPAGE_REDUCE_THRESHOLD and fixed_lot is None:
-        # Recalculate lot using market_price as the effective entry so that
-        # the risk from fill to SL remains exactly RISK_PER_TRADE % of balance.
+    # ── Tier 1: limit order at exact OB price ────────────────────────────────
+    if slippage <= SLIPPAGE_LIMIT_THRESHOLD:
+        ticket = send_limit_order(
+            symbol, side,
+            volume_original,
+            signal["entry"],   # limit price = exact OB level
+            signal["sl"],
+            signal["tp"],
+        )
+        if ticket:
+            seen_obs.add(ob_key)
+            save_seen_obs(seen_obs)
+            # Pending order is not a position yet — tracked via get_our_positions()
+            # once it fills; we do not add it to open_tickets to avoid false-close.
+            _placed_data = {
+                "ticket":       ticket,
+                "order_type":   "limit",
+                "direction":    signal["direction"],
+                "volume":       volume_original,
+                "limit_price":  signal["entry"],
+                "sl":           signal["sl"],
+                "tp":           signal["tp"],
+                "slippage_pts": round(slippage, 2),
+                "expiry_min":   LIMIT_ORDER_EXPIRY_MINUTES,
+                "ob_high":      signal["ob_high"],
+                "ob_low":       signal["ob_low"],
+                "ob_time":      signal["ob_time"],
+            }
+            log("limit_order_placed", _placed_data)
+            notifier.notify_order_placed(_placed_data)
+        else:
+            log("order_failed", {"direction": signal["direction"],
+                                 "sl": signal["sl"], "tp": signal["tp"]})
+        return
+
+    # ── Tier 2: market order, reduced lot (4 < slippage < 6 pts) ─────────────
+    if fixed_lot is None:
         volume_final = calc_volume(symbol, side, market_price, signal["sl"], balance)
-
-        # Recalculate TP from market_price to keep RR = RISK_REWARD.
-        # Using the original TP would shrink the effective RR below 2.
-        risk_from_fill = abs(market_price - signal["sl"])
-        if signal["direction"] == "BUY":
-            tp_final = round(market_price + risk_from_fill * RISK_REWARD, 2)
-        else:
-            tp_final = round(market_price - risk_from_fill * RISK_REWARD, 2)
-
-        _adj_data = {
-            "direction": signal["direction"],
-            "ob_entry": signal["entry"],
-            "market_price": round(market_price, 2),
-            "slippage_pts": round(slippage, 2),
-            "sl_unchanged": signal["sl"],
-            "volume_original": volume_original,
-            "volume_adjusted": volume_final,
-            "tp_original": signal["tp"],
-            "tp_adjusted": tp_final,
-        }
-        log("slippage_adjusted", _adj_data)
-        notifier.notify_slippage_adjusted(_adj_data)
-
-    # ── Tier 1: full lot, recalculate TP from actual fill price (RR=2) ─────────
     else:
-        risk_from_fill = abs(market_price - signal["sl"])
-        if signal["direction"] == "BUY":
-            tp_final = round(market_price + risk_from_fill * RISK_REWARD, 2)
-        else:
-            tp_final = round(market_price - risk_from_fill * RISK_REWARD, 2)
-        # volume_final stays at volume_original — no lot adjustment for Tier 1
+        volume_final = fixed_lot
 
-    # ── Step 8: Send order ───────────────────────────────────────────────────
+    risk_from_fill = abs(market_price - signal["sl"])
+    if signal["direction"] == "BUY":
+        tp_final = round(market_price + risk_from_fill * RISK_REWARD, 2)
+    else:
+        tp_final = round(market_price - risk_from_fill * RISK_REWARD, 2)
+
+    _adj_data = {
+        "direction":       signal["direction"],
+        "ob_entry":        signal["entry"],
+        "market_price":    round(market_price, 2),
+        "slippage_pts":    round(slippage, 2),
+        "sl_unchanged":    signal["sl"],
+        "volume_original": volume_original,
+        "volume_adjusted": volume_final,
+        "tp_original":     signal["tp"],
+        "tp_adjusted":     tp_final,
+    }
+    log("slippage_adjusted", _adj_data)
+    notifier.notify_slippage_adjusted(_adj_data)
+
+    # ── Step 8: Send market order (Tier 2 only) ───────────────────────────────
     ticket = send_market_order(
-        symbol,
-        side,
-        volume_final,  # full lot (Tier 1) or reduced lot (Tier 2)
-        signal["sl"],  # SL always stays at the structural OB edge
-        tp_final,  # recalculated from fill price in both Tier 1 and Tier 2
+        symbol, side,
+        volume_final,
+        signal["sl"],
+        tp_final,
     )
 
     if ticket:
-        # Mark this OB as traded to prevent re-entry in future cycles
         seen_obs.add(ob_key)
         save_seen_obs(seen_obs)
-        open_tickets.add(ticket)  # track for position-close detection
+        open_tickets.add(ticket)
 
         _placed_data = {
-            "ticket": ticket,
-            "direction": signal["direction"],
-            "volume": volume_final,
-            "sl": signal["sl"],
-            "tp": tp_final,
+            "ticket":       ticket,
+            "order_type":   "market",
+            "direction":    signal["direction"],
+            "volume":       volume_final,
+            "sl":           signal["sl"],
+            "tp":           tp_final,
             "slippage_pts": round(slippage, 2),
-            "ob_entry": signal["entry"],
-            "ob_high": signal["ob_high"],
-            "ob_low": signal["ob_low"],
-            "ob_time": signal["ob_time"],
+            "ob_entry":     signal["entry"],
+            "ob_high":      signal["ob_high"],
+            "ob_low":       signal["ob_low"],
+            "ob_time":      signal["ob_time"],
         }
         log("order_placed", _placed_data)
         notifier.notify_order_placed(_placed_data)
     else:
-        log(
-            "order_failed",
-            {
-                "direction": signal["direction"],
-                "sl": signal["sl"],
-                "tp": tp_final,
-            },
-        )
+        log("order_failed", {"direction": signal["direction"],
+                             "sl": signal["sl"], "tp": tp_final})
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1289,8 +1367,8 @@ def main() -> None:
             "rejection_wick_ratio": REJECTION_WICK_RATIO,
             "risk_reward": RISK_REWARD,
             "sl_buffer": SL_BUFFER,
-            "slippage_reduce_threshold": SLIPPAGE_REDUCE_THRESHOLD,  # [CHANGE 2+3]
-            "slippage_max_points": SLIPPAGE_MAX_POINTS,  # [CHANGE 2+3]
+            "slippage_limit_threshold": SLIPPAGE_LIMIT_THRESHOLD,
+            "slippage_max_points": SLIPPAGE_MAX_POINTS,
             "magic": MAGIC,
             "log_path": str(LOG_PATH),
         },
