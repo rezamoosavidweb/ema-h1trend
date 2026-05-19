@@ -62,6 +62,11 @@ except ImportError:
     print("Install MetaTrader5: pip install MetaTrader5", file=sys.stderr)
     raise
 
+# telegram_bot lives in the repo root; make sure it's importable regardless of
+# which directory the script is launched from.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from telegram_bot.mt5_notifier import Mt5Notifier  # noqa: E402
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PATHS
@@ -101,7 +106,7 @@ REJECTION_WICK_RATIO     = 0.3
 RISK_REWARD              = 2.0
 
 # Extra buffer beyond the OB edge for the SL (0 = exactly at OB edge)
-SL_BUFFER                = 0.5
+SL_BUFFER                = 0.05
 
 # ── [CHANGE 2] Slippage thresholds ───────────────────────────────────────────
 # SLIPPAGE_REDUCE_THRESHOLD: when slippage exceeds this but stays below MAX,
@@ -839,14 +844,69 @@ def get_our_positions(symbol: str) -> list:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# POSITION-CLOSE DETECTOR
+# ══════════════════════════════════════════════════════════════════════════════
+
+def _check_closed_positions(
+    symbol:       str,
+    open_tickets: set,
+    notifier:     "Mt5Notifier",
+) -> None:
+    """
+    Compare previously tracked open tickets against current live positions.
+    Any ticket that has disappeared was closed (SL or TP hit).
+    Fetches the closing deal profit from MT5 history and sends a balance
+    notification for each closed trade.
+    """
+    if not open_tickets:
+        return
+
+    current_tickets = {p.ticket for p in get_our_positions(symbol)}
+    closed = open_tickets - current_tickets
+    if not closed:
+        return
+
+    from datetime import timedelta
+
+    now_utc  = datetime.now(timezone.utc)
+    look_back = now_utc - timedelta(hours=24)
+
+    deals = mt5.history_deals_get(look_back, now_utc) or []
+    profit_by_position: dict[int, float] = {}
+    for deal in deals:
+        if deal.entry == mt5.DEAL_ENTRY_OUT:
+            profit_by_position[deal.position_id] = (
+                profit_by_position.get(deal.position_id, 0.0) + deal.profit
+            )
+
+    ai = mt5.account_info()
+    balance = float(ai.balance) if ai else 0.0
+    equity  = float(ai.equity)  if ai else 0.0
+
+    for ticket in closed:
+        profit = profit_by_position.get(ticket, 0.0)
+        log("position_closed_detected", {
+            "ticket":  ticket,
+            "profit":  round(profit, 2),
+            "balance": round(balance, 2),
+            "equity":  round(equity,  2),
+        })
+        notifier.notify_position_closed(ticket, profit, balance, equity)
+
+    open_tickets -= closed  # remove closed tickets from tracking set
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # MAIN CYCLE
 # ══════════════════════════════════════════════════════════════════════════════
 
 def run_cycle(
-    symbol:    str,
-    fixed_lot: Optional[float],
-    dry_run:   bool,
-    seen_obs:  set,
+    symbol:       str,
+    fixed_lot:    Optional[float],
+    dry_run:      bool,
+    seen_obs:     set,
+    notifier:     "Mt5Notifier",
+    open_tickets: set,
 ) -> None:
     """
     Execute one full evaluation-and-order cycle.
@@ -867,6 +927,9 @@ def run_cycle(
       dry_run   : Log signals but never send orders.
       seen_obs  : Set of (ob_time, direction) pairs already traded.
     """
+
+    # ── Detect positions closed since the last cycle (SL or TP hit) ──────────
+    _check_closed_positions(symbol, open_tickets, notifier)
 
     # ── Step 1: Fetch data ───────────────────────────────────────────────────
     try:
@@ -899,10 +962,9 @@ def run_cycle(
     # If the newest bar is older than 15 minutes the market is closed or the
     # data feed is broken — do not trade on stale information.
     if age_minutes > 15:
-        log("skip", {
-            "reason":       "market_closed_or_stale",
-            "data_age_min": round(age_minutes, 1),
-        })
+        _skip_data = {"reason": "market_closed_or_stale", "data_age_min": round(age_minutes, 1)}
+        log("skip", _skip_data)
+        notifier.notify_skip(_skip_data)
         return
 
     if signal is None:
@@ -913,11 +975,9 @@ def run_cycle(
     # bars arrive) to identify whether this OB was already traded.
     ob_key = (signal["ob_time"], signal["direction"])
     if ob_key in seen_obs:
-        log("skip", {
-            "reason":    "already_traded",
-            "ob_time":   signal["ob_time"],
-            "direction": signal["direction"],
-        })
+        _skip_data = {"reason": "already_traded", "ob_time": signal["ob_time"], "direction": signal["direction"]}
+        log("skip", _skip_data)
+        notifier.notify_skip(_skip_data)
         return
 
     # ── Step 5: One position at a time ───────────────────────────────────────
@@ -925,7 +985,7 @@ def run_cycle(
     # post-trade analysis can identify how much opportunity was lost.
     positions = get_our_positions(symbol)
     if positions:
-        log("skip", {
+        _skip_data = {
             "reason":         "position_open",
             "open_positions": len(positions),
             "missed_signal": {
@@ -935,11 +995,14 @@ def run_cycle(
                 "sl":        signal["sl"],
                 "tp":        signal["tp"],
             },
-        })
+        }
+        log("skip", _skip_data)
+        notifier.notify_skip(_skip_data)
         return
 
     # Signal is valid — log it before the order-execution steps
     log("signal", signal)
+    notifier.notify_signal(signal)
 
     # In dry-run mode: record the signal but do not send any order
     if dry_run:
@@ -967,11 +1030,9 @@ def run_cycle(
     # Reject if the calculated lot is below the broker minimum
     si = mt5.symbol_info(symbol)
     if si and volume_original < si.volume_min:
-        log("skip", {
-            "reason": "volume_too_small",
-            "volume": volume_original,
-            "min":    si.volume_min,
-        })
+        _skip_data = {"reason": "volume_too_small", "volume": volume_original, "min": si.volume_min}
+        log("skip", _skip_data)
+        notifier.notify_skip(_skip_data)
         return
 
     # ── Step 7: Slippage measurement and three-tier response [CHANGE 3] ──────
@@ -1016,14 +1077,16 @@ def run_cycle(
 
     # ── Tier 3: hard skip ────────────────────────────────────────────────────
     if slippage > SLIPPAGE_MAX_POINTS:
-        log("skip", {
+        _skip_data = {
             "reason":       "slippage_exceeded",
             "direction":    signal["direction"],
             "ob_entry":     signal["entry"],
             "market_price": round(market_price, 2),
             "slippage_pts": round(slippage, 2),
             "max_pts":      SLIPPAGE_MAX_POINTS,
-        })
+        }
+        log("skip", _skip_data)
+        notifier.notify_skip(_skip_data)
         return
 
     # ── Tier 2: reduce lot + recalculate TP ─────────────────────────────────
@@ -1042,17 +1105,19 @@ def run_cycle(
         else:
             tp_final = round(market_price - risk_from_fill * RISK_REWARD, 2)
 
-        log("slippage_adjusted", {
+        _adj_data = {
             "direction":       signal["direction"],
             "ob_entry":        signal["entry"],
             "market_price":    round(market_price, 2),
             "slippage_pts":    round(slippage, 2),
-            "sl_unchanged":    signal["sl"],      # SL stays at OB structural edge
+            "sl_unchanged":    signal["sl"],
             "volume_original": volume_original,
-            "volume_adjusted": volume_final,      # smaller lot to keep 1 % risk
+            "volume_adjusted": volume_final,
             "tp_original":     signal["tp"],
-            "tp_adjusted":     tp_final,          # TP shifted to match fill price
-        })
+            "tp_adjusted":     tp_final,
+        }
+        log("slippage_adjusted", _adj_data)
+        notifier.notify_slippage_adjusted(_adj_data)
 
     # ── Tier 1: no adjustment needed (slippage <= 3.0 pts or fixed lot) ─────
     # volume_final and tp_final already hold the original values — nothing to do.
@@ -1069,20 +1134,22 @@ def run_cycle(
         # Mark this OB as traded to prevent re-entry in future cycles
         seen_obs.add(ob_key)
         save_seen_obs(seen_obs)
+        open_tickets.add(ticket)  # track for position-close detection
 
-        log("order_placed", {
-            "ticket":          ticket,
-            "direction":       signal["direction"],
-            "volume":          volume_final,
-            "sl":              signal["sl"],
-            "tp":              tp_final,
-            # Slippage info recorded for post-trade analysis
-            "slippage_pts":    round(slippage, 2),
-            "ob_entry":        signal["entry"],
-            "ob_high":         signal["ob_high"],
-            "ob_low":          signal["ob_low"],
-            "ob_time":         signal["ob_time"],
-        })
+        _placed_data = {
+            "ticket":       ticket,
+            "direction":    signal["direction"],
+            "volume":       volume_final,
+            "sl":           signal["sl"],
+            "tp":           tp_final,
+            "slippage_pts": round(slippage, 2),
+            "ob_entry":     signal["entry"],
+            "ob_high":      signal["ob_high"],
+            "ob_low":       signal["ob_low"],
+            "ob_time":      signal["ob_time"],
+        }
+        log("order_placed", _placed_data)
+        notifier.notify_order_placed(_placed_data)
     else:
         log("order_failed", {
             "direction": signal["direction"],
@@ -1176,14 +1243,18 @@ def main() -> None:
     # Restore OBs already traded in previous sessions
     seen_obs: set = load_seen_obs()
 
+    # Telegram notifier (reads token/chat_id from .env; no-ops if unconfigured)
+    notifier     = Mt5Notifier()
+    open_tickets: set = set()
+
     try:
         if args.once:
-            run_cycle(symbol, args.lot, args.dry_run, seen_obs)
+            run_cycle(symbol, args.lot, args.dry_run, seen_obs, notifier, open_tickets)
             return
 
         print(f"Order Block Bot running on {symbol} M5. Press Ctrl+C to stop.")
         while True:
-            run_cycle(symbol, args.lot, args.dry_run, seen_obs)
+            run_cycle(symbol, args.lot, args.dry_run, seen_obs, notifier, open_tickets)
             sleep_until_next_m5(extra=0.1)   # [CHANGE 1]
 
     except KeyboardInterrupt:
