@@ -1184,8 +1184,23 @@ def run_cycle(
         notifier.notify_skip(_skip_data)
         return
 
+    # A LIMIT order is only accepted by the broker when entry sits on the far
+    # side of the current price by at least trade_stops_level. Otherwise MT5
+    # returns retcode 10015 (Invalid price):
+    #   SELL LIMIT: entry must be > ask + stops_dist
+    #   BUY  LIMIT: entry must be < bid - stops_dist
+    # When invalid, skip the limit attempt and fall through to a market order
+    # so the signal is still taken immediately.
+    si_chk = mt5.symbol_info(symbol)
+    _pt = float(si_chk.point) if si_chk and si_chk.point else 0.01
+    _stops_dist = (int(getattr(si_chk, "trade_stops_level", 0) or 0) * _pt) if si_chk else 0.0
+    if side == "sell":
+        limit_valid = (signal["entry"] - tick.ask) > _stops_dist
+    else:
+        limit_valid = (tick.bid - signal["entry"]) > _stops_dist
+
     # ── Tier 1: limit order at exact OB price ────────────────────────────────
-    if slippage <= SLIPPAGE_LIMIT_THRESHOLD:
+    if limit_valid and slippage <= SLIPPAGE_LIMIT_THRESHOLD:
         ticket = send_limit_order(
             symbol, side,
             volume_original,
@@ -1219,7 +1234,19 @@ def run_cycle(
                                  "sl": signal["sl"], "tp": signal["tp"]})
         return
 
-    # ── Tier 2: market order, reduced lot (4 < slippage < 6 pts) ─────────────
+    # Limit was skipped because market already passed entry — log and fall
+    # through to the Tier 2 market-order path so the trade still gets in.
+    if not limit_valid:
+        log("limit_invalid_fallback_market", {
+            "direction":    signal["direction"],
+            "ob_entry":     signal["entry"],
+            "ask":          round(tick.ask, 2),
+            "bid":          round(tick.bid, 2),
+            "stops_dist":   round(_stops_dist, 5),
+            "slippage_pts": round(slippage, 2),
+        })
+
+    # ── Tier 2: market order, reduced lot (high slippage OR invalid limit) ───
     if fixed_lot is None:
         volume_final = calc_volume(symbol, side, market_price, signal["sl"], balance)
     else:
