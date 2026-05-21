@@ -10,13 +10,14 @@ lifecycle, fallback, retries, and observability.
 | Module              | Responsibility                                                |
 |---------------------|---------------------------------------------------------------|
 | `symbol_config`     | Resolve `XAUUSD` -> `XAUUSD.i` once; snapshot broker metadata |
-| `structured_logger` | JSON-Lines event log with a stable schema                     |
+| `structured_logger` | JSON-Lines event log + daily file rotation                    |
 | `broker_validator`  | Pre-flight: terminal, AutoTrading, spread, stops, freeze      |
 | `order_factory`     | Build `order_send` dicts; snap prices; pick filling mode      |
 | `pending_manager`   | Track / cancel / dedupe pending orders client-side (GTC)      |
 | `risk_adapter`      | Lot sizing from balance × `risk_per_trade`                    |
 | `fallback_engine`   | LIMIT -> MARKET cascade by retcode + re-validation            |
-| `execution_engine`  | Public facade `engine.place_signal(signal)`                   |
+| `mt5_watchdog`      | Health check + automatic reconnect; structured state logs     |
+| `execution_engine`  | Public facade `engine.place_signal(signal)` + heartbeat       |
 
 Strategy script wires them together via `ExecutionEngine`, the only object it
 needs to construct.
@@ -112,6 +113,111 @@ the refactor are marked **NEW**.
 | `telegram_sent`   | `category`, `attempt`, `status`, `latency_ms`         |
 | `telegram_error`  | `category`, `attempt`, `status`, `body`, `error_type` |
 | `telegram_disabled` | `reason`, `has_token`, `has_chat_id`                |
+
+### Reliability / uptime *(NEW group)*
+
+These events are pure observability -- they do not influence trade selection,
+risk sizing, or candle-confirmation timing. They exist so you can answer "was
+the bot running, and was MT5 healthy, at time X?" without guessing.
+
+| Event                       | Fields                                                                                  |
+|-----------------------------|-----------------------------------------------------------------------------------------|
+| `heartbeat`                 | `uptime_s`, `mt5_connected`, `mt5_trade_allowed`, `tracked_pendings`, `open_positions`, `cooldown_active`, `cooldown_remaining_s`, `balance`, `equity` |
+| `state_recovered`           | `adopted_pendings: [int]`, `adopted_positions: [int]`, `balance`, `equity` -- one-shot at startup |
+| `mt5_connected`             | `state="healthy"`, `connected`, `trade_allowed`, `ping_ms`, optional `periodic=true`    |
+| `mt5_disconnected`          | `state` (`terminal_unreachable` / `broker_disconnected` / `autotrading_disabled`), `consecutive_failures` |
+| `mt5_reconnect_attempt`     | `attempt`, `total_reconnects_so_far`                                                    |
+| `mt5_reconnect_success`     | `attempt`, `total_reconnects`, `connected`, `trade_allowed`                             |
+| `mt5_reconnect_failed`      | `attempt`, `state`, `error_type`, `error_msg`                                           |
+| `mt5_reconnect_giveup`      | `attempts`, `advice` -- operator intervention required                                  |
+| `cycle_skipped`             | `reason="mt5_unhealthy"` -- the strategy cycle was skipped this M5 boundary             |
+| `startup_pending_recovery_error`  | `error_type`, `error_msg`                                                         |
+| `startup_position_recovery_error` | `error_type`, `error_msg`                                                         |
+
+#### Heartbeat example
+
+```json
+{"ts":"2026-05-21T08:30:00.456+00:00","event":"heartbeat","symbol":"XAUUSD.i","uptime_s":3604.2,"mt5_connected":true,"mt5_trade_allowed":true,"tracked_pendings":0,"open_positions":1,"cooldown_active":false,"cooldown_remaining_s":0.0,"balance":10050.32,"equity":10047.18}
+```
+
+#### State recovery example (one event at bot startup)
+
+```json
+{"ts":"2026-05-21T07:00:01.123+00:00","event":"state_recovered","symbol":"XAUUSD.i","adopted_pendings":[38875210],"adopted_positions":[],"balance":10050.32,"equity":10050.32}
+```
+
+#### Reconnect cycle example
+
+```json
+{"ts":"2026-05-21T05:13:02.001+00:00","event":"mt5_disconnected","symbol":"XAUUSD.i","state":"broker_disconnected","connected":false,"trade_allowed":true,"consecutive_failures":0}
+{"ts":"2026-05-21T05:13:02.013+00:00","event":"mt5_reconnect_attempt","symbol":"XAUUSD.i","attempt":1,"total_reconnects_so_far":0}
+{"ts":"2026-05-21T05:13:04.502+00:00","event":"mt5_reconnect_success","symbol":"XAUUSD.i","attempt":1,"total_reconnects":1,"connected":true,"trade_allowed":true}
+{"ts":"2026-05-21T05:13:04.605+00:00","event":"mt5_connected","symbol":"XAUUSD.i","state":"healthy","connected":true,"trade_allowed":true,"recovered_after_failures":0}
+```
+
+---
+
+## Reliability features (operational, NOT strategy)
+
+The following items were added without altering any trading behaviour. Every
+strategy primitive (signal generation, OB detection, FVG logic, rejection
+candle test, SL/TP geometry, RR ratio, `risk_per_trade`, position sizing,
+candle-confirmation timing) is byte-identical to the pre-reliability commit.
+
+### Daily log rotation
+
+`StructuredLogger(rotate_daily=True)` (default) writes to
+`logs/XAUUSD-YYYY-MM-DD.json`. The base `logs/XAUUSD.json` path is maintained
+as a best-effort symlink to today's file (silently skipped on Windows accounts
+without symlink permission). This makes accidental truncation during a deploy
+non-destructive -- only today's file is at risk.
+
+If you depend on a single ever-growing file, pass
+`ExecutionEngine(rotate_daily_logs=False)`.
+
+### Heartbeat (cycle-driven)
+
+`engine.heartbeat_if_due()` runs as the last step of `begin_cycle()`. It emits
+a `heartbeat` event every `heartbeat_interval_seconds` (default 600 s = 10 min).
+It is NOT a background thread, so it cannot race with strategy code or shift
+order timing. Skip it entirely with `heartbeat_interval_seconds=0` if you
+prefer external uptime monitoring.
+
+### Startup recovery
+
+`engine.initialize_state_from_broker()` runs ONCE at startup, before the main
+loop. It:
+
+* adopts existing pending orders for this `MAGIC` into `PendingOrderManager`
+* adopts existing open positions for this `MAGIC` so close-detection works
+* logs a `state_recovered` event
+* DOES NOT call `find_signal`, fetch bars, or place any order
+
+Combined with the cross-restart `seen_obs_XAUUSD.json` file (unchanged), a
+restart in the middle of a signal bar will:
+
+1. Recover broker state cleanly.
+2. Run the FIRST cycle immediately (no leading sleep).
+3. Evaluate the most recent CLOSED candle once (`iloc[:-1]` always drops the
+   forming bar -- candle confirmation behaviour is preserved).
+4. Continue normal M5-aligned cycle timing.
+
+### MT5 watchdog
+
+`Mt5Watchdog` is attached to the engine via `engine.attach_watchdog(...)`. At
+the start of every cycle, the bot calls `engine.is_mt5_healthy()` which
+returns False when the terminal is offline, the broker connection is down,
+or AutoTrading is off. A failing cycle:
+
+* logs `cycle_skipped reason=mt5_unhealthy`
+* attempts `mt5_reconnect_attempt` -> success/failure
+* does NOT fetch bars, generate signals, or send orders
+* does NOT advance any per-OB retry counter
+* still respects the M5 cadence so the NEXT cycle gets a fresh chance
+
+Because `PendingOrderManager.sync_from_broker()` runs every cycle, a reconnect
+cannot leave the bot's in-memory state out of sync with the broker -- no
+duplicate orders, no replayed signals.
 
 ### Examples
 

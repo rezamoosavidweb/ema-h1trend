@@ -67,12 +67,14 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import shutil
 import sys
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional
+from zoneinfo import ZoneInfo
 
 import numpy as np
 import pandas as pd
@@ -86,8 +88,8 @@ except ImportError:
 # Make sibling packages importable regardless of cwd
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from execution import ExecutionEngine, ExecutionOutcome  # noqa: E402
-from telegram_bot.mt5_notifier import Mt5Notifier         # noqa: E402
+from execution import ExecutionEngine, ExecutionOutcome, Mt5Watchdog  # noqa: E402
+from telegram_bot.mt5_notifier import Mt5Notifier                       # noqa: E402
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -121,6 +123,56 @@ MAX_SPREAD_POINTS          = 200
 RISK_PER_TRADE             = 0.01
 MAGIC                      = 8088080
 M5_SECONDS                 = 300
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# BROKER TIMEZONE  (fixes the long-standing 3h mislabel of bar timestamps)
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Why this exists:
+#   MetaTrader 5's Python `copy_rates_*` returns `time` as int64 seconds, but
+#   the integer encodes the BROKER SERVER's wall clock (e.g. broker 15:55) as
+#   if it were a UTC epoch second. On an EET/EEST broker (Errante) those
+#   "seconds" are 2-3h ahead of the true UTC moment (3h in summer / 2h winter).
+#
+#   The old code called `pd.to_datetime(df["time"], unit="s", utc=True)`,
+#   which silently tagged broker-wall-clock with `+00:00`. Every downstream
+#   artifact (`last_bar_time`, `ob_time`, `retest_time`, seen_obs keys,
+#   Telegram messages, `data_age_min`) inherited the drift.
+#
+# Fix:
+#   Declare the actual zone with `tz_localize(BROKER_TZ)` -- a real IANA
+#   zone so DST transitions (EET <-> EEST) are handled automatically twice
+#   a year -- then `tz_convert("UTC")` to get correct UTC. Always done at
+#   the ingest boundary so the rest of the codebase stays pure UTC.
+BROKER_TZ = ZoneInfo("Asia/Nicosia")
+
+
+def _mt5_seconds_to_utc(seconds):
+    """
+    Convert MT5's `time` field (broker wall-clock encoded as Unix seconds)
+    to a real-UTC pandas Timestamp / Series. DST-aware via BROKER_TZ.
+
+    `nonexistent='shift_forward'` and `ambiguous='infer'` make the call
+    robust around DST transitions; the broker should never produce a bar
+    inside the spring-forward gap, but tagging this explicitly keeps the
+    behaviour deterministic if it ever does.
+    """
+    naive = pd.to_datetime(seconds, unit="s")  # treat integer as naive wall clock
+    if hasattr(naive, "dt"):  # pandas Series -- `infer` needs monotonic data, which MT5 bars are.
+        return (
+            naive.dt.tz_localize(BROKER_TZ, nonexistent="shift_forward",
+                                 ambiguous="infer")
+                 .dt.tz_convert("UTC")
+        )
+    # scalar Timestamp: pandas scalar API does NOT support ambiguous='infer'.
+    # `False` = treat as standard time (the second occurrence during the
+    # fall-back hour); only relevant for the one ambiguous wall-clock hour
+    # per year. Diagnostics + seen_obs migration use this path.
+    return (
+        naive.tz_localize(BROKER_TZ, nonexistent="shift_forward", ambiguous=False)
+             .tz_convert("UTC")
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -350,7 +402,9 @@ def fetch_m5(symbol: str, bars: int) -> pd.DataFrame:
     if r is None or len(r) == 0:
         raise RuntimeError(f"No M5 data for {symbol}: {mt5.last_error()}")
     df = pd.DataFrame(r)
-    df["time"] = pd.to_datetime(df["time"], unit="s", utc=True)
+    # MT5 returns broker-local wall-clock as a Unix-seconds integer; the old
+    # `pd.to_datetime(..., utc=True)` call mislabeled it. See _mt5_seconds_to_utc.
+    df["time"] = _mt5_seconds_to_utc(df["time"])
     df = df.rename(columns={"tick_volume": "volume"})
     df = df[[c for c in ["time", "open", "high", "low", "close", "volume"] if c in df.columns]]
     return df.iloc[:-1].reset_index(drop=True)
@@ -361,20 +415,76 @@ def fetch_m5(symbol: str, bars: int) -> pd.DataFrame:
 # ═══════════════════════════════════════════════════════════════════════════
 
 
+_SEEN_OBS_SCHEMA = "utc-v1"
+
+
+def _migrate_legacy_seen_obs(items) -> set:
+    """
+    Convert legacy seen_obs entries (whose `ob_time` strings were broker-local
+    wall-clock mislabeled `+00:00` -- see _mt5_seconds_to_utc) into real-UTC
+    strings, so dedup keys keep matching the new correct ob_time strings.
+
+    DST-aware: each timestamp is re-interpreted in BROKER_TZ individually, so
+    entries that fall in winter (EET / UTC+2) and summer (EEST / UTC+3) are
+    each converted correctly.
+    """
+    migrated: set = set()
+    for item in items:
+        try:
+            ts_str, direction = item
+            old_ts = pd.Timestamp(ts_str)
+            # The "+00:00" label on the legacy string was wrong -- drop it,
+            # then declare the actual broker zone and convert to real UTC.
+            if old_ts.tzinfo is not None:
+                old_ts = old_ts.tz_localize(None)
+            new_ts = (
+                old_ts.tz_localize(BROKER_TZ, nonexistent="shift_forward",
+                                   ambiguous=False)  # scalar API; see _mt5_seconds_to_utc
+                       .tz_convert("UTC")
+            )
+            migrated.add((str(new_ts), direction))
+        except Exception:
+            # Defensive: never drop a dedup entry just because we could not
+            # parse it; better a stale extra than an accidental re-trade.
+            migrated.add(tuple(item))
+    return migrated
+
+
 def load_seen_obs() -> set:
     if not SEEN_OBS_PATH.exists():
         return set()
     try:
         with SEEN_OBS_PATH.open("r", encoding="utf-8") as f:
-            return {tuple(item) for item in json.load(f)}
+            data = json.load(f)
     except Exception:
         return set()
+
+    # New schema (post-tz-fix): wrapper dict carrying real-UTC strings.
+    if isinstance(data, dict) and data.get("schema") == _SEEN_OBS_SCHEMA:
+        return {tuple(item) for item in data.get("entries", [])}
+
+    # Legacy schema: bare list of [broker-mislabeled-utc-str, direction].
+    # Back up the original file before migrating so the old state is recoverable.
+    backup = SEEN_OBS_PATH.with_name(SEEN_OBS_PATH.stem + ".pre-tz-migration.json")
+    try:
+        if not backup.exists():
+            shutil.copy2(SEEN_OBS_PATH, backup)
+    except Exception:
+        pass  # backup is best-effort -- never block startup on it.
+
+    migrated = _migrate_legacy_seen_obs(data if isinstance(data, list) else [])
+    save_seen_obs(migrated)
+    return migrated
 
 
 def save_seen_obs(seen_obs: set) -> None:
     SEEN_OBS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "schema":  _SEEN_OBS_SCHEMA,
+        "entries": [list(item) for item in seen_obs],
+    }
     with SEEN_OBS_PATH.open("w", encoding="utf-8") as f:
-        json.dump([list(item) for item in seen_obs], f)
+        json.dump(payload, f)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -397,6 +507,15 @@ def run_cycle(
     and writes structured events to logs/<symbol>.json.
     """
     symbol = engine.cfg.name
+
+    # ── 0) Health check (infrastructure -- no strategy effect) ───────────────
+    # If MT5 is offline we refuse to fetch data this cycle. The watchdog has
+    # already logged the reason and attempted reconnect. The next M5 cycle
+    # will retry. Strategy timing is preserved because we still sleep until
+    # the next M5 boundary; we just skip ONE evaluation.
+    if not engine.is_mt5_healthy():
+        engine.logger.event("cycle_skipped", reason="mt5_unhealthy")
+        return
 
     # ── 1) Strategy ──────────────────────────────────────────────────────────
     try:
@@ -524,6 +643,52 @@ def sleep_until_next_m5(extra: float = 0.1) -> None:
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+# STARTUP DIAGNOSTICS
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+def log_timezone_diagnostics(engine: "ExecutionEngine", symbol: str) -> None:
+    """
+    One-shot startup proof of the broker -> UTC mapping.
+
+    Emits a `tz_diag` event showing the live tick time three ways: the raw
+    integer MT5 hands us, that integer interpreted as broker wall-clock (the
+    OLD, buggy reading), and the corrected real-UTC value (the NEW reading),
+    plus the OS clock. If tz drift ever returns, grep `tz_diag` and compare
+    `tick_corrected_utc` against `system_now_utc` -- they should agree to
+    within a few seconds.
+    """
+    try:
+        tick = mt5.symbol_info_tick(symbol)
+    except Exception:
+        tick = None
+    if tick is None or not getattr(tick, "time", 0):
+        engine.logger.event("tz_diag", broker_tz=str(BROKER_TZ),
+                            note="no_tick_available")
+        return
+
+    raw_secs = int(tick.time)
+    # How the bot USED to read this (mislabel) -- kept for forensic clarity.
+    broker_wall = datetime.fromtimestamp(raw_secs, tz=timezone.utc).replace(tzinfo=None)
+    # How the bot reads it now -- DST-aware via BROKER_TZ.
+    corrected_utc = _mt5_seconds_to_utc(raw_secs)
+    system_now_utc = datetime.now(timezone.utc)
+
+    engine.logger.event(
+        "tz_diag",
+        broker_tz=str(BROKER_TZ),
+        tick_raw_seconds=raw_secs,
+        tick_broker_local=broker_wall.isoformat(),
+        tick_corrected_utc=corrected_utc.isoformat(),
+        system_now_utc=system_now_utc.isoformat(),
+        broker_minus_system_min=round(
+            (broker_wall - system_now_utc.replace(tzinfo=None)).total_seconds() / 60,
+            1,
+        ),
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 # ENTRY POINT
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -555,20 +720,52 @@ def main() -> None:
         slippage_max_points=SLIPPAGE_MAX_POINTS,
         max_spread_points=MAX_SPREAD_POINTS,
         stale_after_seconds=LIMIT_ORDER_STALE_SECONDS,
+        # Daily-rotated logs + cycle-driven heartbeat. Both are observability
+        # only -- they do NOT influence trade selection or timing.
+        rotate_daily_logs=True,
     )
+
+    # ── Watchdog: monitors MT5 health and reconnects on drops ────────────────
+    # `mt5_connect` is the same function used at startup, so a reconnect is
+    # bit-identical to a fresh boot. The watchdog does NOT cancel or replay
+    # any order -- PendingOrderManager.sync_from_broker() reconciles state
+    # at the start of every cycle.
+    watchdog = Mt5Watchdog(logger=engine.logger, connect_fn=mt5_connect)
+    engine.attach_watchdog(watchdog)
 
     # ── Notifier shares the engine's structured logger for observability ─────
     notifier = Mt5Notifier(logger=engine.logger)
 
+    # ── Timezone diagnostics (observability only; never gates trading) ───────
+    # Emits a single `tz_diag` event so the broker -> UTC conversion is
+    # provable from the log alone if drift ever returns. See BROKER_TZ.
+    log_timezone_diagnostics(engine, engine.cfg.name)
+
     # ── State that survives restarts ─────────────────────────────────────────
     seen_obs: set = load_seen_obs()
 
+    # ── Startup recovery: adopt any pending orders / open positions that
+    #    already exist for this magic. This is pure state recovery -- it does
+    #    NOT generate any new signal, replay history, or place any order.
+    engine.initialize_state_from_broker()
+
     try:
         if args.once:
+            # Single-shot mode evaluates the most recent CLOSED candle once
+            # and exits -- exactly the same code path as the normal loop, so
+            # candle-confirmation timing is identical.
             run_cycle(engine, notifier, args.lot, args.dry_run, seen_obs)
             return
 
         print(f"Order Block Bot running on {engine.cfg.name} M5. Ctrl+C to stop.")
+
+        # GRACEFUL RESTART HANDLING
+        # ─────────────────────────
+        # The first iteration runs IMMEDIATELY (no leading sleep). `fetch_m5`
+        # always drops the still-forming last bar via `iloc[:-1]`, so even on
+        # a mid-session restart the bot evaluates ONLY fully closed candles.
+        # If we restarted DURING the signal bar's lifetime, this single
+        # evaluation catches it without changing candle-confirmation logic.
         while True:
             try:
                 run_cycle(engine, notifier, args.lot, args.dry_run, seen_obs)

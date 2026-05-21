@@ -35,6 +35,7 @@ import MetaTrader5 as mt5
 
 from .broker_validator import BrokerValidator
 from .fallback_engine import FallbackEngine, FallbackResult
+from .mt5_watchdog import Mt5Watchdog
 from .order_factory import OrderFactory
 from .pending_manager import PendingOrderManager
 from .risk_adapter import RiskAdapter
@@ -52,6 +53,11 @@ DEFAULT_COOLDOWN_DURATION_SECONDS = 15 * 60
 
 # Hard cap on retries per ob_key. After this many tries we give up on the OB.
 DEFAULT_MAX_RETRIES_PER_OB = 3
+
+# Heartbeat: cheap "still alive" event emitted at a fixed cadence. Tied to
+# cycle invocations -- NOT a background thread -- so heartbeat cannot
+# interfere with cycle timing or trading behaviour.
+DEFAULT_HEARTBEAT_INTERVAL_SECONDS = 10 * 60
 
 
 @dataclass
@@ -83,12 +89,19 @@ class ExecutionEngine:
         cooldown_window_seconds: int = DEFAULT_COOLDOWN_WINDOW_SECONDS,
         cooldown_duration_seconds: int = DEFAULT_COOLDOWN_DURATION_SECONDS,
         max_retries_per_ob: int = DEFAULT_MAX_RETRIES_PER_OB,
+        heartbeat_interval_seconds: int = DEFAULT_HEARTBEAT_INTERVAL_SECONDS,
+        rotate_daily_logs: bool = True,
     ) -> None:
         # Symbol -- this is the one and only place we resolve the broker name
         self.cfg = resolve_symbol(symbol)
 
-        # Observability
-        self.logger = StructuredLogger(symbol=self.cfg.name, log_path=log_path)
+        # Observability -- daily rotation by default so deploys / restarts
+        # cannot wipe historical events.
+        self.logger = StructuredLogger(
+            symbol=self.cfg.name,
+            log_path=log_path,
+            rotate_daily=rotate_daily_logs,
+        )
 
         # Components
         self.validator = BrokerValidator(max_spread_points=max_spread_points)
@@ -118,6 +131,16 @@ class ExecutionEngine:
         # Position-close detection
         self._tracked_position_tickets: set[int] = set()
 
+        # Heartbeat -- cycle-driven, no background thread.
+        self._heartbeat_interval = max(60, int(heartbeat_interval_seconds))
+        self._last_heartbeat: float = 0.0
+        self._started_at: float = time.monotonic()
+
+        # Optional MT5 watchdog. Wired in by the bot script via `attach_watchdog`.
+        # Left None here so ExecutionEngine remains usable for unit tests that
+        # do not need a real terminal.
+        self.watchdog: Optional[Mt5Watchdog] = None
+
         self.logger.event(
             "bot_start",
             symbol=self.cfg.name, requested_symbol=self.cfg.requested,
@@ -127,7 +150,93 @@ class ExecutionEngine:
             slippage_max_points=slippage_max_points,
             max_spread_points=max_spread_points,
             stale_after_seconds=stale_after_seconds,
+            heartbeat_interval_seconds=self._heartbeat_interval,
+            rotate_daily_logs=rotate_daily_logs,
         )
+
+    # ── infrastructure wiring (no trading behaviour) ─────────────────────────-
+
+    def attach_watchdog(self, watchdog: Mt5Watchdog) -> None:
+        """Wire an Mt5Watchdog so begin_cycle() can refuse to act when offline."""
+        self.watchdog = watchdog
+
+    def initialize_state_from_broker(self) -> None:
+        """
+        ONE-TIME startup recovery. Reload live broker state so the bot continues
+        cleanly after a restart instead of acting as if it just booted with no
+        history.
+
+        Does NOT:
+            * generate new signals
+            * replay any historical bar
+            * modify SL/TP or any order
+            * change cycle timing
+
+        Does:
+            * adopt any of THIS bot's pending orders that already exist
+              (matched by magic), so they enter the lifecycle manager
+            * adopt any of THIS bot's open positions (matched by magic),
+              so close-detection works after a restart
+            * emit a structured `state_recovered` event for audit
+        """
+        adopted_pendings: list[int] = []
+        adopted_positions: list[int] = []
+
+        try:
+            self.pendings.sync_from_broker()
+            adopted_pendings = list(self.pendings.active_tickets())
+        except Exception as exc:
+            self.logger.error("startup_pending_recovery_error", exc=exc)
+
+        try:
+            for p in (mt5.positions_get(symbol=self.cfg.name) or []):
+                if p.magic == self.factory.magic:
+                    self._tracked_position_tickets.add(p.ticket)
+                    adopted_positions.append(p.ticket)
+        except Exception as exc:
+            self.logger.error("startup_position_recovery_error", exc=exc)
+
+        ai = mt5.account_info()
+        self.logger.event(
+            "state_recovered",
+            adopted_pendings=adopted_pendings,
+            adopted_positions=adopted_positions,
+            balance=float(ai.balance) if ai else None,
+            equity=float(ai.equity) if ai else None,
+        )
+
+    def heartbeat_if_due(self) -> None:
+        """
+        Emit a `heartbeat` event when at least `heartbeat_interval_seconds`
+        has passed since the previous one. Cycle-driven (no background thread)
+        so it cannot interfere with strategy timing or order placement.
+
+        The heartbeat carries only OBSERVABILITY fields (uptime, MT5 state,
+        cooldown status, position/pending counts). It does NOT touch orders,
+        signals, or cached strategy state.
+        """
+        now = time.monotonic()
+        if now - self._last_heartbeat < self._heartbeat_interval:
+            return
+
+        ai = mt5.account_info()
+        ti = mt5.terminal_info()
+        positions = mt5.positions_get(symbol=self.cfg.name) or []
+        our_positions = [p for p in positions if p.magic == self.factory.magic]
+
+        self.logger.event(
+            "heartbeat",
+            uptime_s=round(now - self._started_at, 1),
+            mt5_connected=bool(ti and ti.connected),
+            mt5_trade_allowed=bool(ti and ti.trade_allowed),
+            tracked_pendings=len(self.pendings.active_tickets()),
+            open_positions=len(our_positions),
+            cooldown_active=self._in_cooldown(now),
+            cooldown_remaining_s=max(0.0, round(self._cooldown_until - now, 1)),
+            balance=float(ai.balance) if ai else None,
+            equity=float(ai.equity) if ai else None,
+        )
+        self._last_heartbeat = now
 
     # ── cycle housekeeping ───────────────────────────────────────────────────-
 
@@ -137,6 +246,12 @@ class ExecutionEngine:
         Reconciles broker state, cancels stale/orphan pendings, sweeps closed
         positions.
         """
+        # 0) MT5 health: if the watchdog says we are offline, we DO NOT abort
+        #    cycle housekeeping here -- but the strategy script should also
+        #    consult `engine.is_mt5_healthy()` and decide whether to fetch data.
+        #    The reason we still let begin_cycle run: sync_from_broker / orphan
+        #    cancel are SAFE no-ops when MT5 returns None / empty lists.
+
         # 1) Reconcile in-memory state with broker (handles restarts / external mods)
         try:
             self.pendings.sync_from_broker()
@@ -152,6 +267,18 @@ class ExecutionEngine:
 
         # 4) Detect closures of positions we previously tracked (TP/SL hit)
         self._sweep_closed_positions()
+
+        # 5) Heartbeat (cheap; throttled internally)
+        self.heartbeat_if_due()
+
+    def is_mt5_healthy(self) -> bool:
+        """
+        Pass-through for the strategy script. If no watchdog is attached we
+        return True (legacy behaviour) so single-shot / test usage still works.
+        """
+        if self.watchdog is None:
+            return True
+        return self.watchdog.ensure_healthy()
 
     def _sweep_closed_positions(self) -> list[dict]:
         """

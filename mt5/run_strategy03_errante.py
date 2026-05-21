@@ -58,8 +58,10 @@ except ImportError:
 import pandas as pd
 
 from strategies.ema_trend.crypto_core import (
+    BROKER_TZ,
     MIN_WARMUP_BARS_H1,
     MIN_WARMUP_BARS_M5,
+    _utc_to_mt5_broker_seconds,
     add_emas,
     compute_pending_setup,
     default_crypto_tick,
@@ -737,7 +739,19 @@ def send_pending(
     else:
         otype = mt5.ORDER_TYPE_SELL_STOP
 
-    exp_ts = int(expiry_utc.timestamp())
+    # MT5 expects `expiration` as a Unix-seconds integer interpreted on the
+    # BROKER side -- the broker wall-clock encoded as if it were UTC seconds
+    # (the same mislabel convention `_mt5_seconds_to_utc` undoes on the way
+    # in). The old code did `int(expiry_utc.timestamp())` directly; that
+    # produced the wrong wire value but accidentally worked while the
+    # crypto_core ingest had a matching bug, since both were broker-time-
+    # mislabeled-UTC and the two errors cancelled. With ingest now correct
+    # (rates_to_ohlcv_df returns real UTC), we MUST translate egress here or
+    # the expiry lands `broker_offset` hours in the past -> retcode 10022.
+    # `_utc_to_mt5_broker_seconds` is DST-aware via BROKER_TZ.
+    # Pending-order LIFETIME is unchanged: expiry is still
+    # signal_bar_time + PENDING_EXPIRY_MIN. Only the wire encoding changed.
+    exp_ts = _utc_to_mt5_broker_seconds(expiry_utc)
 
     req = {
         "action": mt5.TRADE_ACTION_PENDING,
@@ -914,6 +928,46 @@ def sleep_until_next_m5_close(extra_seconds: float = 2.0) -> None:
     time.sleep(delay)
 
 
+def log_expiry_tz_diagnostics() -> None:
+    """
+    One-shot startup proof of the OUTBOUND timezone translation used for
+    `ORDER_TIME_SPECIFIED` expirations. Mirrors `_utc_to_mt5_broker_seconds`
+    end-to-end on a synthetic "now + PENDING_EXPIRY_MIN" value:
+
+        intended_utc            -- real UTC we want the pending to expire at
+        broker_local            -- DST-aware broker wall clock of that moment
+        transmitted_seconds     -- the int actually sent to MT5
+        reconstructed_utc       -- round-trip back through _mt5_seconds_to_utc;
+                                   should equal intended_utc to within 1s
+
+    If `reconstructed_utc` ever drifts from `intended_utc` for a future date,
+    BROKER_TZ is wrong (or the broker changed servers); pending orders will
+    start being rejected with retcode 10022. Easy to grep for `tz_expiry_diag`.
+    """
+    intended_utc = datetime.now(timezone.utc) + timedelta(minutes=PENDING_EXPIRY_MIN)
+    broker_local = intended_utc.astimezone(BROKER_TZ)
+    transmitted_seconds = _utc_to_mt5_broker_seconds(intended_utc)
+    # Reconstruct what MT5 will think we asked for, using the inbound translator.
+    reconstructed = _mt5_seconds_to_utc(transmitted_seconds)
+
+    drift_s = abs((pd.Timestamp(intended_utc) - reconstructed).total_seconds())
+    print(
+        "[tz_expiry_diag] "
+        f"broker_tz={BROKER_TZ} "
+        f"intended_utc={intended_utc.isoformat(timespec='seconds')} "
+        f"broker_local={broker_local.isoformat(timespec='seconds')} "
+        f"transmitted_seconds={transmitted_seconds} "
+        f"reconstructed_utc={reconstructed.isoformat()} "
+        f"round_trip_drift_s={drift_s:.3f}",
+        flush=True,
+    )
+
+
+# `_mt5_seconds_to_utc` is used only by the diagnostic above; imported lazily
+# to keep the import block tight and obvious to anyone tracing tz behaviour.
+from strategies.ema_trend.crypto_core import _mt5_seconds_to_utc  # noqa: E402
+
+
 def main() -> None:
     """Parse args, connect MT5, run once or loop each M5 close, always mt5.shutdown in finally."""
     p = argparse.ArgumentParser(description="Strategy03 crypto — Errante MT5 pending stops")
@@ -1008,6 +1062,9 @@ def main() -> None:
 
     mt5_connect(login, password, server)
     assert_terminal_ready()
+
+    # Timezone diagnostics (observability only -- never gates trading).
+    log_expiry_tz_diagnostics()
 
     try:
         # Print matching symbols and exit — resolve exact broker names.

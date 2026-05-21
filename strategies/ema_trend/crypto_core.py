@@ -6,6 +6,9 @@ Used by notebooks/03_strategy03_crypto.ipynb and mt5/run_strategy03_errante.py.
 
 from __future__ import annotations
 
+from datetime import timezone
+from zoneinfo import ZoneInfo
+
 import pandas as pd
 
 EMA_FAST = 8
@@ -14,6 +17,85 @@ EMA_SLOW = 21
 
 MIN_WARMUP_BARS_M5 = 200
 MIN_WARMUP_BARS_H1 = 200
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# BROKER TIMEZONE  (paired ingest + egress translation -- both halves must
+# agree, or pending expirations land in the past and MT5 returns 10022).
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# MT5's Python `copy_rates_*` returns `time` as an int64 second-count, but
+# the integer encodes the BROKER SERVER's wall clock formatted as if it
+# were a UTC epoch second. On an EET/EEST broker (Errante) those seconds
+# are 2-3h ahead of real UTC.
+#
+# The SAME mislabel convention is used in the reverse direction by
+# `order_send`: the `expiration` field is also an integer that MT5
+# interprets as broker wall clock, NOT real UTC. So we need a matched
+# pair of translators:
+#
+#     _mt5_seconds_to_utc(int)     -- inbound  (MT5 -> real UTC)
+#     _utc_to_mt5_broker_seconds() -- outbound (real UTC -> MT5 wire)
+#
+# Why this matters NOW: the previous code in run_strategy03_errante.py
+# called `int(expiry_utc.timestamp())` directly. That accidentally
+# produced the right wire value ONLY because `rates_to_ohlcv_df` had a
+# matching ingest bug -- bar timestamps were broker-mislabeled-UTC, so
+# `bar_time + 60min` was also broker-mislabeled-UTC, and `.timestamp()`
+# happened to emit broker-seconds. The two bugs cancelled perfectly.
+#
+# Once the ingest side is corrected here, bar_time becomes real UTC; the
+# egress side MUST be corrected in lock-step or every pending order will
+# be rejected with "Invalid expiration".
+BROKER_TZ = ZoneInfo("Europe/Athens")
+
+
+def _mt5_seconds_to_utc(seconds):
+    """
+    INBOUND: MT5 `time` int (broker wall-clock as Unix seconds) -> real UTC
+    pandas Timestamp / Series. DST-aware via BROKER_TZ.
+
+    `nonexistent='shift_forward'` and `ambiguous='infer'` keep this robust
+    around the two DST transitions per year; broker bars do not normally
+    fall in the spring-forward gap, but tagging this explicitly keeps the
+    behaviour deterministic if it ever does.
+    """
+    naive = pd.to_datetime(seconds, unit="s")
+    if hasattr(naive, "dt"):  # pandas Series -- 'infer' needs monotonic data, which MT5 bars are.
+        return (
+            naive.dt.tz_localize(BROKER_TZ, nonexistent="shift_forward",
+                                 ambiguous="infer")
+                 .dt.tz_convert("UTC")
+        )
+    # scalar Timestamp: pandas scalar tz_localize does NOT accept 'infer'.
+    return (
+        naive.tz_localize(BROKER_TZ, nonexistent="shift_forward", ambiguous=False)
+             .tz_convert("UTC")
+    )
+
+
+def _utc_to_mt5_broker_seconds(utc_dt) -> int:
+    """
+    OUTBOUND: real-UTC datetime/Timestamp -> the Unix-seconds integer that
+    MT5 expects on the wire (broker wall-clock encoded as if it were UTC).
+
+    This is the exact inverse of `_mt5_seconds_to_utc`:
+        UTC -> astimezone(BROKER_TZ)  -- DST-aware broker wall clock
+            -> replace tzinfo with UTC -- re-encode wall clock as the MT5
+                                          wire convention (no time shift)
+            -> .timestamp() -> int
+    """
+    if isinstance(utc_dt, pd.Timestamp):
+        utc_dt = utc_dt.to_pydatetime()
+    if utc_dt.tzinfo is None:
+        # Treat naive as already-UTC (caller's contract).
+        utc_dt = utc_dt.replace(tzinfo=timezone.utc)
+    broker_aware = utc_dt.astimezone(BROKER_TZ)
+    # Replace the +XX:XX offset label with +00:00 WITHOUT shifting the
+    # wall-clock components -- this yields the same encoding MT5 hands
+    # us on the inbound side, so the round-trip is exact.
+    naive_as_utc = broker_aware.replace(tzinfo=timezone.utc)
+    return int(naive_as_utc.timestamp())
 
 
 def default_crypto_tick(sym: str) -> float:
@@ -81,7 +163,9 @@ def rates_to_ohlcv_df(rates) -> pd.DataFrame:
     df = pd.DataFrame(rates)
     if df.empty:
         return df
-    df["time"] = pd.to_datetime(df["time"], unit="s", utc=True)
+    # MT5 returns broker-local wall-clock as a Unix-seconds integer; the old
+    # `pd.to_datetime(..., utc=True)` call mislabeled it. See _mt5_seconds_to_utc.
+    df["time"] = _mt5_seconds_to_utc(df["time"])
     df = df.rename(columns={"tick_volume": "volume"})
     df = df.set_index("time").sort_index()
     return df[["open", "high", "low", "close", "volume"]]

@@ -29,6 +29,7 @@ from .fallback_engine import FallbackEngine, FallbackResult
 from .execution_engine import ExecutionEngine, ExecutionOutcome
 from .order_factory import OrderFactory
 from .risk_adapter import RiskAdapter
+from .mt5_watchdog import Mt5Watchdog, WatchdogConfig
 
 __all__ = [
     "SymbolConfig",
@@ -43,4 +44,6 @@ __all__ = [
     "ExecutionOutcome",
     "OrderFactory",
     "RiskAdapter",
+    "Mt5Watchdog",
+    "WatchdogConfig",
 ]
