@@ -65,7 +65,19 @@ pd.set_option('display.float_format', '{:.4f}'.format)
 
 # ── Identity ────────────────────────────────────────────────────────────────
 STRATEGY    = 'multi_symbol_scalper'
-DATA_DIR    = Path('./data')
+# Try a few known data layouts (dev machine vs. server). Pick the first that
+# actually contains symbol subfolders so the notebook is portable across hosts.
+_DATA_CANDIDATES = [
+    Path('./data'),
+    Path('../src/notebooks/data'),
+    Path('./src/notebooks/data'),
+]
+DATA_DIR = next(
+    (p for p in _DATA_CANDIDATES
+     if p.exists() and any(c.is_dir() for c in p.iterdir())),
+    _DATA_CANDIDATES[0],
+)
+print(f'DATA_DIR = {DATA_DIR.resolve()}')
 RESULTS_DIR = Path('./results') / STRATEGY
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
