@@ -1,0 +1,588 @@
+#!/usr/bin/env python3
+"""
+Multi-Symbol Reaction Scalper — Live MT5 (Errante)
+
+Live execution of the strategy from notebooks/24_multi_symbol_scalper.ipynb.
+
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                          ARCHITECTURE OVERVIEW                            ║
+╠═══════════════════════════════════════════════════════════════════════════╣
+║                                                                           ║
+║   Per cycle (driven by M5 close):                                         ║
+║       1. Health-check MT5 (watchdog)                                      ║
+║       2. For each symbol in the golden basket:                            ║
+║            a) Fetch M5 + H1 + D1 history (UTC-corrected)                  ║
+║            b) Run Strategy.detect_signal() on last closed bar             ║
+║            c) If signal, dedupe via per-symbol seen_signals.json          ║
+║            d) Hand off to that symbol's ExecutionEngine (LIMIT→MARKET)    ║
+║       3. Aggregate cycle summary line                                     ║
+║       4. Sleep until next M5 close                                        ║
+║                                                                           ║
+║   One ExecutionEngine per symbol => independent:                          ║
+║       * logs/<SYMBOL>.json                                                ║
+║       * MAGIC (offset per symbol for ticket attribution)                  ║
+║       * risk_per_trade (set by CapitalAllocator)                          ║
+║       * pending/position state                                            ║
+║                                                                           ║
+║   Aggregate observability:                                                ║
+║       logs/multi_symbol_scalper.json — portfolio-level events             ║
+║                                                                           ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+Run:
+    python mt5/run_multi_scalper.py                 # loop, all golden symbols
+    python mt5/run_multi_scalper.py --once          # one cycle then exit
+    python mt5/run_multi_scalper.py --dry-run       # signals only, no orders
+    python mt5/run_multi_scalper.py --symbols GBPUSD XAUUSD   # explicit basket
+    python mt5/run_multi_scalper.py --policy score  # score-weighted sizing
+
+Env vars (optional, forwarded to mt5.initialize):
+    MT5_LOGIN, MT5_PASSWORD, MT5_SERVER, MT5_TERMINAL_PATH
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+import time
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Optional
+from zoneinfo import ZoneInfo
+
+import numpy as np
+import pandas as pd
+
+try:
+    import MetaTrader5 as mt5
+except ImportError:
+    print("Install MetaTrader5: pip install MetaTrader5", file=sys.stderr)
+    raise
+
+# Make sibling packages importable regardless of cwd.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from execution import ExecutionEngine, ExecutionOutcome, Mt5Watchdog  # noqa: E402
+from telegram_bot.mt5_notifier import Mt5Notifier                     # noqa: E402
+
+from mt5.multi_symbol_bot import (                                    # noqa: E402
+    Strategy, StrategyConfig, Signal,
+    SymbolBasket, SymbolStrategyConfig, load_basket,
+    CapitalAllocator, SymbolAllocation,
+)
+from mt5.multi_symbol_bot.strategy import (                           # noqa: E402
+    HISTORY_M5_BARS, HISTORY_H1_BARS, HISTORY_D1_BARS,
+    DEFAULT_BROKER_TO_NY_H, RR,
+)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# PATHS / RUNTIME CONFIG
+# ═══════════════════════════════════════════════════════════════════════════
+
+_REPO_ROOT     = Path(__file__).resolve().parent.parent
+LOGS_DIR       = _REPO_ROOT / "logs"
+SEEN_DIR       = _REPO_ROOT / "logs" / "seen_signals_multi"
+RESULTS_DIR    = _REPO_ROOT / "notebooks" / "results" / "multi_symbol_scalper"
+PORTFOLIO_LOG  = LOGS_DIR / "multi_symbol_scalper.json"
+
+# Magic-number base. Each symbol gets MAGIC_BASE + offset (0…N-1) so positions
+# from different symbols can be told apart in MT5 history.
+MAGIC_BASE     = 24_000_000
+
+# Execution thresholds — match values that worked for the gold bot in production.
+SLIPPAGE_LIMIT_THRESHOLD = 4.0
+SLIPPAGE_MAX_POINTS      = 6.0
+LIMIT_ORDER_STALE_SECONDS = 5 * 60        # 1 M5 bar
+MAX_SPREAD_POINTS        = 200
+DEFAULT_PORTFOLIO_RISK   = 0.02           # 2% portfolio at risk if all 1× open
+
+M5_SECONDS               = 300
+
+# Broker timezone. Errante quotes wall-clock as if it were UTC; we relabel.
+# (Same fix as run_ob_xauusd.py — see that file's docstring for full rationale.)
+BROKER_TZ = ZoneInfo("Asia/Nicosia")
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# UTC-CORRECTION HELPER
+# ═══════════════════════════════════════════════════════════════════════════
+
+def _mt5_seconds_to_utc(seconds):
+    """
+    Convert MT5's `time` field (broker wall-clock encoded as Unix seconds) to
+    real UTC. DST-aware via BROKER_TZ. See run_ob_xauusd.py for the full
+    treatise on why this matters.
+    """
+    naive = pd.to_datetime(seconds, unit="s")
+    if hasattr(naive, "dt"):
+        return (
+            naive.dt.tz_localize(BROKER_TZ, nonexistent="shift_forward",
+                                  ambiguous="infer")
+                 .dt.tz_convert("UTC")
+        )
+    return (
+        naive.tz_localize(BROKER_TZ, nonexistent="shift_forward",
+                          ambiguous=False)
+             .tz_convert("UTC")
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# MT5 CONNECTION
+# ═══════════════════════════════════════════════════════════════════════════
+
+def mt5_connect() -> None:
+    """Open the MT5 IPC connection using env vars when present."""
+    kwargs: dict = {}
+    login    = os.environ.get("MT5_LOGIN")
+    password = os.environ.get("MT5_PASSWORD")
+    server   = os.environ.get("MT5_SERVER")
+    if login and password and server:
+        kwargs["login"]    = int(login)
+        kwargs["password"] = password
+        kwargs["server"]   = server
+    path = os.environ.get("MT5_TERMINAL_PATH")
+    if path:
+        kwargs["path"] = path
+    if not mt5.initialize(**kwargs):
+        raise RuntimeError(f"mt5.initialize failed: {mt5.last_error()}")
+
+
+def assert_terminal_ready() -> None:
+    ti = mt5.terminal_info()
+    if ti is None:
+        raise RuntimeError(
+            f"terminal_info() returned None: {mt5.last_error()}\n"
+            "Open MT5, log in, enable AutoTrading, then retry."
+        )
+    if not ti.connected:
+        raise RuntimeError(
+            "MT5 terminal not connected to broker — wait for quotes in Market Watch."
+        )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# DATA FETCH  (per-symbol M5 / H1 / D1)
+# ═══════════════════════════════════════════════════════════════════════════
+
+def _fetch_bars(symbol: str, timeframe, n: int) -> pd.DataFrame:
+    """Fetch `n` bars; drop the still-forming bar via iloc[:-1]."""
+    rates = mt5.copy_rates_from_pos(symbol, timeframe, 0, n)
+    if rates is None or len(rates) == 0:
+        raise RuntimeError(f"No data for {symbol} timeframe={timeframe}: {mt5.last_error()}")
+    df = pd.DataFrame(rates)
+    df["time"] = _mt5_seconds_to_utc(df["time"])
+    df = df.rename(columns={"tick_volume": "volume"})
+    cols = [c for c in ["time", "open", "high", "low", "close", "volume"] if c in df.columns]
+    return df[cols].iloc[:-1].reset_index(drop=True)
+
+
+def fetch_strategy_frames(broker_symbol: str) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Fetch the three frames the Strategy needs, all in one go."""
+    m5 = _fetch_bars(broker_symbol, mt5.TIMEFRAME_M5, HISTORY_M5_BARS)
+    h1 = _fetch_bars(broker_symbol, mt5.TIMEFRAME_H1, HISTORY_H1_BARS)
+    d1 = _fetch_bars(broker_symbol, mt5.TIMEFRAME_D1, HISTORY_D1_BARS)
+    return m5, h1, d1
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SEEN-SIGNAL PERSISTENCE  (per symbol; dedup across restarts)
+# ═══════════════════════════════════════════════════════════════════════════
+
+def _seen_path(symbol: str) -> Path:
+    return SEEN_DIR / f"{symbol}.json"
+
+
+def load_seen_signals(symbol: str) -> set:
+    path = _seen_path(symbol)
+    if not path.exists():
+        return set()
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return {tuple(item) for item in data.get("entries", [])}
+    except Exception:
+        return set()
+
+
+def save_seen_signals(symbol: str, seen: set) -> None:
+    SEEN_DIR.mkdir(parents=True, exist_ok=True)
+    payload = {"schema": "utc-v1", "entries": [list(t) for t in seen]}
+    _seen_path(symbol).write_text(json.dumps(payload), encoding="utf-8")
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# PER-SYMBOL CONTEXT  (everything one symbol needs in the cycle)
+# ═══════════════════════════════════════════════════════════════════════════
+
+@dataclass
+class SymbolContext:
+    """
+    One per active symbol. Bundles the strategy, engine, notifier, and
+    persistence layer so the cycle loop has a single uniform interface.
+    """
+
+    symbol:          str                     # canonical (e.g. "XAUUSD")
+    strategy:        Strategy
+    engine:          ExecutionEngine
+    notifier:        Mt5Notifier
+    allocation:      SymbolAllocation
+    seen_signals:    set = field(default_factory=set)
+
+    @property
+    def broker_symbol(self) -> str:
+        """Broker-resolved symbol (e.g. 'XAUUSD.i')."""
+        return self.engine.cfg.name
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# CYCLE  (single evaluation of one symbol)
+# ═══════════════════════════════════════════════════════════════════════════
+
+def run_symbol_cycle(ctx: SymbolContext, dry_run: bool) -> dict:
+    """
+    One full evaluation for one symbol:
+        fetch -> detect -> dedupe -> handoff to ExecutionEngine.
+
+    Returns a per-symbol summary dict for the aggregate cycle log.
+    Never raises — exceptions are logged and absorbed so one symbol's failure
+    doesn't take down the whole portfolio loop.
+    """
+    sym  = ctx.symbol
+    eng  = ctx.engine
+    log  = eng.logger
+
+    # ── 0) Bookkeeping that must run every cycle (orphans, stale pendings) ──
+    eng.begin_cycle(active_ob_keys=[])    # we set valid keys after detection
+    eng.heartbeat_if_due()
+
+    if not eng.is_mt5_healthy():
+        log.event("cycle_skipped", reason="mt5_unhealthy")
+        return {"symbol": sym, "skipped": "mt5_unhealthy"}
+
+    # ── 1) Strategy ─────────────────────────────────────────────────────────-
+    try:
+        m5, h1, d1 = fetch_strategy_frames(ctx.broker_symbol)
+    except RuntimeError as exc:
+        log.error("data_fetch_error", exc=exc)
+        return {"symbol": sym, "skipped": "data_fetch_error", "error": str(exc)}
+
+    try:
+        signal: Optional[Signal] = ctx.strategy.detect_signal(m5, h1, d1)
+    except Exception as exc:
+        log.error("strategy_exception", exc=exc)
+        return {"symbol": sym, "skipped": "strategy_exception", "error": str(exc)}
+
+    last_bar_time = m5.iloc[-1]["time"]
+    age_minutes   = (datetime.now(timezone.utc) - last_bar_time).total_seconds() / 60
+
+    log.event(
+        "cycle",
+        bars_m5=len(m5), bars_h1=len(h1), bars_d1=len(d1),
+        last_bar_time=str(last_bar_time),
+        data_age_min=round(age_minutes, 1),
+        signal=signal is not None,
+        risk_per_trade=ctx.allocation.risk_per_trade,
+        weight=ctx.allocation.weight,
+    )
+
+    # ── 2) Stale-data guard ─────────────────────────────────────────────────-
+    if age_minutes > 15:
+        log.event("skip", reason="market_closed_or_stale",
+                  data_age_min=round(age_minutes, 1))
+        return {"symbol": sym, "skipped": "stale", "age_min": round(age_minutes, 1)}
+
+    if signal is None:
+        return {"symbol": sym, "signal": False}
+
+    # ── 3) Dedupe against persistent seen-signals ───────────────────────────-
+    sig_key = (signal.bar_time, signal.direction)
+    if sig_key in ctx.seen_signals:
+        log.event("skip", reason="already_traded",
+                  bar_time=signal.bar_time, direction=signal.direction)
+        return {"symbol": sym, "skipped": "already_traded"}
+
+    # ── 4) Telegram + structured log of the fresh signal ────────────────────-
+    log.event("signal",
+              direction=signal.direction, entry=signal.entry,
+              sl=signal.sl, tp=signal.tp,
+              bar_time=signal.bar_time, **signal.confidence)
+    tg_payload = {**signal.as_engine_dict(), "symbol": sym}
+    try:
+        ctx.notifier.notify_signal(tg_payload)
+    except Exception as exc:
+        log.error("notify_signal_failed", exc=exc)
+
+    if dry_run:
+        log.event("dry_run", msg="no_order_sent",
+                  direction=signal.direction, entry=signal.entry)
+        ctx.seen_signals.add(sig_key)
+        save_seen_signals(sym, ctx.seen_signals)
+        return {"symbol": sym, "signal": True, "stage": "dry_run"}
+
+    # ── 5) Hand to ExecutionEngine ──────────────────────────────────────────-
+    try:
+        outcome: ExecutionOutcome = eng.place_signal(signal.as_engine_dict())
+    except Exception as exc:
+        log.error("execution_exception", exc=exc, bar_time=signal.bar_time)
+        return {"symbol": sym, "signal": True, "stage": "exception", "error": str(exc)}
+
+    # ── 6) Notify outcome ───────────────────────────────────────────────────-
+    if outcome.placed:
+        ctx.seen_signals.add(sig_key)
+        save_seen_signals(sym, ctx.seen_signals)
+        try:
+            ctx.notifier.notify_order_placed({
+                "symbol":       sym,
+                "ticket":       outcome.ticket,
+                "order_type":   outcome.stage,
+                "direction":    signal.direction,
+                "volume":       outcome.fields.get("volume"),
+                "sl":           signal.sl,
+                "tp":           outcome.fields.get("tp_final", signal.tp),
+                "slippage_pts": outcome.fields.get("slippage_pts"),
+            })
+        except Exception as exc:
+            log.error("notify_placed_failed", exc=exc)
+    else:
+        try:
+            ctx.notifier.notify_skip({
+                "symbol":    sym,
+                "reason":    outcome.reason or outcome.stage,
+                "direction": signal.direction,
+                "bar_time":  signal.bar_time,
+                **outcome.fields,
+            })
+        except Exception as exc:
+            log.error("notify_skip_failed", exc=exc)
+
+    return {
+        "symbol":  sym,
+        "signal":  True,
+        "stage":   outcome.stage,
+        "placed":  outcome.placed,
+        "ticket":  outcome.ticket,
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# PORTFOLIO LOGGER
+# ═══════════════════════════════════════════════════════════════════════════
+
+def write_portfolio_event(event: str, **fields) -> None:
+    """Single-line JSON to the portfolio aggregate log."""
+    LOGS_DIR.mkdir(parents=True, exist_ok=True)
+    entry = {
+        "ts":    datetime.now(timezone.utc).isoformat(),
+        "event": event,
+        **fields,
+    }
+    with PORTFOLIO_LOG.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(entry, default=str) + "\n")
+    print(f"[portfolio] {event}: " +
+          " ".join(f"{k}={v}" for k, v in fields.items() if k != "exc"))
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# BUILD PER-SYMBOL CONTEXTS
+# ═══════════════════════════════════════════════════════════════════════════
+
+def build_contexts(
+    basket: SymbolBasket,
+    allocations: list[SymbolAllocation],
+    risk_reward: float,
+) -> list[SymbolContext]:
+    """
+    For each basket member: create Strategy, ExecutionEngine, Notifier, seen-set.
+
+    Each ExecutionEngine writes to its own `logs/<SYMBOL>.json` with a unique
+    magic so multi-bot ticket attribution stays clean.
+    """
+    contexts: list[SymbolContext] = []
+    alloc_by_sym = {a.symbol: a for a in allocations}
+
+    for idx, member in enumerate(basket):
+        sym = member.symbol
+        alloc = alloc_by_sym.get(sym)
+        if alloc is None:
+            # Should never happen — allocator covers every basket member.
+            write_portfolio_event("alloc_missing", symbol=sym)
+            continue
+
+        log_path = LOGS_DIR / f"{sym}.json"
+        magic    = MAGIC_BASE + idx
+
+        engine = ExecutionEngine(
+            symbol                    = sym,
+            magic                     = magic,
+            log_path                  = log_path,
+            risk_per_trade            = alloc.risk_per_trade,
+            risk_reward               = risk_reward,
+            slippage_limit_threshold  = SLIPPAGE_LIMIT_THRESHOLD,
+            slippage_max_points       = SLIPPAGE_MAX_POINTS,
+            max_spread_points         = MAX_SPREAD_POINTS,
+            stale_after_seconds       = LIMIT_ORDER_STALE_SECONDS,
+            comment_prefix            = "multi_scalp",
+            rotate_daily_logs         = True,
+        )
+
+        # Recover open positions / pendings (idempotent — survives bot restarts).
+        engine.initialize_state_from_broker()
+
+        strategy = Strategy(cfg=member.cfg, broker_to_ny_h=DEFAULT_BROKER_TO_NY_H)
+        notifier = Mt5Notifier(logger=engine.logger)
+        seen     = load_seen_signals(sym)
+
+        contexts.append(SymbolContext(
+            symbol       = sym,
+            strategy     = strategy,
+            engine       = engine,
+            notifier     = notifier,
+            allocation   = alloc,
+            seen_signals = seen,
+        ))
+
+    return contexts
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# CYCLE TIMING
+# ═══════════════════════════════════════════════════════════════════════════
+
+def sleep_until_next_m5(extra: float = 0.5) -> None:
+    """Sleep until just after the next M5 bar closes (UTC-anchored)."""
+    now = time.time()
+    delay = max(1.0, (int(now // M5_SECONDS) + 1) * M5_SECONDS - now + extra)
+    print(f"  → sleeping {delay:.0f}s until next M5 close ...")
+    time.sleep(delay)
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# MAIN CYCLE  (across all symbols)
+# ═══════════════════════════════════════════════════════════════════════════
+
+def run_portfolio_cycle(contexts: list[SymbolContext], dry_run: bool) -> None:
+    """One pass through every symbol; collects + logs an aggregate summary."""
+    started = time.monotonic()
+    results: list[dict] = []
+    for ctx in contexts:
+        try:
+            results.append(run_symbol_cycle(ctx, dry_run=dry_run))
+        except Exception as exc:
+            # Belt-and-suspenders — run_symbol_cycle already catches its own
+            # exceptions. This is here so an issue with a single symbol never
+            # blocks the rest of the portfolio from running this cycle.
+            ctx.engine.logger.error("uncaught_cycle_exception", exc=exc)
+            results.append({"symbol": ctx.symbol, "skipped": "uncaught_exception",
+                            "error": str(exc)})
+
+    n_signals = sum(1 for r in results if r.get("signal"))
+    n_placed  = sum(1 for r in results if r.get("placed"))
+    n_skipped = sum(1 for r in results if "skipped" in r)
+
+    write_portfolio_event(
+        "cycle_complete",
+        symbols=len(contexts),
+        signals=n_signals,
+        placed=n_placed,
+        skipped=n_skipped,
+        elapsed_s=round(time.monotonic() - started, 2),
+        per_symbol=results,
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ENTRY POINT
+# ═══════════════════════════════════════════════════════════════════════════
+
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    p = argparse.ArgumentParser(description=__doc__,
+                                formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument("--symbols", nargs="+", default=None,
+                   help="Explicit basket (overrides ranking).")
+    p.add_argument("--policy", default="equal", choices=["equal", "score", "custom"],
+                   help="Capital allocation policy (default: equal).")
+    p.add_argument("--portfolio-risk", type=float, default=DEFAULT_PORTFOLIO_RISK,
+                   help="Total fraction of balance at risk if every symbol is in (default: 0.02).")
+    p.add_argument("--target-wr", type=float, default=48.0,
+                   help="Minimum IS WR%% for auto-basket selection (default: 48).")
+    p.add_argument("--once",    action="store_true",
+                   help="Run one cycle then exit.")
+    p.add_argument("--dry-run", action="store_true",
+                   help="Detect + notify, never send orders.")
+    p.add_argument("--results-dir", default=str(RESULTS_DIR),
+                   help=f"Notebook-24 results directory (default: {RESULTS_DIR}).")
+    return p.parse_args(argv)
+
+
+def main() -> None:
+    args = parse_args()
+
+    # ── 1) Load research artifacts ──────────────────────────────────────────-
+    basket = load_basket(
+        results_dir      = Path(args.results_dir),
+        target_wr        = args.target_wr,
+        symbols_override = args.symbols,
+    )
+    print(f"Basket loaded: {len(basket)} symbols — {basket.symbols}")
+    print(f"Selection criteria: {basket.criteria}")
+
+    # ── 2) Allocate capital across the basket ───────────────────────────────-
+    allocator = CapitalAllocator(total_portfolio_risk=args.portfolio_risk)
+    allocations = allocator.allocate(basket, policy=args.policy)
+    print(f"\nCapital plan (policy={args.policy}, total_risk={args.portfolio_risk:.3%}):")
+    for a in allocations:
+        print(f"  {a.symbol:8} weight={a.weight:6.2%}  risk_per_trade={a.risk_per_trade:.4%}")
+
+    # ── 3) Boot MT5 ─────────────────────────────────────────────────────────-
+    mt5_connect()
+    assert_terminal_ready()
+
+    write_portfolio_event(
+        "portfolio_start",
+        basket=basket.symbols,
+        policy=args.policy,
+        portfolio_risk=args.portfolio_risk,
+        criteria=basket.criteria,
+        dry_run=args.dry_run,
+    )
+
+    # ── 4) Build per-symbol contexts ────────────────────────────────────────-
+    contexts = build_contexts(basket, allocations, risk_reward=RR)
+
+    # Single shared watchdog (MT5 connection is process-wide).
+    watchdog = Mt5Watchdog(logger=contexts[0].engine.logger, connect_fn=mt5_connect)
+    for ctx in contexts:
+        ctx.engine.attach_watchdog(watchdog)
+
+    # ── 5) Run ──────────────────────────────────────────────────────────────-
+    try:
+        if args.once:
+            run_portfolio_cycle(contexts, dry_run=args.dry_run)
+            return
+
+        print(f"\nMulti-symbol scalper running on {len(contexts)} symbols. Ctrl+C to stop.")
+        while True:
+            try:
+                run_portfolio_cycle(contexts, dry_run=args.dry_run)
+            except Exception as exc:
+                write_portfolio_event("portfolio_cycle_exception", error=repr(exc))
+            sleep_until_next_m5()
+
+    except KeyboardInterrupt:
+        print("\nStopped by user.")
+    finally:
+        write_portfolio_event("portfolio_stop")
+        for ctx in contexts:
+            try:
+                ctx.engine.shutdown()
+            except Exception:
+                pass
+        mt5.shutdown()
+
+
+if __name__ == "__main__":
+    main()
