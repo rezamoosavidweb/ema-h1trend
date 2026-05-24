@@ -625,10 +625,12 @@ code(r"""def trades_to_df(trades):
     } for t in trades])
 
 
+QUARTERLY_COLS = ['symbol','quarter','trades','wins','WR_%','exp_R','PF','pass']
+
 def per_quarter_stats(trades, symbol):
     df = trades_to_df(trades)
     if df.empty:
-        return pd.DataFrame()
+        return pd.DataFrame(columns=QUARTERLY_COLS)
     df['quarter'] = df['entry_time'].dt.to_period('Q').astype(str)
     rows = []
     for q, g in df.groupby('quarter'):
@@ -643,14 +645,22 @@ def per_quarter_stats(trades, symbol):
             'PF'     : round(g[g['R']>0]['R'].sum() / abs(g[g['R']<=0]['R'].sum() or 1e-9), 2),
             'pass'   : (wins/n*100 >= TARGET_WR) and (n >= MIN_TRADES_PER_QUARTER),
         })
-    return pd.DataFrame(rows)
+    return pd.DataFrame(rows, columns=QUARTERLY_COLS)
 
 
-all_q = pd.concat(
-    [per_quarter_stats(baseline_trades[s], s) for s in baseline_trades],
-    ignore_index=True,
-)
+parts = [per_quarter_stats(baseline_trades[s], s) for s in baseline_trades]
+all_q = (pd.concat(parts, ignore_index=True) if parts
+         else pd.DataFrame(columns=QUARTERLY_COLS))
 all_q.to_csv(SUMMARY_DIR / 'baseline_quarterly_all.csv', index=False)
+
+if all_q.empty:
+    n_syms     = len(baseline_trades)
+    n_with_tr  = sum(1 for s in baseline_trades if baseline_trades[s])
+    raise RuntimeError(
+        f'No baseline trades to summarise: {n_with_tr}/{n_syms} symbols produced any trades. '
+        f'Check that the M5/H1/D1 CSVs under {DATA_DIR.resolve()} exist for the active symbols '
+        f'and that DATE_FROM..DATE_TO ({DATE_FROM}..{DATE_TO}) overlaps the available data.'
+    )
 
 # Pivot for readability
 pivot_wr = all_q.pivot(index='quarter', columns='symbol', values='WR_%').round(2)
