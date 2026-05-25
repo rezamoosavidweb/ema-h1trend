@@ -1,0 +1,47 @@
+[Mon 05/25/2026 11:48:49.07] launching python runner 
+Basket loaded: 7 symbols — ['GBPUSD', 'XAUUSD', 'GBPCAD', 'USDMXN', 'EURJPY', 'EURCAD', 'AUDCAD']
+Selection criteria: WR_IS >= 48.0% AND fwd_net_$ >= 0.00
+
+Capital plan (policy=equal, total_risk=2.000%):
+  GBPUSD   weight=14.29%  risk_per_trade=0.2857%
+  XAUUSD   weight=14.29%  risk_per_trade=0.2857%
+  GBPCAD   weight=14.29%  risk_per_trade=0.2857%
+  USDMXN   weight=14.29%  risk_per_trade=0.2857%
+  EURJPY   weight=14.29%  risk_per_trade=0.2857%
+  EURCAD   weight=14.29%  risk_per_trade=0.2857%
+  AUDCAD   weight=14.29%  risk_per_trade=0.2857%
+[portfolio] portfolio_start: basket=['GBPUSD', 'XAUUSD', 'GBPCAD', 'USDMXN', 'EURJPY', 'EURCAD', 'AUDCAD'] policy=equal portfolio_risk=0.02 criteria=WR_IS >= 48.0% AND fwd_net_$ >= 0.00 dry_run=False
+[2026-05-25T08:18:51.157496+00:00] bot_start | {'symbol': 'GBPUSD', 'requested_symbol': 'GBPUSD', 'magic': 24000000, 'risk_per_trade': 0.002857, 'risk_reward': 2.0, 'slippage_limit_threshold': 4.0, 'slippage_max_points': 6.0, 'max_spread_points': 200, 'stale_after_seconds': 300, 'heartbeat_interval_seconds': 600, 'rotate_daily_logs': True}
+[2026-05-25T08:18:51.169858+00:00] state_recovered | {'adopted_pendings': [], 'adopted_positions': [], 'balance': 961.66, 'equity': 961.66}
+[2026-05-25T08:18:51.172752+00:00] bot_start | {'symbol': 'XAUUSD.i', 'requested_symbol': 'XAUUSD', 'magic': 24000001, 'risk_per_trade': 0.002857, 'risk_reward': 2.0, 'slippage_limit_threshold': 4.0, 'slippage_max_points': 6.0, 'max_spread_points': 200, 'stale_after_seconds': 300, 'heartbeat_interval_seconds': 600, 'rotate_daily_logs': True}
+[2026-05-25T08:18:51.174723+00:00] state_recovered | {'adopted_pendings': [], 'adopted_positions': [], 'balance': 961.66, 'equity': 961.66}
+[2026-05-25T08:18:51.178271+00:00] bot_start | {'symbol': 'GBPCAD.i', 'requested_symbol': 'GBPCAD', 'magic': 24000002, 'risk_per_trade': 0.002857, 'risk_reward': 2.0, 'slippage_limit_threshold': 4.0, 'slippage_max_points': 6.0, 'max_spread_points': 200, 'stale_after_seconds': 300, 'heartbeat_interval_seconds': 600, 'rotate_daily_logs': True}
+[2026-05-25T08:18:51.180591+00:00] state_recovered | {'adopted_pendings': [], 'adopted_positions': [], 'balance': 961.66, 'equity': 961.66}
+[2026-05-25T08:18:51.182398+00:00] bot_start | {'symbol': 'USDMXN.i', 'requested_symbol': 'USDMXN', 'magic': 24000003, 'risk_per_trade': 0.002857, 'risk_reward': 2.0, 'slippage_limit_threshold': 4.0, 'slippage_max_points': 6.0, 'max_spread_points': 200, 'stale_after_seconds': 300, 'heartbeat_interval_seconds': 600, 'rotate_daily_logs': True}
+[2026-05-25T08:18:51.184557+00:00] state_recovered | {'adopted_pendings': [], 'adopted_positions': [], 'balance': 961.66, 'equity': 961.66}
+[2026-05-25T08:18:51.187028+00:00] bot_start | {'symbol': 'EURJPY.i', 'requested_symbol': 'EURJPY', 'magic': 24000004, 'risk_per_trade': 0.002857, 'risk_reward': 2.0, 'slippage_limit_threshold': 4.0, 'slippage_max_points': 6.0, 'max_spread_points': 200, 'stale_after_seconds': 300, 'heartbeat_interval_seconds': 600, 'rotate_daily_logs': True}
+[2026-05-25T08:18:51.189519+00:00] state_recovered | {'adopted_pendings': [], 'adopted_positions': [], 'balance': 961.66, 'equity': 961.66}
+[2026-05-25T08:18:51.191613+00:00] bot_start | {'symbol': 'EURCAD.i', 'requested_symbol': 'EURCAD', 'magic': 24000005, 'risk_per_trade': 0.002857, 'risk_reward': 2.0, 'slippage_limit_threshold': 4.0, 'slippage_max_points': 6.0, 'max_spread_points': 200, 'stale_after_seconds': 300, 'heartbeat_interval_seconds': 600, 'rotate_daily_logs': True}
+[2026-05-25T08:18:51.193829+00:00] state_recovered | {'adopted_pendings': [], 'adopted_positions': [], 'balance': 961.66, 'equity': 961.66}
+[2026-05-25T08:18:51.196655+00:00] bot_start | {'symbol': 'AUDCAD.i', 'requested_symbol': 'AUDCAD', 'magic': 24000006, 'risk_per_trade': 0.002857, 'risk_reward': 2.0, 'slippage_limit_threshold': 4.0, 'slippage_max_points': 6.0, 'max_spread_points': 200, 'stale_after_seconds': 300, 'heartbeat_interval_seconds': 600, 'rotate_daily_logs': True}
+[2026-05-25T08:18:51.200847+00:00] state_recovered | {'adopted_pendings': [], 'adopted_positions': [], 'balance': 961.66, 'equity': 961.66}
+
+Multi-symbol scalper running on 7 symbols. Ctrl+C to stop.
+[2026-05-25T08:18:51.204963+00:00] heartbeat | {'uptime_s': 0.0, 'mt5_connected': True, 'mt5_trade_allowed': True, 'tracked_pendings': 0, 'open_positions': 0, 'cooldown_active': False, 'cooldown_remaining_s': 0.0, 'balance': 961.66, 'equity': 961.66}
+[2026-05-25T08:18:51.209425+00:00] mt5_connected | {'state': 'healthy', 'connected': True, 'trade_allowed': True, 'ping_ms': 16999, 'recovered_after_failures': 0}
+[2026-05-25T08:18:52.594937+00:00] cycle | {'bars_m5': 599, 'bars_h1': 249, 'bars_d1': 119, 'last_bar_time': '2026-05-25 08:10:00+00:00', 'data_age_min': 8.9, 'signal': False, 'risk_per_trade': 0.002857, 'weight': 0.142857}
+[2026-05-25T08:18:52.597411+00:00] heartbeat | {'uptime_s': 1.4, 'mt5_connected': True, 'mt5_trade_allowed': True, 'tracked_pendings': 0, 'open_positions': 0, 'cooldown_active': False, 'cooldown_remaining_s': 0.0, 'balance': 961.66, 'equity': 961.66}
+[2026-05-25T08:18:53.648090+00:00] cycle | {'bars_m5': 599, 'bars_h1': 249, 'bars_d1': 119, 'last_bar_time': '2026-05-25 08:10:00+00:00', 'data_age_min': 8.9, 'signal': False, 'risk_per_trade': 0.002857, 'weight': 0.142857}
+[2026-05-25T08:18:53.651052+00:00] heartbeat | {'uptime_s': 2.5, 'mt5_connected': True, 'mt5_trade_allowed': True, 'tracked_pendings': 0, 'open_positions': 0, 'cooldown_active': False, 'cooldown_remaining_s': 0.0, 'balance': 961.66, 'equity': 961.66}
+[2026-05-25T08:18:55.304693+00:00] cycle | {'bars_m5': 599, 'bars_h1': 249, 'bars_d1': 119, 'last_bar_time': '2026-05-24 21:35:00+00:00', 'data_age_min': 643.9, 'signal': False, 'risk_per_trade': 0.002857, 'weight': 0.142857}
+[2026-05-25T08:18:55.306022+00:00] skip | {'reason': 'market_closed_or_stale', 'data_age_min': 643.9}
+[2026-05-25T08:18:55.308217+00:00] heartbeat | {'uptime_s': 4.1, 'mt5_connected': True, 'mt5_trade_allowed': True, 'tracked_pendings': 0, 'open_positions': 0, 'cooldown_active': False, 'cooldown_remaining_s': 0.0, 'balance': 961.66, 'equity': 961.66}
+[2026-05-25T08:18:56.581140+00:00] cycle | {'bars_m5': 599, 'bars_h1': 249, 'bars_d1': 119, 'last_bar_time': '2026-05-24 21:50:00+00:00', 'data_age_min': 628.9, 'signal': False, 'risk_per_trade': 0.002857, 'weight': 0.142857}
+[2026-05-25T08:18:56.582803+00:00] skip | {'reason': 'market_closed_or_stale', 'data_age_min': 628.9}
+[2026-05-25T08:18:56.585453+00:00] heartbeat | {'uptime_s': 5.4, 'mt5_connected': True, 'mt5_trade_allowed': True, 'tracked_pendings': 0, 'open_positions': 0, 'cooldown_active': False, 'cooldown_remaining_s': 0.0, 'balance': 961.66, 'equity': 961.66}
+[2026-05-25T08:18:56.985805+00:00] data_fetch_error | {'error_type': 'RuntimeError', 'error_msg': "No data for EURJPY.i timeframe=5: (-1, 'Terminal: Call failed')"}
+[2026-05-25T08:18:56.997794+00:00] heartbeat | {'uptime_s': 5.8, 'mt5_connected': True, 'mt5_trade_allowed': True, 'tracked_pendings': 0, 'open_positions': 0, 'cooldown_active': False, 'cooldown_remaining_s': 0.0, 'balance': 961.66, 'equity': 961.66}
+[2026-05-25T08:18:58.330486+00:00] cycle | {'bars_m5': 599, 'bars_h1': 249, 'bars_d1': 119, 'last_bar_time': '2026-05-24 21:30:00+00:00', 'data_age_min': 649.0, 'signal': False, 'risk_per_trade': 0.002857, 'weight': 0.142857}
+[2026-05-25T08:18:58.331995+00:00] skip | {'reason': 'market_closed_or_stale', 'data_age_min': 649.0}
+[2026-05-25T08:18:58.336595+00:00] heartbeat | {'uptime_s': 7.1, 'mt5_connected': True, 'mt5_trade_allowed': True, 'tracked_pendings': 0, 'open_positions': 0, 'cooldown_active': False, 'cooldown_remaining_s': 0.0, 'balance': 961.66, 'equity': 961.66}
+[2026-05-25T08:18:59.757010+00:00] cycle | {'bars_m5': 599, 'bars_h1': 249, 'bars_d1': 119, 'last_bar_time': '2026-05-25 08:10:00+00:00', 'data_age_min': 9.0, 'signal': False, 'risk_per_trade': 0.002857, 'weight': 0.142857}
