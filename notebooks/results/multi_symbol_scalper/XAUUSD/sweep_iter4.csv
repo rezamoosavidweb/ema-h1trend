@@ -1,0 +1,12 @@
+symbol,overlay,trades,WR_%,exp_R,PF,q_pass_%,score
+XAUUSD,{'require_h1_rsi_align': True},532,52.82,0.585,2.01,69.2,39.43
+XAUUSD,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",498,52.61,0.578,1.97,69.2,39.23
+XAUUSD,{},665,50.38,0.511,1.8,61.5,33.15
+XAUUSD,{'adx_min': 18.0},627,50.08,0.502,1.77,61.5,32.85
+XAUUSD,{'add_vol_confirm': True},812,49.26,0.478,1.76,61.5,32.03
+XAUUSD,"{'adx_min': 18.0, 'add_vol_confirm': True}",762,48.82,0.465,1.73,61.5,31.59
+XAUUSD,{'adx_min': 22.0},507,48.72,0.462,1.65,61.5,31.49
+XAUUSD,{'require_macd_align': True},470,51.06,0.532,1.66,38.5,22.29
+XAUUSD,"{'require_h1_rsi_align': True, 'require_macd_align': True}",387,52.71,0.581,1.81,30.8,20.1
+XAUUSD,"{'adx_min': 18.0, 'require_macd_align': True}",423,51.06,0.532,1.63,30.8,18.45
+XAUUSD,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",302,52.65,0.579,1.7,15.4,12.34

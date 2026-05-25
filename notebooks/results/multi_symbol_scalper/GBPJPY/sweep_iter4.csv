@@ -1,0 +1,12 @@
+symbol,overlay,trades,WR_%,exp_R,PF,q_pass_%,score
+GBPJPY,{'add_vol_confirm': True},857,46.21,0.386,1.46,41.2,18.8
+GBPJPY,{},735,45.71,0.371,1.41,41.2,18.3
+GBPJPY,{'require_h1_rsi_align': True},582,48.45,0.454,1.57,35.3,18.1
+GBPJPY,"{'adx_min': 18.0, 'add_vol_confirm': True}",784,45.66,0.37,1.44,35.3,15.31
+GBPJPY,{'adx_min': 18.0},666,45.2,0.356,1.4,35.3,14.84
+GBPJPY,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",524,47.14,0.414,1.51,29.4,13.84
+GBPJPY,{'adx_min': 22.0},552,44.57,0.337,1.36,29.4,11.27
+GBPJPY,{'require_macd_align': True},526,45.25,0.357,1.27,23.5,9.01
+GBPJPY,"{'require_h1_rsi_align': True, 'require_macd_align': True}",418,48.09,0.443,1.39,11.8,5.97
+GBPJPY,"{'adx_min': 18.0, 'require_macd_align': True}",461,44.69,0.341,1.25,5.9,-0.37
+GBPJPY,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",331,46.83,0.405,1.33,0.0,-1.17

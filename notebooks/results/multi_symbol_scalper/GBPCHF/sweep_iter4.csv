@@ -1,0 +1,12 @@
+symbol,overlay,trades,WR_%,exp_R,PF,q_pass_%,score
+GBPCHF,{'add_vol_confirm': True},621,46.38,0.391,1.54,38.5,17.61
+GBPCHF,{'require_macd_align': True},383,45.95,0.379,1.37,38.5,17.18
+GBPCHF,{'require_h1_rsi_align': True},438,47.72,0.432,1.51,30.8,15.1
+GBPCHF,"{'adx_min': 18.0, 'add_vol_confirm': True}",551,45.74,0.372,1.52,30.8,13.12
+GBPCHF,{},543,45.67,0.37,1.44,30.8,13.06
+GBPCHF,{'adx_min': 18.0},483,44.72,0.342,1.4,23.1,8.26
+GBPCHF,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",385,45.97,0.379,1.41,15.4,5.67
+GBPCHF,"{'adx_min': 18.0, 'require_macd_align': True}",332,44.88,0.346,1.31,15.4,4.57
+GBPCHF,{'adx_min': 22.0},365,44.66,0.34,1.38,15.4,4.35
+GBPCHF,"{'require_h1_rsi_align': True, 'require_macd_align': True}",315,48.25,0.448,1.44,7.7,4.1
+GBPCHF,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",225,48.44,0.453,1.41,0.0,0.44

@@ -1,0 +1,12 @@
+{
+  "basket": [
+    "GBPUSD",
+    "XAUUSD",
+    "GBPCAD",
+    "USDMXN",
+    "EURJPY",
+    "EURCAD",
+    "AUDCAD"
+  ],
+  "criteria": "WR_IS >= 48.0 AND fwd_net >= 0"
+}

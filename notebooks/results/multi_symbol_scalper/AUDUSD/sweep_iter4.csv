@@ -1,0 +1,12 @@
+symbol,overlay,trades,WR_%,exp_R,PF,q_pass_%,score
+AUDUSD,{},477,45.49,0.365,1.51,53.8,24.42
+AUDUSD,{'require_h1_rsi_align': True},394,46.95,0.409,1.61,46.2,22.03
+AUDUSD,"{'adx_min': 18.0, 'add_vol_confirm': True}",526,46.77,0.403,1.63,46.2,21.84
+AUDUSD,{'adx_min': 18.0},424,46.46,0.394,1.57,38.5,17.69
+AUDUSD,{'add_vol_confirm': True},585,45.98,0.379,1.57,38.5,17.21
+AUDUSD,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",351,47.29,0.419,1.63,30.8,14.68
+AUDUSD,{'require_macd_align': True},341,47.8,0.434,1.53,23.1,11.34
+AUDUSD,{'adx_min': 22.0},324,47.22,0.417,1.6,23.1,10.76
+AUDUSD,"{'adx_min': 18.0, 'require_macd_align': True}",288,48.96,0.469,1.62,15.4,8.65
+AUDUSD,"{'require_h1_rsi_align': True, 'require_macd_align': True}",293,48.46,0.454,1.57,7.7,4.31
+AUDUSD,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",216,48.61,0.458,1.55,0.0,0.61

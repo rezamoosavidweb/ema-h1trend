@@ -1,0 +1,12 @@
+symbol,overlay,trades,WR_%,exp_R,PF,q_pass_%,score
+EURUSD,{},486,50.62,0.519,1.68,69.2,37.23
+EURUSD,{'add_vol_confirm': True},589,50.42,0.513,1.73,61.5,33.19
+EURUSD,"{'adx_min': 18.0, 'add_vol_confirm': True}",532,50.19,0.506,1.65,61.5,32.96
+EURUSD,{'require_h1_rsi_align': True},376,55.59,0.668,2.07,46.2,30.66
+EURUSD,{'adx_min': 18.0},431,50.81,0.524,1.64,53.8,29.74
+EURUSD,{'adx_min': 22.0},352,52.27,0.568,1.75,30.8,19.66
+EURUSD,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",334,55.99,0.68,2.03,23.1,19.53
+EURUSD,{'require_macd_align': True},350,52.0,0.56,1.55,23.1,15.54
+EURUSD,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",211,62.56,0.877,2.37,0.0,14.56
+EURUSD,"{'adx_min': 18.0, 'require_macd_align': True}",301,54.15,0.625,1.67,7.7,10.0
+EURUSD,"{'require_h1_rsi_align': True, 'require_macd_align': True}",284,55.99,0.68,1.87,0.0,7.99

@@ -1,0 +1,12 @@
+symbol,overlay,trades,WR_%,exp_R,PF,q_pass_%,score
+CHFJPY,{'require_h1_rsi_align': True},443,49.21,0.476,1.66,23.5,12.97
+CHFJPY,{'add_vol_confirm': True},639,45.38,0.362,1.45,29.4,12.09
+CHFJPY,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",380,51.58,0.547,1.83,11.8,9.46
+CHFJPY,{'adx_min': 22.0},395,48.61,0.458,1.61,17.6,9.43
+CHFJPY,"{'adx_min': 18.0, 'add_vol_confirm': True}",562,45.55,0.367,1.45,23.5,9.32
+CHFJPY,{},547,45.52,0.366,1.42,23.5,9.29
+CHFJPY,{'adx_min': 18.0},479,46.97,0.409,1.5,17.6,7.8
+CHFJPY,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",238,54.62,0.639,1.8,0.0,6.62
+CHFJPY,"{'require_h1_rsi_align': True, 'require_macd_align': True}",322,49.69,0.491,1.49,5.9,4.63
+CHFJPY,"{'adx_min': 18.0, 'require_macd_align': True}",323,48.61,0.458,1.44,0.0,0.61
+CHFJPY,{'require_macd_align': True},386,46.37,0.391,1.32,0.0,-1.63

@@ -1,0 +1,498 @@
+{
+  "AUDCAD": {
+    "mode": "RSI-gated",
+    "confirms": [
+      "f_candle",
+      "f_ema"
+    ],
+    "rsi_memory": 15,
+    "session": [
+      8,
+      13
+    ],
+    "sl_method": "structural",
+    "atr_min_mult": 0.0,
+    "htf_strength_min": 0.0,
+    "require_h1_rsi_align": true
+  },
+  "AUDCHF": {
+    "mode": "RSI-gated",
+    "confirms": [
+      "f_candle",
+      "f_ema"
+    ],
+    "rsi_memory": 15,
+    "session": [
+      8,
+      12
+    ],
+    "sl_method": "structural",
+    "atr_min_mult": 0.0,
+    "htf_strength_min": 0.0
+  },
+  "AUDJPY": {
+    "mode": "RSI-gated",
+    "confirms": [
+      "f_candle",
+      "f_ema"
+    ],
+    "rsi_memory": 10,
+    "session": [
+      8,
+      12
+    ],
+    "sl_method": "structural",
+    "atr_min_mult": 0.0,
+    "htf_strength_min": 0.0
+  },
+  "AUDNZD": {
+    "mode": "RSI-gated",
+    "confirms": [
+      "f_candle",
+      "f_ema",
+      "f_vol"
+    ],
+    "rsi_memory": 15,
+    "session": [
+      8,
+      12
+    ],
+    "sl_method": "structural",
+    "atr_min_mult": 0.0,
+    "htf_strength_min": 0.0,
+    "adx_min": 18.0
+  },
+  "AUDUSD": {
+    "mode": "RSI-gated",
+    "confirms": [
+      "f_candle",
+      "f_ema"
+    ],
+    "rsi_memory": 15,
+    "session": [
+      8,
+      12
+    ],
+    "sl_method": "structural",
+    "atr_min_mult": 0.0,
+    "htf_strength_min": 0.0
+  },
+  "CADCHF": {
+    "mode": "OR",
+    "confirms": [
+      "f_rsi",
+      "f_candle",
+      "f_ema"
+    ],
+    "min_reactions": 1,
+    "rsi_memory": 10,
+    "session": [
+      8,
+      13
+    ],
+    "sl_method": "structural",
+    "atr_min_mult": 0.9,
+    "htf_strength_min": 0.0,
+    "adx_min": 20.0,
+    "require_h1_rsi_align": true,
+    "require_macd_align": true
+  },
+  "CADJPY": {
+    "mode": "RSI-gated",
+    "confirms": [
+      "f_candle",
+      "f_ema"
+    ],
+    "rsi_memory": 15,
+    "session": [
+      8,
+      13
+    ],
+    "sl_method": "structural",
+    "atr_min_mult": 0.9,
+    "htf_strength_min": 0.0
+  },
+  "CHFJPY": {
+    "mode": "RSI-gated",
+    "confirms": [
+      "f_candle",
+      "f_ema"
+    ],
+    "rsi_memory": 15,
+    "session": [
+      8,
+      13
+    ],
+    "sl_method": "structural",
+    "atr_min_mult": 0.9,
+    "htf_strength_min": 0.0,
+    "require_h1_rsi_align": true
+  },
+  "EURAUD": {
+    "mode": "RSI-gated",
+    "confirms": [
+      "f_candle",
+      "f_ema"
+    ],
+    "rsi_memory": 15,
+    "session": [
+      8,
+      13
+    ],
+    "sl_method": "structural",
+    "atr_min_mult": 0.0,
+    "htf_strength_min": 0.0
+  },
+  "EURCAD": {
+    "mode": "OR",
+    "confirms": [
+      "f_candle",
+      "f_ema"
+    ],
+    "min_reactions": 1,
+    "rsi_memory": 10,
+    "session": [
+      8,
+      13
+    ],
+    "sl_method": "structural",
+    "atr_min_mult": 0.9,
+    "htf_strength_min": 0.0,
+    "require_h1_rsi_align": true,
+    "require_macd_align": true
+  },
+  "EURCHF": {
+    "mode": "OR",
+    "confirms": [
+      "f_candle",
+      "f_ema"
+    ],
+    "min_reactions": 1,
+    "rsi_memory": 10,
+    "session": [
+      8,
+      12
+    ],
+    "sl_method": "structural",
+    "atr_min_mult": 0.9,
+    "htf_strength_min": 0.0,
+    "require_h1_rsi_align": true
+  },
+  "EURGBP": {
+    "mode": "RSI-gated",
+    "confirms": [
+      "f_candle",
+      "f_ema",
+      "f_vol"
+    ],
+    "rsi_memory": 15,
+    "session": [
+      7,
+      16
+    ],
+    "sl_method": "structural",
+    "atr_min_mult": 0.0,
+    "htf_strength_min": 0.0,
+    "adx_min": 18.0
+  },
+  "EURJPY": {
+    "mode": "OR",
+    "confirms": [
+      "f_candle",
+      "f_ema"
+    ],
+    "min_reactions": 1,
+    "rsi_memory": 10,
+    "session": [
+      8,
+      13
+    ],
+    "sl_method": "structural",
+    "atr_min_mult": 0.9,
+    "htf_strength_min": 0.0,
+    "require_h1_rsi_align": true,
+    "require_macd_align": true
+  },
+  "EURSEK": {
+    "mode": "RSI-gated",
+    "confirms": [
+      "f_candle",
+      "f_ema"
+    ],
+    "rsi_memory": 15,
+    "session": [
+      8,
+      13
+    ],
+    "sl_method": "structural",
+    "atr_min_mult": 0.0,
+    "htf_strength_min": 0.0
+  },
+  "EURTRY": {
+    "mode": "RSI-gated",
+    "confirms": [
+      "f_candle",
+      "f_ema"
+    ],
+    "rsi_memory": 15,
+    "session": [
+      8,
+      12
+    ],
+    "sl_method": "structural",
+    "atr_min_mult": 0.9,
+    "htf_strength_min": 0.0,
+    "require_h1_rsi_align": true
+  },
+  "EURUSD": {
+    "mode": "RSI-gated",
+    "confirms": [
+      "f_candle",
+      "f_ema"
+    ],
+    "rsi_memory": 15,
+    "session": [
+      8,
+      13
+    ],
+    "sl_method": "structural",
+    "atr_min_mult": 0.9,
+    "htf_strength_min": 0.0
+  },
+  "GBPAUD": {
+    "mode": "RSI-gated",
+    "confirms": [
+      "f_candle",
+      "f_ema"
+    ],
+    "rsi_memory": 15,
+    "session": [
+      7,
+      16
+    ],
+    "sl_method": "structural",
+    "atr_min_mult": 0.9,
+    "htf_strength_min": 0.0,
+    "require_h1_rsi_align": true
+  },
+  "GBPCAD": {
+    "mode": "OR",
+    "confirms": [
+      "f_candle",
+      "f_ema"
+    ],
+    "min_reactions": 1,
+    "rsi_memory": 10,
+    "session": [
+      8,
+      13
+    ],
+    "sl_method": "structural",
+    "atr_min_mult": 0.9,
+    "htf_strength_min": 0.0,
+    "require_h1_rsi_align": true,
+    "require_macd_align": true
+  },
+  "GBPCHF": {
+    "mode": "RSI-gated",
+    "confirms": [
+      "f_candle",
+      "f_ema",
+      "f_vol"
+    ],
+    "rsi_memory": 15,
+    "session": [
+      7,
+      16
+    ],
+    "sl_method": "structural",
+    "atr_min_mult": 0.9,
+    "htf_strength_min": 0.0
+  },
+  "GBPJPY": {
+    "mode": "RSI-gated",
+    "confirms": [
+      "f_candle",
+      "f_ema",
+      "f_vol"
+    ],
+    "rsi_memory": 15,
+    "session": [
+      8,
+      13
+    ],
+    "sl_method": "structural",
+    "atr_min_mult": 0.9,
+    "htf_strength_min": 0.0
+  },
+  "GBPNZD": {
+    "mode": "RSI-gated",
+    "confirms": [
+      "f_candle",
+      "f_ema",
+      "f_vol"
+    ],
+    "rsi_memory": 15,
+    "session": [
+      7,
+      16
+    ],
+    "sl_method": "structural",
+    "atr_min_mult": 0.9,
+    "htf_strength_min": 0.0,
+    "adx_min": 18.0
+  },
+  "GBPUSD": {
+    "mode": "OR",
+    "confirms": [
+      "f_candle",
+      "f_ema"
+    ],
+    "min_reactions": 1,
+    "rsi_memory": 10,
+    "session": [
+      8,
+      13
+    ],
+    "sl_method": "structural",
+    "atr_min_mult": 0.9,
+    "htf_strength_min": 0.0,
+    "require_h1_rsi_align": true,
+    "require_macd_align": true
+  },
+  "NZDJPY": {
+    "mode": "RSI-gated",
+    "confirms": [
+      "f_candle",
+      "f_ema"
+    ],
+    "rsi_memory": 10,
+    "session": [
+      8,
+      13
+    ],
+    "sl_method": "structural",
+    "atr_min_mult": 0.9,
+    "htf_strength_min": 0.0,
+    "adx_min": 18.0
+  },
+  "NZDUSD": {
+    "mode": "OR",
+    "confirms": [
+      "f_candle",
+      "f_ema"
+    ],
+    "min_reactions": 1,
+    "rsi_memory": 10,
+    "session": [
+      8,
+      13
+    ],
+    "sl_method": "structural",
+    "atr_min_mult": 0.9,
+    "htf_strength_min": 0.0,
+    "require_h1_rsi_align": true
+  },
+  "USDCAD": {
+    "mode": "RSI-gated",
+    "confirms": [
+      "f_candle",
+      "f_ema"
+    ],
+    "rsi_memory": 15,
+    "session": [
+      8,
+      13
+    ],
+    "sl_method": "structural",
+    "atr_min_mult": 0.9,
+    "htf_strength_min": 0.0
+  },
+  "USDCHF": {
+    "mode": "OR",
+    "confirms": [
+      "f_rsi",
+      "f_candle",
+      "f_ema"
+    ],
+    "min_reactions": 1,
+    "rsi_memory": 10,
+    "session": [
+      8,
+      12
+    ],
+    "sl_method": "structural",
+    "atr_min_mult": 0.9,
+    "htf_strength_min": 0.0,
+    "adx_min": 20.0,
+    "require_h1_rsi_align": true,
+    "require_macd_align": true
+  },
+  "USDJPY": {
+    "mode": "RSI-gated",
+    "confirms": [
+      "f_candle",
+      "f_ema",
+      "f_vol"
+    ],
+    "rsi_memory": 15,
+    "session": [
+      8,
+      12
+    ],
+    "sl_method": "structural",
+    "atr_min_mult": 0.0,
+    "htf_strength_min": 0.0
+  },
+  "USDMXN": {
+    "mode": "RSI-gated",
+    "confirms": [
+      "f_candle",
+      "f_ema"
+    ],
+    "rsi_memory": 15,
+    "session": [
+      7,
+      16
+    ],
+    "sl_method": "structural",
+    "atr_min_mult": 0.9,
+    "htf_strength_min": 0.0,
+    "require_h1_rsi_align": true
+  },
+  "USDTRY": {
+    "mode": "OR",
+    "confirms": [
+      "f_rsi",
+      "f_candle",
+      "f_ema",
+      "f_vol"
+    ],
+    "min_reactions": 1,
+    "rsi_memory": 10,
+    "session": [
+      7,
+      16
+    ],
+    "sl_method": "structural",
+    "atr_min_mult": 0.9,
+    "htf_strength_min": 0.8,
+    "adx_min": 18.0
+  },
+  "XAUUSD": {
+    "mode": "RSI-gated",
+    "confirms": [
+      "f_candle",
+      "f_ema"
+    ],
+    "rsi_memory": 10,
+    "session": [
+      7,
+      16
+    ],
+    "sl_method": "structural",
+    "atr_min_mult": 0.0,
+    "htf_strength_min": 0.0,
+    "require_h1_rsi_align": true
+  }
+}

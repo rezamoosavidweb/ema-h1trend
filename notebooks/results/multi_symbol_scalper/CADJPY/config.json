@@ -1,0 +1,15 @@
+{
+  "mode": "RSI-gated",
+  "confirms": [
+    "f_candle",
+    "f_ema"
+  ],
+  "rsi_memory": 15,
+  "session": [
+    8,
+    13
+  ],
+  "sl_method": "structural",
+  "atr_min_mult": 0.9,
+  "htf_strength_min": 0.0
+}

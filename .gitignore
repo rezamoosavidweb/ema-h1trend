@@ -66,4 +66,7 @@ htmlcov/
 !/notebooks/data/stat_arb/
 /notebooks/data/stat_arb/live_signals/
 
-/notebooks/results
+# Ignore everything under notebooks/results EXCEPT the multi_symbol_scalper
+# outputs (golden basket + per-symbol stats that the live runner reads).
+/notebooks/results/*
+!/notebooks/results/multi_symbol_scalper/
