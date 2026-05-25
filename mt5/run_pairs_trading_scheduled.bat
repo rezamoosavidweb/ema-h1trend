@@ -23,8 +23,8 @@ if not exist "%SCHED_LOG_DIR%" mkdir "%SCHED_LOG_DIR%"
 
 REM Timestamped log per run (Scheduler keeps history of "last run" anyway,
 REM but a per-invocation file is invaluable when something goes wrong at 3am)
-for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /value') do set DT=%%I
-set RUN_TS=%DT:~0,8%-%DT:~8,6%
+REM Timestamp via PowerShell — wmic is deprecated/removed on Win11/Server 2022+
+for /f "delims=" %%I in ('powershell -NoLogo -NoProfile -Command "Get-Date -Format yyyyMMdd-HHmmss"') do set RUN_TS=%%I
 set RUN_LOG=%SCHED_LOG_DIR%\run-%RUN_TS%.log
 
 echo [%date% %time%] starting pairs_trading --dry-run --once > "%RUN_LOG%"

@@ -30,8 +30,8 @@ REM Per-launch log file so each restart has its own trail
 set LOOP_LOG_DIR=%REPO_ROOT%\logs\pairs_trading\loop
 if not exist "%LOOP_LOG_DIR%" mkdir "%LOOP_LOG_DIR%"
 
-for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /value') do set DT=%%I
-set RUN_TS=%DT:~0,8%-%DT:~8,6%
+REM Timestamp via PowerShell — wmic is deprecated/removed on Win11/Server 2022+
+for /f "delims=" %%I in ('powershell -NoLogo -NoProfile -Command "Get-Date -Format yyyyMMdd-HHmmss"') do set RUN_TS=%%I
 set LOOP_LOG=%LOOP_LOG_DIR%\loop-%RUN_TS%.log
 
 echo ========================================================================
