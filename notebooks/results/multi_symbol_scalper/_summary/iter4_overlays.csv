@@ -1,331 +1,78 @@
 symbol,overlay,trades,WR_%,exp_R,PF,q_pass_%,score
-EURUSD,{},486,50.62,0.519,1.68,69.2,37.23
-EURUSD,{'add_vol_confirm': True},589,50.42,0.513,1.73,61.5,33.19
-EURUSD,"{'adx_min': 18.0, 'add_vol_confirm': True}",532,50.19,0.506,1.65,61.5,32.96
-EURUSD,{'require_h1_rsi_align': True},376,55.59,0.668,2.07,46.2,30.66
-EURUSD,{'adx_min': 18.0},431,50.81,0.524,1.64,53.8,29.74
-EURUSD,{'adx_min': 22.0},352,52.27,0.568,1.75,30.8,19.66
-EURUSD,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",334,55.99,0.68,2.03,23.1,19.53
-EURUSD,{'require_macd_align': True},350,52.0,0.56,1.55,23.1,15.54
-EURUSD,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",211,62.56,0.877,2.37,0.0,14.56
-EURUSD,"{'adx_min': 18.0, 'require_macd_align': True}",301,54.15,0.625,1.67,7.7,10.0
-EURUSD,"{'require_h1_rsi_align': True, 'require_macd_align': True}",284,55.99,0.68,1.87,0.0,7.99
-GBPUSD,"{'require_h1_rsi_align': True, 'require_macd_align': True}",870,51.26,0.538,1.71,61.5,34.03
-GBPUSD,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",612,50.82,0.525,1.55,61.5,33.59
-GBPUSD,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",1085,48.66,0.46,1.62,61.5,31.43
-GBPUSD,{'require_h1_rsi_align': True},1359,49.3,0.479,1.7,53.8,28.22
-GBPUSD,"{'adx_min': 18.0, 'add_vol_confirm': True}",1324,46.68,0.4,1.49,53.8,25.6
-GBPUSD,"{'adx_min': 18.0, 'require_macd_align': True}",770,47.79,0.434,1.41,46.2,22.87
-GBPUSD,{'add_vol_confirm': True},1639,46.74,0.402,1.51,46.2,21.81
-GBPUSD,{'require_macd_align': True},966,48.45,0.453,1.52,38.5,19.68
-GBPUSD,{},1524,46.39,0.392,1.5,30.8,13.78
-GBPUSD,{'adx_min': 22.0},968,45.87,0.376,1.41,30.8,13.25
-GBPUSD,{'adx_min': 18.0},1230,45.69,0.371,1.43,23.1,9.23
-AUDUSD,{},477,45.49,0.365,1.51,53.8,24.42
-AUDUSD,{'require_h1_rsi_align': True},394,46.95,0.409,1.61,46.2,22.03
-AUDUSD,"{'adx_min': 18.0, 'add_vol_confirm': True}",526,46.77,0.403,1.63,46.2,21.84
-AUDUSD,{'adx_min': 18.0},424,46.46,0.394,1.57,38.5,17.69
-AUDUSD,{'add_vol_confirm': True},585,45.98,0.379,1.57,38.5,17.21
-AUDUSD,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",351,47.29,0.419,1.63,30.8,14.68
-AUDUSD,{'require_macd_align': True},341,47.8,0.434,1.53,23.1,11.34
-AUDUSD,{'adx_min': 22.0},324,47.22,0.417,1.6,23.1,10.76
-AUDUSD,"{'adx_min': 18.0, 'require_macd_align': True}",288,48.96,0.469,1.62,15.4,8.65
-AUDUSD,"{'require_h1_rsi_align': True, 'require_macd_align': True}",293,48.46,0.454,1.57,7.7,4.31
-AUDUSD,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",216,48.61,0.458,1.55,0.0,0.61
-NZDUSD,{'require_h1_rsi_align': True},1318,48.33,0.45,1.62,61.5,31.1
-NZDUSD,"{'require_h1_rsi_align': True, 'require_macd_align': True}",922,47.72,0.432,1.49,46.2,22.8
-NZDUSD,"{'adx_min': 18.0, 'add_vol_confirm': True}",1353,47.01,0.41,1.55,46.2,22.08
-NZDUSD,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",1080,47.87,0.436,1.55,38.5,19.1
-NZDUSD,{'add_vol_confirm': True},1652,47.28,0.418,1.59,38.5,18.51
-NZDUSD,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",664,46.99,0.41,1.4,38.5,18.22
-NZDUSD,"{'adx_min': 18.0, 'require_macd_align': True}",806,46.28,0.388,1.37,38.5,17.51
-NZDUSD,{},1489,45.6,0.368,1.46,38.5,16.83
-NZDUSD,{'require_macd_align': True},1003,45.86,0.376,1.38,30.8,13.25
-NZDUSD,{'adx_min': 18.0},1229,45.57,0.367,1.42,30.8,12.95
-NZDUSD,{'adx_min': 22.0},997,44.93,0.348,1.34,30.8,12.32
-USDCAD,{},528,47.54,0.426,1.58,76.9,38.0
-USDCAD,{'add_vol_confirm': True},673,47.85,0.435,1.64,69.2,34.46
-USDCAD,"{'adx_min': 18.0, 'add_vol_confirm': True}",597,47.4,0.422,1.6,61.5,30.17
-USDCAD,{'require_h1_rsi_align': True},388,52.32,0.57,1.91,46.2,27.4
-USDCAD,{'require_macd_align': True},389,50.13,0.504,1.67,46.2,25.21
-USDCAD,{'adx_min': 18.0},462,46.1,0.383,1.47,38.5,17.33
-USDCAD,"{'adx_min': 18.0, 'require_macd_align': True}",331,49.24,0.477,1.55,30.8,16.63
-USDCAD,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",337,50.15,0.504,1.71,23.1,13.69
-USDCAD,{'adx_min': 22.0},352,47.73,0.432,1.6,23.1,11.27
-USDCAD,"{'require_h1_rsi_align': True, 'require_macd_align': True}",299,54.52,0.635,1.97,7.7,10.36
-USDCAD,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",213,54.46,0.634,1.91,0.0,6.46
-USDCHF,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",648,51.39,0.542,1.71,76.9,41.85
-USDCHF,"{'require_h1_rsi_align': True, 'require_macd_align': True}",881,50.96,0.529,1.69,76.9,41.43
-USDCHF,{'require_h1_rsi_align': True},1338,51.2,0.536,1.86,69.2,37.81
-USDCHF,"{'adx_min': 18.0, 'add_vol_confirm': True}",1338,48.43,0.453,1.67,69.2,35.05
-USDCHF,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",1104,51.45,0.543,1.88,61.5,34.22
-USDCHF,{'adx_min': 22.0},996,48.59,0.458,1.61,61.5,31.36
-USDCHF,{},1519,47.53,0.426,1.6,61.5,30.3
-USDCHF,{'adx_min': 18.0},1264,48.1,0.443,1.64,53.8,27.02
-USDCHF,"{'adx_min': 18.0, 'require_macd_align': True}",795,47.8,0.434,1.48,53.8,26.72
-USDCHF,{'add_vol_confirm': True},1630,47.67,0.43,1.61,53.8,26.59
-USDCHF,{'require_macd_align': True},959,47.97,0.439,1.5,46.2,23.04
-USDJPY,{'add_vol_confirm': True},595,45.71,0.371,1.47,46.2,20.79
-USDJPY,{},486,47.53,0.426,1.52,38.5,18.76
-USDJPY,{'require_h1_rsi_align': True},363,53.17,0.595,1.91,23.1,16.71
-USDJPY,{'adx_min': 18.0},457,47.92,0.438,1.53,30.8,15.31
-USDJPY,"{'adx_min': 18.0, 'add_vol_confirm': True}",562,45.91,0.377,1.49,30.8,13.29
-USDJPY,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",337,53.12,0.593,1.89,15.4,12.81
-USDJPY,{'adx_min': 22.0},389,49.1,0.473,1.6,15.4,8.79
-USDJPY,"{'require_h1_rsi_align': True, 'require_macd_align': True}",263,51.71,0.551,1.67,7.7,7.56
-USDJPY,{'require_macd_align': True},332,48.19,0.446,1.42,7.7,4.04
-USDJPY,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",206,51.94,0.558,1.61,0.0,3.94
-USDJPY,"{'adx_min': 18.0, 'require_macd_align': True}",301,47.51,0.425,1.35,7.7,3.35
-EURJPY,"{'require_h1_rsi_align': True, 'require_macd_align': True}",864,51.04,0.531,1.69,69.2,37.66
-EURJPY,{'require_macd_align': True},942,49.26,0.478,1.54,69.2,35.87
-EURJPY,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",607,50.25,0.507,1.55,61.5,33.02
-EURJPY,"{'adx_min': 18.0, 'require_macd_align': True}",758,48.55,0.456,1.41,53.8,27.47
-EURJPY,{'require_h1_rsi_align': True},1259,47.66,0.43,1.59,46.2,22.73
-EURJPY,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",1011,47.48,0.424,1.51,46.2,22.55
-EURJPY,"{'adx_min': 18.0, 'add_vol_confirm': True}",1246,46.95,0.409,1.45,46.2,22.03
-EURJPY,{'adx_min': 22.0},900,46.0,0.38,1.43,46.2,21.08
-EURJPY,{'adx_min': 18.0},1144,45.63,0.369,1.39,46.2,20.71
-EURJPY,{},1403,45.69,0.371,1.45,38.5,16.92
-EURJPY,{'add_vol_confirm': True},1528,46.6,0.398,1.5,30.8,13.98
-GBPJPY,{'add_vol_confirm': True},515,48.16,0.445,1.53,53.8,27.08
-GBPJPY,{},435,47.13,0.414,1.46,46.2,22.2
-GBPJPY,"{'adx_min': 18.0, 'add_vol_confirm': True}",476,47.27,0.418,1.48,38.5,18.5
-GBPJPY,{'adx_min': 18.0},398,45.98,0.379,1.4,38.5,17.21
-GBPJPY,{'require_h1_rsi_align': True},358,49.72,0.492,1.64,30.8,17.11
-GBPJPY,{'require_macd_align': True},306,50.0,0.5,1.5,23.1,13.54
-GBPJPY,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",326,48.47,0.454,1.57,23.1,12.0
-GBPJPY,"{'require_h1_rsi_align': True, 'require_macd_align': True}",252,52.78,0.583,1.61,7.7,8.62
-GBPJPY,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",205,51.22,0.537,1.51,0.0,3.22
-GBPJPY,{'adx_min': 22.0},331,45.62,0.369,1.39,7.7,1.47
-GBPJPY,"{'adx_min': 18.0, 'require_macd_align': True}",268,48.51,0.455,1.43,0.0,0.51
-AUDJPY,{},401,46.13,0.384,1.47,46.2,21.21
-AUDJPY,{'add_vol_confirm': True},466,45.49,0.365,1.45,30.8,12.88
-AUDJPY,"{'adx_min': 18.0, 'add_vol_confirm': True}",417,44.36,0.331,1.38,30.8,11.75
-AUDJPY,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",147,57.14,0.714,2.02,0.0,9.14
-AUDJPY,{'adx_min': 18.0},355,44.79,0.344,1.36,23.1,8.33
-AUDJPY,"{'require_h1_rsi_align': True, 'require_macd_align': True}",209,55.02,0.651,2.02,0.0,7.02
-AUDJPY,{'require_h1_rsi_align': True},321,49.22,0.477,1.72,7.7,5.07
-AUDJPY,{'require_macd_align': True},262,51.53,0.546,1.67,0.0,3.53
-AUDJPY,"{'adx_min': 18.0, 'require_macd_align': True}",224,50.45,0.513,1.57,0.0,2.45
-AUDJPY,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",281,48.4,0.452,1.61,0.0,0.4
-AUDJPY,{'adx_min': 22.0},274,44.53,0.336,1.32,0.0,-3.47
-NZDJPY,{'adx_min': 18.0},360,42.78,0.283,1.33,23.1,6.32
-NZDJPY,{},410,42.68,0.28,1.33,23.1,6.22
-NZDJPY,{'require_h1_rsi_align': True},317,46.06,0.382,1.57,15.4,5.75
-NZDJPY,{'add_vol_confirm': True},490,42.04,0.261,1.31,23.1,5.58
-NZDJPY,"{'adx_min': 18.0, 'add_vol_confirm': True}",433,41.8,0.254,1.29,23.1,5.34
-NZDJPY,{'require_macd_align': True},276,44.57,0.337,1.3,7.7,0.41
-NZDJPY,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",147,47.62,0.429,1.43,0.0,-0.38
-NZDJPY,"{'require_h1_rsi_align': True, 'require_macd_align': True}",213,47.42,0.423,1.51,0.0,-0.58
-NZDJPY,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",271,46.49,0.395,1.6,0.0,-1.51
-NZDJPY,"{'adx_min': 18.0, 'require_macd_align': True}",229,44.98,0.349,1.26,0.0,-3.02
-NZDJPY,{'adx_min': 22.0},277,44.4,0.332,1.4,0.0,-3.6
-CADJPY,{'adx_min': 18.0},475,48.42,0.453,1.63,53.8,27.34
-CADJPY,{'require_h1_rsi_align': True},371,52.29,0.569,1.88,38.5,23.52
-CADJPY,{},499,47.9,0.437,1.61,46.2,22.97
-CADJPY,"{'adx_min': 18.0, 'add_vol_confirm': True}",576,47.4,0.422,1.63,46.2,22.47
-CADJPY,{'add_vol_confirm': True},603,46.93,0.408,1.61,46.2,22.01
-CADJPY,{'adx_min': 22.0},392,49.49,0.485,1.72,38.5,20.72
-CADJPY,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",348,53.16,0.595,1.93,23.1,16.7
-CADJPY,{'require_macd_align': True},329,48.94,0.468,1.58,15.4,8.63
-CADJPY,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",206,55.34,0.66,1.97,0.0,7.34
-CADJPY,"{'require_h1_rsi_align': True, 'require_macd_align': True}",257,52.53,0.576,1.79,0.0,4.53
-CADJPY,"{'adx_min': 18.0, 'require_macd_align': True}",305,49.84,0.495,1.62,0.0,1.84
-CHFJPY,{'require_h1_rsi_align': True},340,47.35,0.421,1.57,30.8,14.74
-CHFJPY,{},413,43.83,0.315,1.34,30.8,11.21
-CHFJPY,{'adx_min': 22.0},294,47.62,0.429,1.54,23.1,11.16
-CHFJPY,{'adx_min': 18.0},360,45.56,0.367,1.42,23.1,9.09
-CHFJPY,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",290,49.66,0.49,1.7,7.7,5.5
-CHFJPY,"{'adx_min': 18.0, 'add_vol_confirm': True}",415,44.1,0.323,1.4,15.4,3.79
-CHFJPY,{'add_vol_confirm': True},474,43.88,0.316,1.4,15.4,3.57
-CHFJPY,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",173,50.29,0.509,1.45,0.0,2.29
-CHFJPY,"{'require_h1_rsi_align': True, 'require_macd_align': True}",244,46.31,0.389,1.28,7.7,2.16
-CHFJPY,"{'adx_min': 18.0, 'require_macd_align': True}",237,45.15,0.354,1.21,0.0,-2.85
-CHFJPY,{'require_macd_align': True},286,43.36,0.301,1.13,0.0,-4.64
-EURGBP,"{'adx_min': 18.0, 'add_vol_confirm': True}",657,46.73,0.402,1.56,53.8,25.65
-EURGBP,{'adx_min': 18.0},582,46.05,0.381,1.53,53.8,24.97
-EURGBP,{},645,45.27,0.358,1.48,53.8,24.19
-EURGBP,{'add_vol_confirm': True},718,45.82,0.375,1.51,46.2,20.9
-EURGBP,{'require_h1_rsi_align': True},525,46.86,0.406,1.57,38.5,18.09
-EURGBP,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",465,47.31,0.419,1.61,30.8,14.7
-EURGBP,{'adx_min': 22.0},451,45.9,0.377,1.53,30.8,13.28
-EURGBP,{'require_macd_align': True},449,45.21,0.356,1.39,30.8,12.6
-EURGBP,"{'require_h1_rsi_align': True, 'require_macd_align': True}",368,48.37,0.451,1.57,15.4,8.06
-EURGBP,"{'adx_min': 18.0, 'require_macd_align': True}",389,45.76,0.373,1.43,15.4,5.45
-EURGBP,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",278,48.2,0.446,1.55,0.0,0.2
-EURAUD,{},460,47.17,0.415,1.53,46.2,22.25
-EURAUD,{'add_vol_confirm': True},535,45.42,0.363,1.46,38.5,16.65
-EURAUD,{'adx_min': 18.0},412,47.09,0.413,1.52,30.8,14.47
-EURAUD,"{'adx_min': 18.0, 'add_vol_confirm': True}",488,45.9,0.377,1.48,30.8,13.29
-EURAUD,{'require_h1_rsi_align': True},353,51.56,0.547,1.8,15.4,11.25
-EURAUD,{'require_macd_align': True},342,46.78,0.404,1.37,23.1,10.32
-EURAUD,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",310,51.94,0.558,1.82,7.7,7.78
-EURAUD,"{'require_h1_rsi_align': True, 'require_macd_align': True}",268,50.0,0.5,1.55,0.0,2.0
-EURAUD,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",200,50.0,0.5,1.54,0.0,2.0
-EURAUD,{'adx_min': 22.0},323,47.06,0.412,1.49,0.0,-0.94
-EURAUD,"{'adx_min': 18.0, 'require_macd_align': True}",295,46.44,0.393,1.33,0.0,-1.56
-EURCAD,"{'require_h1_rsi_align': True, 'require_macd_align': True}",957,51.83,0.555,1.72,84.6,46.14
-EURCAD,{'require_h1_rsi_align': True},1339,51.61,0.548,1.85,84.6,45.91
-EURCAD,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",723,51.59,0.548,1.62,76.9,42.05
-EURCAD,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",1155,50.91,0.527,1.74,76.9,41.37
-EURCAD,{'require_macd_align': True},1059,48.54,0.456,1.5,69.2,35.15
-EURCAD,{'add_vol_confirm': True},1665,48.53,0.456,1.65,69.2,35.14
-EURCAD,"{'adx_min': 18.0, 'require_macd_align': True}",891,48.82,0.465,1.48,61.5,31.59
-EURCAD,"{'adx_min': 18.0, 'add_vol_confirm': True}",1425,48.63,0.459,1.61,61.5,31.4
-EURCAD,{'adx_min': 22.0},1070,46.92,0.407,1.49,53.8,25.84
-EURCAD,{},1515,48.05,0.442,1.6,46.2,23.13
-EURCAD,{'adx_min': 18.0},1301,47.58,0.427,1.54,38.5,18.81
-EURCHF,{'require_h1_rsi_align': True},1283,48.95,0.468,1.67,69.2,35.56
-EURCHF,"{'require_h1_rsi_align': True, 'require_macd_align': True}",842,49.88,0.496,1.66,61.5,32.65
-EURCHF,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",1022,48.04,0.441,1.58,61.5,30.81
-EURCHF,{'require_macd_align': True},947,46.78,0.403,1.45,53.8,25.7
-EURCHF,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",576,48.96,0.469,1.55,46.2,24.04
-EURCHF,{},1467,45.67,0.37,1.44,38.5,16.9
-EURCHF,"{'adx_min': 18.0, 'require_macd_align': True}",729,46.5,0.395,1.42,30.8,13.89
-EURCHF,{'adx_min': 18.0},1158,45.6,0.368,1.41,30.8,12.98
-EURCHF,{'add_vol_confirm': True},1650,45.27,0.358,1.47,30.8,12.66
-EURCHF,{'adx_min': 22.0},906,46.03,0.381,1.39,23.1,9.56
-EURCHF,"{'adx_min': 18.0, 'add_vol_confirm': True}",1293,45.86,0.376,1.47,23.1,9.4
-GBPAUD,{'require_h1_rsi_align': True},443,48.53,0.456,1.68,30.8,15.92
-GBPAUD,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",385,47.53,0.426,1.57,30.8,14.92
-GBPAUD,{},564,43.44,0.303,1.35,30.8,10.82
-GBPAUD,{'adx_min': 18.0},498,42.77,0.283,1.28,23.1,6.31
-GBPAUD,{'add_vol_confirm': True},658,42.4,0.272,1.32,23.1,5.94
-GBPAUD,{'require_macd_align': True},401,44.14,0.324,1.33,15.4,3.83
-GBPAUD,"{'adx_min': 18.0, 'add_vol_confirm': True}",579,42.14,0.264,1.27,15.4,1.83
-GBPAUD,"{'require_h1_rsi_align': True, 'require_macd_align': True}",322,48.76,0.463,1.63,0.0,0.76
-GBPAUD,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",237,46.84,0.405,1.43,0.0,-1.16
-GBPAUD,{'adx_min': 22.0},391,40.92,0.228,1.15,7.7,-3.23
-GBPAUD,"{'adx_min': 18.0, 'require_macd_align': True}",340,43.53,0.306,1.26,0.0,-4.47
-GBPNZD,"{'adx_min': 18.0, 'add_vol_confirm': True}",576,43.4,0.302,1.4,30.8,10.79
-GBPNZD,{'require_h1_rsi_align': True},443,45.37,0.361,1.49,23.1,8.91
-GBPNZD,{'add_vol_confirm': True},618,44.01,0.32,1.43,23.1,7.55
-GBPNZD,{'adx_min': 22.0},387,43.15,0.295,1.38,23.1,6.69
-GBPNZD,{},535,42.43,0.273,1.32,23.1,5.97
-GBPNZD,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",405,44.2,0.326,1.44,15.4,3.89
-GBPNZD,{'adx_min': 18.0},494,41.5,0.245,1.28,15.4,1.19
-GBPNZD,{'require_macd_align': True},376,41.49,0.245,1.19,7.7,-2.66
-GBPNZD,"{'require_h1_rsi_align': True, 'require_macd_align': True}",314,45.22,0.357,1.4,0.0,-2.78
-GBPNZD,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",233,44.64,0.339,1.36,0.0,-3.36
-GBPNZD,"{'adx_min': 18.0, 'require_macd_align': True}",330,39.7,0.191,1.11,0.0,-8.3
-GBPCAD,"{'require_h1_rsi_align': True, 'require_macd_align': True}",969,52.43,0.573,1.79,84.6,46.73
-GBPCAD,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",697,52.37,0.571,1.66,76.9,42.83
-GBPCAD,{'require_macd_align': True},1045,50.24,0.507,1.62,76.9,40.7
-GBPCAD,"{'adx_min': 18.0, 'require_macd_align': True}",842,49.88,0.496,1.51,69.2,36.5
-GBPCAD,{'require_h1_rsi_align': True},1420,47.89,0.437,1.56,46.2,22.96
-GBPCAD,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",1171,47.57,0.427,1.49,46.2,22.64
-GBPCAD,{'add_vol_confirm': True},1708,47.13,0.414,1.52,46.2,22.21
-GBPCAD,"{'adx_min': 18.0, 'add_vol_confirm': True}",1402,46.86,0.406,1.48,38.5,18.09
-GBPCAD,{},1555,45.98,0.379,1.45,30.8,13.37
-GBPCAD,{'adx_min': 22.0},1037,44.74,0.342,1.33,23.1,8.28
-GBPCAD,{'adx_min': 18.0},1285,46.15,0.384,1.42,15.4,5.84
-GBPCHF,{'add_vol_confirm': True},621,46.38,0.391,1.54,38.5,17.61
-GBPCHF,{'require_macd_align': True},383,45.95,0.379,1.37,38.5,17.18
-GBPCHF,{'require_h1_rsi_align': True},438,47.72,0.432,1.51,30.8,15.1
-GBPCHF,"{'adx_min': 18.0, 'add_vol_confirm': True}",551,45.74,0.372,1.52,30.8,13.12
-GBPCHF,{},543,45.67,0.37,1.44,30.8,13.06
-GBPCHF,{'adx_min': 18.0},483,44.72,0.342,1.4,23.1,8.26
-GBPCHF,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",385,45.97,0.379,1.41,15.4,5.67
-GBPCHF,"{'adx_min': 18.0, 'require_macd_align': True}",332,44.88,0.346,1.31,15.4,4.57
-GBPCHF,{'adx_min': 22.0},365,44.66,0.34,1.38,15.4,4.35
-GBPCHF,"{'require_h1_rsi_align': True, 'require_macd_align': True}",315,48.25,0.448,1.44,7.7,4.1
-GBPCHF,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",225,48.44,0.453,1.41,0.0,0.44
-AUDCAD,{'require_h1_rsi_align': True},431,49.88,0.497,1.79,53.8,28.81
-AUDCAD,"{'adx_min': 18.0, 'add_vol_confirm': True}",573,46.95,0.408,1.62,53.8,25.87
-AUDCAD,{},527,46.87,0.406,1.59,46.2,21.95
-AUDCAD,{'add_vol_confirm': True},628,46.34,0.39,1.6,46.2,21.41
-AUDCAD,{'adx_min': 18.0},473,47.36,0.421,1.59,38.5,18.59
-AUDCAD,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",380,50.0,0.5,1.75,30.8,17.38
-AUDCAD,{'adx_min': 22.0},382,48.17,0.445,1.69,23.1,11.71
-AUDCAD,{'require_macd_align': True},393,46.31,0.389,1.44,23.1,9.85
-AUDCAD,"{'require_h1_rsi_align': True, 'require_macd_align': True}",328,48.17,0.445,1.56,15.4,7.86
-AUDCAD,"{'adx_min': 18.0, 'require_macd_align': True}",343,47.23,0.417,1.47,7.7,3.08
-AUDCAD,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",253,50.2,0.506,1.63,0.0,2.2
-AUDCHF,{},412,48.3,0.449,1.67,46.2,23.38
-AUDCHF,"{'adx_min': 18.0, 'add_vol_confirm': True}",438,46.8,0.404,1.58,38.5,18.03
-AUDCHF,{'add_vol_confirm': True},491,46.64,0.399,1.58,38.5,17.87
-AUDCHF,{'adx_min': 18.0},368,48.37,0.451,1.66,30.8,15.75
-AUDCHF,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",269,53.53,0.606,2.08,15.4,13.22
-AUDCHF,{'require_h1_rsi_align': True},308,52.6,0.578,2.0,15.4,12.29
-AUDCHF,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",156,52.56,0.577,1.9,0.0,4.56
-AUDCHF,"{'require_h1_rsi_align': True, 'require_macd_align': True}",221,51.58,0.548,1.8,0.0,3.58
-AUDCHF,{'require_macd_align': True},283,47.7,0.431,1.52,0.0,-0.3
-AUDCHF,{'adx_min': 22.0},269,47.58,0.428,1.64,0.0,-0.42
-AUDCHF,"{'adx_min': 18.0, 'require_macd_align': True}",241,47.3,0.419,1.47,0.0,-0.7
-AUDNZD,"{'adx_min': 18.0, 'add_vol_confirm': True}",477,44.65,0.34,1.44,46.2,19.73
-AUDNZD,{'add_vol_confirm': True},567,43.56,0.307,1.4,38.5,14.79
-AUDNZD,{},469,43.5,0.305,1.33,38.5,14.73
-AUDNZD,{'adx_min': 18.0},392,43.62,0.309,1.33,23.1,7.16
-AUDNZD,{'require_h1_rsi_align': True},361,45.98,0.38,1.46,15.4,5.68
-AUDNZD,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",297,46.46,0.394,1.47,7.7,2.31
-AUDNZD,{'require_macd_align': True},331,44.11,0.323,1.25,7.7,-0.05
-AUDNZD,"{'require_h1_rsi_align': True, 'require_macd_align': True}",264,46.21,0.386,1.35,0.0,-1.79
-AUDNZD,"{'adx_min': 18.0, 'require_macd_align': True}",271,45.76,0.373,1.33,0.0,-2.24
-AUDNZD,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",185,45.41,0.362,1.31,0.0,-2.59
-AUDNZD,{'adx_min': 22.0},315,41.9,0.257,1.26,0.0,-6.1
-CADCHF,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",705,52.48,0.574,1.77,76.9,42.94
-CADCHF,"{'require_h1_rsi_align': True, 'require_macd_align': True}",935,52.94,0.588,1.87,69.2,39.56
-CADCHF,{'require_h1_rsi_align': True},1376,52.03,0.561,1.95,69.2,38.65
-CADCHF,{'require_macd_align': True},1027,50.63,0.519,1.68,69.2,37.25
-CADCHF,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",1164,50.6,0.518,1.81,69.2,37.22
-CADCHF,{},1560,48.72,0.462,1.68,69.2,35.33
-CADCHF,"{'adx_min': 18.0, 'require_macd_align': True}",850,50.71,0.521,1.65,61.5,33.48
-CADCHF,{'adx_min': 22.0},1050,48.76,0.463,1.62,61.5,31.53
-CADCHF,{'add_vol_confirm': True},1648,48.54,0.456,1.68,61.5,31.31
-CADCHF,{'adx_min': 18.0},1322,48.03,0.441,1.61,53.8,26.96
-CADCHF,"{'adx_min': 18.0, 'add_vol_confirm': True}",1384,47.9,0.437,1.6,53.8,26.83
-USDMXN,{'require_h1_rsi_align': True},545,58.72,0.761,2.59,92.3,56.87
-USDMXN,{},696,54.17,0.625,2.1,92.3,52.32
-USDMXN,{'adx_min': 18.0},619,53.8,0.614,2.07,92.3,51.95
-USDMXN,{'add_vol_confirm': True},831,53.43,0.603,2.06,92.3,51.58
-USDMXN,{'require_macd_align': True},533,56.29,0.689,2.15,84.6,50.59
-USDMXN,"{'adx_min': 18.0, 'require_macd_align': True}",457,56.24,0.687,2.12,84.6,50.54
-USDMXN,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",479,57.62,0.729,2.48,69.2,44.24
-USDMXN,"{'require_h1_rsi_align': True, 'require_macd_align': True}",433,60.51,0.815,2.62,61.5,43.28
-USDMXN,{'adx_min': 22.0},466,55.36,0.661,2.17,61.5,38.13
-USDMXN,"{'adx_min': 18.0, 'add_vol_confirm': True}",750,52.67,0.58,2.0,61.5,35.44
-USDMXN,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",319,60.19,0.806,2.54,7.7,16.03
-USDTRY,{},0,0.0,0.0,0.0,0.0,-1000000000.0
-USDTRY,{'adx_min': 18.0},0,0.0,0.0,0.0,0.0,-1000000000.0
-USDTRY,{'adx_min': 22.0},0,0.0,0.0,0.0,0.0,-1000000000.0
-USDTRY,{'require_h1_rsi_align': True},0,0.0,0.0,0.0,0.0,-1000000000.0
-USDTRY,{'require_macd_align': True},0,0.0,0.0,0.0,0.0,-1000000000.0
-USDTRY,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",0,0.0,0.0,0.0,0.0,-1000000000.0
-USDTRY,"{'adx_min': 18.0, 'require_macd_align': True}",0,0.0,0.0,0.0,0.0,-1000000000.0
-USDTRY,"{'require_h1_rsi_align': True, 'require_macd_align': True}",0,0.0,0.0,0.0,0.0,-1000000000.0
-USDTRY,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",0,0.0,0.0,0.0,0.0,-1000000000.0
-USDTRY,{'add_vol_confirm': True},0,0.0,0.0,0.0,0.0,-1000000000.0
-USDTRY,"{'adx_min': 18.0, 'add_vol_confirm': True}",0,0.0,0.0,0.0,0.0,-1000000000.0
-EURSEK,{},416,49.28,0.478,1.75,46.2,24.36
-EURSEK,{'add_vol_confirm': True},518,48.65,0.459,1.71,38.5,19.88
-EURSEK,{'adx_min': 18.0},372,48.66,0.46,1.69,30.8,16.04
-EURSEK,{'require_h1_rsi_align': True},333,51.65,0.55,1.92,15.4,11.34
-EURSEK,"{'adx_min': 18.0, 'add_vol_confirm': True}",471,47.13,0.414,1.6,23.1,10.67
-EURSEK,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",293,50.51,0.515,1.81,15.4,10.2
-EURSEK,{'adx_min': 22.0},303,51.16,0.535,1.86,7.7,7.0
-EURSEK,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",181,53.04,0.591,1.87,0.0,5.04
-EURSEK,{'require_macd_align': True},301,48.84,0.465,1.59,7.7,4.68
-EURSEK,"{'adx_min': 18.0, 'require_macd_align': True}",256,48.83,0.465,1.57,7.7,4.67
-EURSEK,"{'require_h1_rsi_align': True, 'require_macd_align': True}",248,51.21,0.536,1.8,0.0,3.21
-EURTRY,{},0,0.0,0.0,0.0,0.0,-1000000000.0
-EURTRY,{'adx_min': 18.0},0,0.0,0.0,0.0,0.0,-1000000000.0
-EURTRY,{'adx_min': 22.0},0,0.0,0.0,0.0,0.0,-1000000000.0
-EURTRY,{'require_h1_rsi_align': True},0,0.0,0.0,0.0,0.0,-1000000000.0
-EURTRY,{'require_macd_align': True},0,0.0,0.0,0.0,0.0,-1000000000.0
-EURTRY,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",0,0.0,0.0,0.0,0.0,-1000000000.0
-EURTRY,"{'adx_min': 18.0, 'require_macd_align': True}",0,0.0,0.0,0.0,0.0,-1000000000.0
-EURTRY,"{'require_h1_rsi_align': True, 'require_macd_align': True}",0,0.0,0.0,0.0,0.0,-1000000000.0
-EURTRY,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",0,0.0,0.0,0.0,0.0,-1000000000.0
-EURTRY,{'add_vol_confirm': True},0,0.0,0.0,0.0,0.0,-1000000000.0
-EURTRY,"{'adx_min': 18.0, 'add_vol_confirm': True}",0,0.0,0.0,0.0,0.0,-1000000000.0
-XAUUSD,{'require_h1_rsi_align': True},532,52.82,0.585,2.01,69.2,39.43
-XAUUSD,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",498,52.61,0.578,1.97,69.2,39.23
-XAUUSD,{},665,50.38,0.511,1.8,61.5,33.15
-XAUUSD,{'adx_min': 18.0},627,50.08,0.502,1.77,61.5,32.85
-XAUUSD,{'add_vol_confirm': True},812,49.26,0.478,1.76,61.5,32.03
-XAUUSD,"{'adx_min': 18.0, 'add_vol_confirm': True}",762,48.82,0.465,1.73,61.5,31.59
-XAUUSD,{'adx_min': 22.0},507,48.72,0.462,1.65,61.5,31.49
-XAUUSD,{'require_macd_align': True},470,51.06,0.532,1.66,38.5,22.29
-XAUUSD,"{'require_h1_rsi_align': True, 'require_macd_align': True}",387,52.71,0.581,1.81,30.8,20.1
-XAUUSD,"{'adx_min': 18.0, 'require_macd_align': True}",423,51.06,0.532,1.63,30.8,18.45
-XAUUSD,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",302,52.65,0.579,1.7,15.4,12.34
+GBPUSD,"{'require_h1_rsi_align': True, 'require_macd_align': True}",302,49.34,0.48,1.56,60.0,31.34
+GBPUSD,{'require_h1_rsi_align': True},497,48.89,0.467,1.73,60.0,30.89
+GBPUSD,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",384,47.92,0.438,1.61,40.0,19.92
+GBPUSD,{'require_macd_align': True},334,46.71,0.401,1.39,40.0,18.71
+GBPUSD,"{'adx_min': 18.0, 'require_macd_align': True}",263,45.63,0.369,1.22,40.0,17.63
+GBPUSD,{'adx_min': 22.0},340,45.59,0.368,1.43,40.0,17.59
+GBPUSD,{'add_vol_confirm': True},581,44.92,0.348,1.44,40.0,16.92
+GBPUSD,"{'adx_min': 18.0, 'add_vol_confirm': True}",458,44.32,0.33,1.38,40.0,16.32
+GBPUSD,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",203,46.31,0.389,1.22,20.0,8.31
+GBPUSD,{},563,45.65,0.369,1.5,20.0,7.65
+GBPUSD,{'adx_min': 18.0},434,44.93,0.348,1.42,20.0,6.93
+EURJPY,{'require_h1_rsi_align': True},142,46.48,0.394,1.65,20.0,8.48
+EURJPY,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",128,46.09,0.383,1.63,20.0,8.09
+EURJPY,{},167,45.51,0.365,1.58,20.0,7.51
+EURJPY,{'add_vol_confirm': True},192,45.31,0.359,1.53,20.0,7.31
+EURJPY,{'adx_min': 18.0},153,44.44,0.333,1.51,20.0,6.44
+EURJPY,"{'adx_min': 18.0, 'add_vol_confirm': True}",176,44.32,0.33,1.44,20.0,6.32
+EURJPY,{'adx_min': 22.0},119,44.54,0.336,1.49,20.0,-3.46
+EURJPY,{'require_macd_align': True},113,44.25,0.327,1.27,20.0,-3.75
+EURJPY,"{'require_h1_rsi_align': True, 'require_macd_align': True}",100,45.0,0.35,1.27,0.0,-13.0
+EURJPY,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",72,41.67,0.25,1.03,0.0,-16.33
+EURJPY,"{'adx_min': 18.0, 'require_macd_align': True}",97,41.24,0.237,1.07,0.0,-16.76
+EURCAD,{'require_h1_rsi_align': True},437,49.66,0.49,1.74,80.0,41.66
+EURCAD,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",359,48.75,0.462,1.65,60.0,30.75
+EURCAD,{'adx_min': 22.0},323,47.99,0.44,1.64,60.0,29.99
+EURCAD,"{'require_h1_rsi_align': True, 'require_macd_align': True}",309,47.9,0.437,1.52,60.0,29.9
+EURCAD,{},484,46.69,0.401,1.54,60.0,28.69
+EURCAD,{'add_vol_confirm': True},516,46.51,0.395,1.57,60.0,28.51
+EURCAD,"{'adx_min': 18.0, 'add_vol_confirm': True}",427,46.37,0.391,1.51,60.0,28.37
+EURCAD,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",221,47.96,0.439,1.48,40.0,19.96
+EURCAD,{'adx_min': 18.0},397,46.6,0.398,1.5,40.0,18.6
+EURCAD,{'require_macd_align': True},336,44.94,0.348,1.34,20.0,6.94
+EURCAD,"{'adx_min': 18.0, 'require_macd_align': True}",273,44.69,0.341,1.31,20.0,6.69
+GBPCAD,"{'require_h1_rsi_align': True, 'require_macd_align': True}",331,51.36,0.541,1.82,100.0,53.36
+GBPCAD,{'require_macd_align': True},360,49.72,0.492,1.69,80.0,41.72
+GBPCAD,"{'adx_min': 18.0, 'require_macd_align': True}",287,49.13,0.474,1.55,60.0,31.13
+GBPCAD,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",241,50.62,0.519,1.67,40.0,22.62
+GBPCAD,{'require_h1_rsi_align': True},475,46.74,0.402,1.53,40.0,18.74
+GBPCAD,{'add_vol_confirm': True},556,45.5,0.365,1.49,40.0,17.5
+GBPCAD,{},519,45.47,0.364,1.46,40.0,17.47
+GBPCAD,"{'adx_min': 18.0, 'add_vol_confirm': True}",445,44.49,0.335,1.36,20.0,6.49
+GBPCAD,{'adx_min': 22.0},342,43.27,0.298,1.2,20.0,5.27
+GBPCAD,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",383,44.65,0.339,1.34,0.0,-3.35
+GBPCAD,{'adx_min': 18.0},420,44.29,0.329,1.33,0.0,-3.71
+AUDCAD,{'require_h1_rsi_align': True},156,48.72,0.462,1.65,40.0,20.72
+AUDCAD,{'add_vol_confirm': True},218,45.87,0.376,1.51,40.0,17.87
+AUDCAD,{},185,44.86,0.346,1.44,40.0,16.86
+AUDCAD,{'require_macd_align': True},140,47.14,0.414,1.41,20.0,9.14
+AUDCAD,"{'adx_min': 18.0, 'add_vol_confirm': True}",205,46.34,0.39,1.51,20.0,8.34
+AUDCAD,{'adx_min': 18.0},170,44.71,0.341,1.4,20.0,6.71
+AUDCAD,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",141,46.81,0.404,1.48,0.0,-1.19
+AUDCAD,"{'adx_min': 18.0, 'require_macd_align': True}",124,45.16,0.355,1.25,0.0,-2.84
+AUDCAD,{'adx_min': 22.0},134,43.28,0.299,1.35,0.0,-4.72
+AUDCAD,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",93,50.54,0.516,1.5,0.0,-7.46
+AUDCAD,"{'require_h1_rsi_align': True, 'require_macd_align': True}",119,50.42,0.513,1.64,0.0,-7.58
+USDMXN,{'require_h1_rsi_align': True},209,59.81,0.794,2.75,80.0,51.81
+USDMXN,{'require_macd_align': True},199,56.78,0.704,2.23,80.0,48.78
+USDMXN,{'add_vol_confirm': True},299,56.19,0.686,2.33,80.0,48.19
+USDMXN,{},255,55.29,0.659,2.21,80.0,47.29
+USDMXN,{'adx_min': 18.0},229,53.71,0.611,2.07,80.0,45.71
+USDMXN,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",184,58.7,0.761,2.61,60.0,40.7
+USDMXN,"{'adx_min': 18.0, 'require_macd_align': True}",174,55.17,0.655,2.04,60.0,37.17
+USDMXN,"{'require_h1_rsi_align': True, 'require_macd_align': True}",169,60.36,0.811,2.69,40.0,32.36
+USDMXN,"{'adx_min': 18.0, 'add_vol_confirm': True}",274,54.38,0.631,2.16,40.0,26.38
+USDMXN,{'adx_min': 22.0},169,53.85,0.615,2.06,40.0,25.85
+USDMXN,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",121,58.68,0.76,2.52,0.0,10.68
+XAUUSD,{},256,52.73,0.582,1.97,66.7,38.07
+XAUUSD,{'adx_min': 18.0},238,52.1,0.563,1.89,66.7,37.43
+XAUUSD,{'add_vol_confirm': True},318,50.63,0.519,1.86,66.7,35.96
+XAUUSD,{'require_h1_rsi_align': True},204,53.92,0.618,2.11,50.0,30.92
+XAUUSD,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",187,52.94,0.588,1.99,50.0,29.94
+XAUUSD,{'adx_min': 22.0},196,51.02,0.531,1.73,50.0,28.02
+XAUUSD,"{'adx_min': 18.0, 'add_vol_confirm': True}",291,49.14,0.474,1.76,50.0,26.14
+XAUUSD,"{'adx_min': 18.0, 'require_macd_align': True}",166,53.01,0.59,1.83,33.3,21.68
+XAUUSD,"{'require_h1_rsi_align': True, 'require_macd_align': True}",158,52.53,0.576,1.9,33.3,21.2
+XAUUSD,{'require_macd_align': True},190,52.11,0.563,1.8,33.3,20.77
+XAUUSD,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",120,50.0,0.5,1.61,16.7,10.33

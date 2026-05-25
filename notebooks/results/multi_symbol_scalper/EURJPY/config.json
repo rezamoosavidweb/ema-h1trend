@@ -1,18 +1,16 @@
 {
-  "mode": "OR",
+  "mode": "RSI-gated",
   "confirms": [
     "f_candle",
     "f_ema"
   ],
-  "min_reactions": 1,
-  "rsi_memory": 10,
+  "rsi_memory": 15,
   "session": [
     8,
     13
   ],
   "sl_method": "structural",
-  "atr_min_mult": 0.9,
+  "atr_min_mult": 0.0,
   "htf_strength_min": 0.0,
-  "require_h1_rsi_align": true,
-  "require_macd_align": true
+  "require_h1_rsi_align": true
 }

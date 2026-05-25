@@ -51,7 +51,6 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
-from zoneinfo import ZoneInfo
 
 import numpy as np
 import pandas as pd
@@ -102,33 +101,45 @@ DEFAULT_PORTFOLIO_RISK   = 0.02           # 2% portfolio at risk if all 1× open
 
 M5_SECONDS               = 300
 
-# Broker timezone. Errante quotes wall-clock as if it were UTC; we relabel.
-# (Same fix as run_ob_xauusd.py — see that file's docstring for full rationale.)
-BROKER_TZ = ZoneInfo("Asia/Nicosia")
-
 
 # ═══════════════════════════════════════════════════════════════════════════
-# UTC-CORRECTION HELPER
+# TIME HANDLING — KEEP BROKER WALL-CLOCK AS-IS, NO TZ CONVERSION
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Convention (locked across live + backtest):
+#   * MT5 returns `time` as wall-clock-encoded-as-Unix-seconds. We do NOT
+#     convert to real UTC — we keep the wall-clock reading verbatim, as a
+#     tz-naive timestamp.
+#   * Backtest CSVs follow the same convention: time labels are wall-clock
+#     even when written with a "+00:00" suffix.
+#   * Strategy session windows assume bar `time.hour` is broker wall-clock.
+#     With broker_to_ny_h=7 (Errante = EET/EEST), broker 15:00 → NY 08:00.
+#   * For age-of-data freshness checks we use `_broker_now()` which returns
+#     the current wall-clock time in the same convention.
+#
+# Why no conversion?
+#   Earlier code did `tz_localize(Asia/Nicosia).tz_convert(UTC)` here AND
+#   a different conversion in the backtest notebooks → frames drifted out
+#   of alignment whenever the CSV cache and the live stream disagreed on
+#   bar boundaries. Removing both conversions removes the only source of
+#   bar-time disagreement: now BT and live receive identical timestamps.
 # ═══════════════════════════════════════════════════════════════════════════
 
-def _mt5_seconds_to_utc(seconds):
-    """
-    Convert MT5's `time` field (broker wall-clock encoded as Unix seconds) to
-    real UTC. DST-aware via BROKER_TZ. See run_ob_xauusd.py for the full
-    treatise on why this matters.
-    """
-    naive = pd.to_datetime(seconds, unit="s")
-    if hasattr(naive, "dt"):
-        return (
-            naive.dt.tz_localize(BROKER_TZ, nonexistent="shift_forward",
-                                  ambiguous="infer")
-                 .dt.tz_convert("UTC")
-        )
-    return (
-        naive.tz_localize(BROKER_TZ, nonexistent="shift_forward",
-                          ambiguous=False)
-             .tz_convert("UTC")
-    )
+# Offset (hours) from broker wall-clock to real UTC. Errante = EET/EEST so
+# this is +2 in winter and +3 in summer. ONLY used by `_broker_now()` so the
+# stale-data guard compares wall-clock against wall-clock.
+# In May 2026 we are in EEST → +3.
+BROKER_WALLCLOCK_OFFSET_HOURS = 3
+
+
+def _mt5_seconds_to_naive(seconds):
+    """MT5 wall-clock-as-unix-seconds → tz-naive Timestamp (no shift)."""
+    return pd.to_datetime(seconds, unit="s")
+
+
+def _broker_now() -> pd.Timestamp:
+    """Current real-world UTC time expressed in BROKER wall-clock (tz-naive)."""
+    return pd.Timestamp.utcnow().tz_localize(None) + pd.Timedelta(hours=BROKER_WALLCLOCK_OFFSET_HOURS)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -170,12 +181,15 @@ def assert_terminal_ready() -> None:
 # ═══════════════════════════════════════════════════════════════════════════
 
 def _fetch_bars(symbol: str, timeframe, n: int) -> pd.DataFrame:
-    """Fetch `n` bars; drop the still-forming bar via iloc[:-1]."""
+    """Fetch `n` bars; drop the still-forming bar via iloc[:-1].
+
+    Returns a DataFrame whose `time` column is tz-naive BROKER wall-clock.
+    """
     rates = mt5.copy_rates_from_pos(symbol, timeframe, 0, n)
     if rates is None or len(rates) == 0:
         raise RuntimeError(f"No data for {symbol} timeframe={timeframe}: {mt5.last_error()}")
     df = pd.DataFrame(rates)
-    df["time"] = _mt5_seconds_to_utc(df["time"])
+    df["time"] = _mt5_seconds_to_naive(df["time"])
     df = df.rename(columns={"tick_volume": "volume"})
     cols = [c for c in ["time", "open", "high", "low", "close", "volume"] if c in df.columns]
     return df[cols].iloc[:-1].reset_index(drop=True)
@@ -270,14 +284,23 @@ def run_symbol_cycle(ctx: SymbolContext, dry_run: bool) -> dict:
         log.error("data_fetch_error", exc=exc)
         return {"symbol": sym, "skipped": "data_fetch_error", "error": str(exc)}
 
+    # detect_signal_verbose returns (Signal|None, diagnostics_dict). The
+    # diagnostics dump every gate value + OHLC of the last bar — invaluable
+    # for backtest/live parity audits in notebook 30/31. Falls back to the
+    # legacy `detect_signal` API if the strategy version doesn't expose it
+    # (so this runner stays compatible with older strategy.py builds).
+    diag: dict = {}
     try:
-        signal: Optional[Signal] = ctx.strategy.detect_signal(m5, h1, d1)
+        if hasattr(ctx.strategy, "detect_signal_verbose"):
+            signal, diag = ctx.strategy.detect_signal_verbose(m5, h1, d1)
+        else:
+            signal = ctx.strategy.detect_signal(m5, h1, d1)
     except Exception as exc:
         log.error("strategy_exception", exc=exc)
         return {"symbol": sym, "skipped": "strategy_exception", "error": str(exc)}
 
     last_bar_time = m5.iloc[-1]["time"]
-    age_minutes   = (datetime.now(timezone.utc) - last_bar_time).total_seconds() / 60
+    age_minutes   = (_broker_now() - pd.Timestamp(last_bar_time)).total_seconds() / 60
 
     log.event(
         "cycle",
@@ -287,6 +310,7 @@ def run_symbol_cycle(ctx: SymbolContext, dry_run: bool) -> dict:
         signal=signal is not None,
         risk_per_trade=ctx.allocation.risk_per_trade,
         weight=ctx.allocation.weight,
+        diag=diag,
     )
 
     # ── 2) Stale-data guard ─────────────────────────────────────────────────-

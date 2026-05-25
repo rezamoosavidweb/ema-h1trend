@@ -1,12 +1,12 @@
 symbol,overlay,trades,WR_%,exp_R,PF,q_pass_%,score
-AUDCAD,{'require_h1_rsi_align': True},431,49.88,0.497,1.79,53.8,28.81
-AUDCAD,"{'adx_min': 18.0, 'add_vol_confirm': True}",573,46.95,0.408,1.62,53.8,25.87
-AUDCAD,{},527,46.87,0.406,1.59,46.2,21.95
-AUDCAD,{'add_vol_confirm': True},628,46.34,0.39,1.6,46.2,21.41
-AUDCAD,{'adx_min': 18.0},473,47.36,0.421,1.59,38.5,18.59
-AUDCAD,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",380,50.0,0.5,1.75,30.8,17.38
-AUDCAD,{'adx_min': 22.0},382,48.17,0.445,1.69,23.1,11.71
-AUDCAD,{'require_macd_align': True},393,46.31,0.389,1.44,23.1,9.85
-AUDCAD,"{'require_h1_rsi_align': True, 'require_macd_align': True}",328,48.17,0.445,1.56,15.4,7.86
-AUDCAD,"{'adx_min': 18.0, 'require_macd_align': True}",343,47.23,0.417,1.47,7.7,3.08
-AUDCAD,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",253,50.2,0.506,1.63,0.0,2.2
+AUDCAD,{'require_h1_rsi_align': True},156,48.72,0.462,1.65,40.0,20.72
+AUDCAD,{'add_vol_confirm': True},218,45.87,0.376,1.51,40.0,17.87
+AUDCAD,{},185,44.86,0.346,1.44,40.0,16.86
+AUDCAD,{'require_macd_align': True},140,47.14,0.414,1.41,20.0,9.14
+AUDCAD,"{'adx_min': 18.0, 'add_vol_confirm': True}",205,46.34,0.39,1.51,20.0,8.34
+AUDCAD,{'adx_min': 18.0},170,44.71,0.341,1.4,20.0,6.71
+AUDCAD,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",141,46.81,0.404,1.48,0.0,-1.19
+AUDCAD,"{'adx_min': 18.0, 'require_macd_align': True}",124,45.16,0.355,1.25,0.0,-2.84
+AUDCAD,{'adx_min': 22.0},134,43.28,0.299,1.35,0.0,-4.72
+AUDCAD,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",93,50.54,0.516,1.5,0.0,-7.46
+AUDCAD,"{'require_h1_rsi_align': True, 'require_macd_align': True}",119,50.42,0.513,1.64,0.0,-7.58

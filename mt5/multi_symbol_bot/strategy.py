@@ -338,20 +338,87 @@ class Strategy:
         """
         Returns a Signal on the latest closed M5 bar if all gates fire, else None.
 
-        The input frames MUST have a UTC `time` column and OHLC[+volume].
-        They MUST exclude the still-forming bar (do `iloc[:-1]` at the data
-        boundary).
+        The input frames MUST have a `time` column (tz-naive broker wall-clock
+        — same convention as the live runner) and OHLC[+volume]. They MUST
+        exclude the still-forming bar (do `iloc[:-1]` at the data boundary).
+
+        For debugging parity issues, prefer `detect_signal_verbose()` which
+        returns the same Signal plus a dict of every gate value that led to
+        the decision (the runner logs that dict on each cycle).
         """
+        sig, _ = self.detect_signal_verbose(m5, h1, d1)
+        return sig
+
+    def detect_signal_verbose(
+        self,
+        m5: pd.DataFrame,
+        h1: pd.DataFrame,
+        d1: pd.DataFrame,
+    ) -> tuple[Optional[Signal], dict]:
+        """
+        Same as `detect_signal` but ALSO returns a diagnostics dict so callers
+        can log exactly why a signal fired (or didn't). Designed to be cheap
+        to serialise as JSON — all values are int / float / bool / str.
+
+        Diagnostics keys:
+            n_m5 / n_h1 / n_d1  — input frame sizes
+            skip                — set when we bail out early
+            bar_time, open, high, low, close, volume  — last-bar OHLC
+            trend_dir, h1_trend, d1_trend, h1_rsi
+            in_session, atr_ok, adx_ok
+            ema20, rsi, atr, adx, bb_up, bb_lo
+            f_bb, f_ema, f_rsi, f_candle, f_rsiR, f_macd, f_stoch, f_vol
+            signal_dir          — -1 / 0 / +1 raw output of `_signal_at`
+        """
+        diag: dict = {
+            "n_m5": int(len(m5)),
+            "n_h1": int(len(h1)),
+            "n_d1": int(len(d1)),
+        }
         if len(m5) < HISTORY_M5_BARS * 0.5 or len(h1) < 100 or len(d1) < 60:
-            return None  # not enough warm-up data
+            diag["skip"] = "insufficient_data"
+            return None, diag
 
         frame = self._build_frame(m5, h1, d1)
-        i = len(frame) - 1                       # index of last closed bar
-        sig_direction = self._signal_at(frame, i)
-        if sig_direction == 0:
-            return None
+        i = len(frame) - 1
+        row = frame.iloc[i]
 
-        return self._build_signal(frame, i, sig_direction)
+        diag.update({
+            "bar_time":   str(row["time"]),
+            "open":       float(row["open"]),
+            "high":       float(row["high"]),
+            "low":        float(row["low"]),
+            "close":      float(row["close"]),
+            "volume":     float(row.get("volume", 0.0)),
+            "trend_dir":  int(row["trend_dir"]),
+            "h1_trend":   int(row["h1_trend"]),
+            "d1_trend":   int(row["d1_trend"]),
+            "h1_rsi":     round(float(row["h1_rsi"]), 3),
+            "in_session": bool(row["in_session"]),
+            "atr_ok":     bool(row["atr_ok"]),
+            "adx_ok":     bool(row["adx_ok"]),
+            "ema20":      round(float(row["ema20"]), 6),
+            "rsi":        round(float(row["rsi"]), 3),
+            "atr":        round(float(row["atr"]), 6),
+            "adx":        round(float(row["adx"]), 3),
+            "bb_up":      round(float(row["bb_up"]), 6),
+            "bb_lo":      round(float(row["bb_lo"]), 6),
+            "f_bb":       int(row["f_bb"]),
+            "f_ema":      int(row["f_ema"]),
+            "f_rsi":      int(row["f_rsi"]),
+            "f_candle":   int(row["f_candle"]),
+            "f_rsiR":     int(row["f_rsiR"]),
+            "f_macd":     int(row["f_macd"]),
+            "f_stoch":    int(row["f_stoch"]),
+            "f_vol":      int(row["f_vol"]),
+        })
+
+        sig_direction = self._signal_at(frame, i)
+        diag["signal_dir"] = int(sig_direction)
+        if sig_direction == 0:
+            return None, diag
+
+        return self._build_signal(frame, i, sig_direction), diag
 
     # ── internals: feature pipeline ──────────────────────────────────────────-
 
