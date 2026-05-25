@@ -25,7 +25,7 @@ AUDCHF,RSI-gated,f_candle|f_ema,15,-,0.0,NY08-12,412,48.3,0.449,1.67,46.2,23.38
 AUDNZD,RSI-gated,f_candle|f_ema,15,-,0.0,NY08-12,469,43.5,0.305,1.33,38.5,14.73
 CADCHF,OR,f_rsi|f_candle|f_ema,10,1,0.9,NY08-13,1560,48.72,0.462,1.68,69.2,35.33
 USDMXN,RSI-gated,f_candle|f_ema,15,-,0.9,NY07-16,696,54.17,0.625,2.1,92.3,52.32
-USDTRY,OR,f_rsi|f_candle|f_ema,10,1,0.9,NY07-16,1619,20.32,-0.39,0.43,0.0,-27.68
+USDTRY,RSI-gated,f_candle|f_ema,10,-,0.0,NY07-16,0,0.0,0.0,0.0,0.0,-1000000000.0
 EURSEK,RSI-gated,f_candle|f_ema,15,-,0.0,NY08-13,416,49.28,0.478,1.75,46.2,24.36
-EURTRY,RSI-gated,f_candle|f_ema,15,-,0.9,NY08-12,508,36.42,0.093,1.03,7.7,-7.74
+EURTRY,RSI-gated,f_candle|f_ema,10,-,0.0,NY07-16,0,0.0,0.0,0.0,0.0,-1000000000.0
 XAUUSD,RSI-gated,f_candle|f_ema,10,-,0.0,NY07-16,665,50.38,0.511,1.8,61.5,33.15
