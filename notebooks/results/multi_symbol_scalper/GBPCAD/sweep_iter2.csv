@@ -1,8 +1,8 @@
 symbol,mode,confirms,memory,min_r,atr_min,session,trades,WR_%,exp_R,PF,q_pass_%,score
 GBPCAD,OR,f_candle|f_ema,10,1,0.9,NY08-13,1555,45.98,0.379,1.45,30.8,13.37
 GBPCAD,OR,f_candle|f_ema,10,1,0.9,NY08-12,1465,45.67,0.37,1.44,30.8,13.05
-GBPCAD,RSI-gated,f_candle|f_ema,15,-,0.0,NY08-12,418,45.22,0.356,1.44,30.8,12.6
 GBPCAD,RSI-gated,f_candle|f_ema,15,-,0.9,NY08-12,418,45.22,0.356,1.44,30.8,12.6
+GBPCAD,RSI-gated,f_candle|f_ema,15,-,0.0,NY08-12,418,45.22,0.356,1.44,30.8,12.6
 GBPCAD,RSI-gated,f_candle|f_ema,15,-,0.0,NY08-13,462,44.81,0.344,1.39,30.8,12.19
 GBPCAD,OR,f_rsi|f_candle|f_ema,10,1,0.9,NY08-13,1666,46.46,0.394,1.48,23.1,10.0
 GBPCAD,RSI-gated,f_candle|f_ema,15,-,0.9,NY08-13,461,44.9,0.347,1.4,23.1,8.44
