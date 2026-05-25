@@ -1,12 +1,12 @@
 symbol,overlay,trades,WR_%,exp_R,PF,q_pass_%,score
-EURTRY,{'require_h1_rsi_align': True},394,42.13,0.264,1.29,15.4,1.82
-EURTRY,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",349,41.83,0.255,1.27,15.4,1.53
-EURTRY,"{'require_h1_rsi_align': True, 'require_macd_align': True}",291,41.58,0.247,1.19,7.7,-2.57
-EURTRY,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",229,41.92,0.258,1.17,0.0,-6.08
-EURTRY,{'add_vol_confirm': True},572,37.59,0.128,1.06,7.7,-6.57
-EURTRY,"{'adx_min': 18.0, 'add_vol_confirm': True}",519,36.61,0.098,1.02,7.7,-7.54
-EURTRY,{},508,36.42,0.093,1.03,7.7,-7.74
-EURTRY,{'adx_min': 22.0},386,35.75,0.073,1.0,7.7,-8.4
-EURTRY,{'adx_min': 18.0},458,35.59,0.068,0.99,7.7,-8.56
-EURTRY,"{'adx_min': 18.0, 'require_macd_align': True}",312,37.82,0.135,1.0,0.0,-10.18
-EURTRY,{'require_macd_align': True},358,37.71,0.131,1.01,0.0,-10.29
+EURTRY,{},0,0.0,0.0,0.0,0,-1000000000.0
+EURTRY,{'adx_min': 18.0},0,0.0,0.0,0.0,0,-1000000000.0
+EURTRY,{'adx_min': 22.0},0,0.0,0.0,0.0,0,-1000000000.0
+EURTRY,{'require_h1_rsi_align': True},0,0.0,0.0,0.0,0,-1000000000.0
+EURTRY,{'require_macd_align': True},0,0.0,0.0,0.0,0,-1000000000.0
+EURTRY,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",0,0.0,0.0,0.0,0,-1000000000.0
+EURTRY,"{'adx_min': 18.0, 'require_macd_align': True}",0,0.0,0.0,0.0,0,-1000000000.0
+EURTRY,"{'require_h1_rsi_align': True, 'require_macd_align': True}",0,0.0,0.0,0.0,0,-1000000000.0
+EURTRY,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",0,0.0,0.0,0.0,0,-1000000000.0
+EURTRY,{'add_vol_confirm': True},0,0.0,0.0,0.0,0,-1000000000.0
+EURTRY,"{'adx_min': 18.0, 'add_vol_confirm': True}",0,0.0,0.0,0.0,0,-1000000000.0

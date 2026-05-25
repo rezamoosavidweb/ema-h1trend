@@ -1,12 +1,12 @@
 symbol,overlay,trades,WR_%,exp_R,PF,q_pass_%,score
-CHFJPY,{'require_h1_rsi_align': True},443,49.21,0.476,1.66,23.5,12.97
-CHFJPY,{'add_vol_confirm': True},639,45.38,0.362,1.45,29.4,12.09
-CHFJPY,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",380,51.58,0.547,1.83,11.8,9.46
-CHFJPY,{'adx_min': 22.0},395,48.61,0.458,1.61,17.6,9.43
-CHFJPY,"{'adx_min': 18.0, 'add_vol_confirm': True}",562,45.55,0.367,1.45,23.5,9.32
-CHFJPY,{},547,45.52,0.366,1.42,23.5,9.29
-CHFJPY,{'adx_min': 18.0},479,46.97,0.409,1.5,17.6,7.8
-CHFJPY,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",238,54.62,0.639,1.8,0.0,6.62
-CHFJPY,"{'require_h1_rsi_align': True, 'require_macd_align': True}",322,49.69,0.491,1.49,5.9,4.63
-CHFJPY,"{'adx_min': 18.0, 'require_macd_align': True}",323,48.61,0.458,1.44,0.0,0.61
-CHFJPY,{'require_macd_align': True},386,46.37,0.391,1.32,0.0,-1.63
+CHFJPY,{'require_h1_rsi_align': True},340,47.35,0.421,1.57,30.8,14.74
+CHFJPY,{},413,43.83,0.315,1.34,30.8,11.21
+CHFJPY,{'adx_min': 22.0},294,47.62,0.429,1.54,23.1,11.16
+CHFJPY,{'adx_min': 18.0},360,45.56,0.367,1.42,23.1,9.09
+CHFJPY,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",290,49.66,0.49,1.7,7.7,5.5
+CHFJPY,"{'adx_min': 18.0, 'add_vol_confirm': True}",415,44.1,0.323,1.4,15.4,3.79
+CHFJPY,{'add_vol_confirm': True},474,43.88,0.316,1.4,15.4,3.57
+CHFJPY,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",173,50.29,0.509,1.45,0.0,2.29
+CHFJPY,"{'require_h1_rsi_align': True, 'require_macd_align': True}",244,46.31,0.389,1.28,7.7,2.16
+CHFJPY,"{'adx_min': 18.0, 'require_macd_align': True}",237,45.15,0.354,1.21,0.0,-2.85
+CHFJPY,{'require_macd_align': True},286,43.36,0.301,1.13,0.0,-4.64

@@ -8,5 +8,7 @@
     "EURCAD",
     "AUDCAD"
   ],
-  "criteria": "WR_IS >= 48.0 AND fwd_net >= 0"
+  "criteria": "WR_IS \u2265 48.0% AND fwd_net \u2265 0",
+  "starting_capital": 1000.0,
+  "lot_per_trade": 0.02
 }
