@@ -60,5 +60,10 @@ htmlcov/
 
 # Ruff
 .ruff_cache/
-/notebooks/data
+# Ignore everything under notebooks/data EXCEPT the stat_arb outputs
+# (strategy artifacts that the live pairs-trading runner depends on).
+/notebooks/data/*
+!/notebooks/data/stat_arb/
+/notebooks/data/stat_arb/live_signals/
+
 /notebooks/results
