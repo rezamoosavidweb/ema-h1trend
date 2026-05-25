@@ -23,7 +23,9 @@ REM      The :loop block re-launches Python if it exits unexpectedly
 REM      (with a 60s backoff so we don't tight-loop on a config error).
 REM ===========================================================================
 
-set REPO_ROOT=D:\bot\ema-1d trend\ema-h1trend
+
+set REPO_ROOT=C:\Users\Administrator\Desktop\tob\ema-h1trend
+
 set VENV_PYTHON=%REPO_ROOT%\.venv\Scripts\python.exe
 
 REM Per-launch log file so each restart has its own trail
