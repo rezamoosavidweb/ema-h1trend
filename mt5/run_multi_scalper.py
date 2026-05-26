@@ -92,12 +92,49 @@ PORTFOLIO_LOG  = LOGS_DIR / "multi_symbol_scalper.json"
 # from different symbols can be told apart in MT5 history.
 MAGIC_BASE     = 24_000_000
 
-# Execution thresholds — match values that worked for the gold bot in production.
+# Execution thresholds.
+#
+# `slippage_max_points` is the HARD cap on price-drift between the strategy's
+# desired entry (the close of the signal bar) and the live market price at
+# order-send time. Points are the smallest broker tick — meaning is symbol-
+# specific:
+#
+#   FX 5-digit majors/crosses  (e.g. 1.86331)  1 point = 0.00001  → 50 pts = 5 pips
+#   FX 3-digit JPY pairs       (e.g. 184.91 )  1 point = 0.001    → 50 pts = 5 pips
+#   XAU                        (e.g. 4525.81)  1 point = 0.01     → 30 pts = $0.30
+#   USDMXN                     (e.g.   17.29)  1 point = 0.0001   → 200 pts = ~$0.02 quote
+#
+# The defaults below were derived from R&D on actual live rejections seen on
+# Errante demo (2026-05-25):
+#   GBPCAD: live drift 19..35 pts  → cap 50  (35 + 40% safety)
+#   EURCAD: live drift 15..21 pts  → cap 35  (21 + 65% safety)
+#   AUDCAD: live drift 17..31 pts  → cap 50  (31 + 60% safety)
+#   GBPUSD/EURJPY/XAUUSD/USDMXN had no live signals yet — sized from typical
+#   bar-close volatility on M5 data.
+#
+# Tune any value individually after live observation. Symbols not in the dict
+# fall back to `SLIPPAGE_MAX_POINTS_DEFAULT`.
 SLIPPAGE_LIMIT_THRESHOLD = 4.0
-SLIPPAGE_MAX_POINTS      = 6.0
+SLIPPAGE_MAX_POINTS_BY_SYMBOL: dict[str, float] = {
+    'GBPUSD':  40.0,   # FX 5-digit major
+    'XAUUSD':  30.0,   # metal, point=0.01 → 30 pts = $0.30 drift
+    'GBPCAD':  50.0,   # live max 35 + 40% safety
+    'USDMXN': 200.0,   # exotic, low liquidity, wider drift typical
+    'EURJPY':  40.0,   # JPY 3-digit
+    'EURCAD':  35.0,   # live max 21 + 65% safety
+    'AUDCAD':  50.0,   # live max 31 + 60% safety
+}
+SLIPPAGE_MAX_POINTS_DEFAULT = 40.0   # safe fallback for any new symbol
+
+
+def slippage_max_for(symbol: str) -> float:
+    """Return the symbol-specific slippage cap, or the default if absent."""
+    return SLIPPAGE_MAX_POINTS_BY_SYMBOL.get(symbol, SLIPPAGE_MAX_POINTS_DEFAULT)
+
+
 LIMIT_ORDER_STALE_SECONDS = 5 * 60        # 1 M5 bar
-MAX_SPREAD_POINTS        = 200
-DEFAULT_PORTFOLIO_RISK   = 0.02           # 2% portfolio at risk if all 1× open
+MAX_SPREAD_POINTS         = 200
+DEFAULT_PORTFOLIO_RISK    = 0.02          # 2% portfolio at risk if all 1× open
 
 M5_SECONDS               = 300
 
@@ -195,12 +232,71 @@ def _fetch_bars(symbol: str, timeframe, n: int) -> pd.DataFrame:
     return df[cols].iloc[:-1].reset_index(drop=True)
 
 
-def fetch_strategy_frames(broker_symbol: str) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Fetch the three frames the Strategy needs, all in one go."""
+# ─── M5 top-up for stale H1 / D1 ─────────────────────────────────────────────
+# Errante demo lags H1/D1 publication by hours-to-days behind M5. When that
+# happens, the strategy sees stale HTF context (old EMA50/RSI14) and its
+# trend / RSI gates can flip vs what a fully up-to-date feed would say.
+# We mirror the fix from notebooks/00_data_feching.ipynb: if M5 has rolled
+# past the latest broker H1/D1 bar, synthesise the missing bucket(s) from
+# the freshest M5 cache and append them. Native broker history is untouched;
+# only the latest forming bucket(s) are synthetic.
+
+_TF_RESAMPLE_RULE = {"H1": "1h", "D1": "1D"}
+_TF_BAR_DURATION  = {"H1": pd.Timedelta(hours=1), "D1": pd.Timedelta(days=1)}
+
+
+def topup_htf_from_m5(htf_df: pd.DataFrame, tf: str, m5_df: pd.DataFrame) -> tuple[pd.DataFrame, int]:
+    """Return (possibly-extended HTF df, number of synthetic bars appended)."""
+    if tf not in _TF_RESAMPLE_RULE or htf_df.empty or m5_df.empty:
+        return htf_df, 0
+
+    rule          = _TF_RESAMPLE_RULE[tf]
+    bar_duration  = _TF_BAR_DURATION[tf]
+    last_htf_time = pd.Timestamp(htf_df["time"].iloc[-1])
+    last_m5_time  = pd.Timestamp(m5_df["time"].iloc[-1])
+
+    if last_m5_time < last_htf_time + bar_duration:
+        return htf_df, 0     # HTF already covers everything M5 can see
+
+    agg = {"open": "first", "high": "max", "low": "min", "close": "last"}
+    if "volume" in m5_df.columns:
+        agg["volume"] = "sum"
+
+    resampled = (
+        m5_df.set_index("time")
+             .resample(rule, label="left", closed="left")
+             .agg(agg)
+             .dropna(subset=["open", "high", "low", "close"])
+             .reset_index()
+    )
+
+    new_bars = resampled[resampled["time"] > last_htf_time].copy()
+    if new_bars.empty:
+        return htf_df, 0
+
+    # Align column order with the broker frame (fill any missing columns).
+    for col in htf_df.columns:
+        if col not in new_bars.columns:
+            new_bars[col] = 0
+    new_bars = new_bars[htf_df.columns]
+
+    return pd.concat([htf_df, new_bars], ignore_index=True), int(len(new_bars))
+
+
+def fetch_strategy_frames(
+    broker_symbol: str,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, int, int]:
+    """Fetch all three frames, then top-up H1/D1 from M5 if broker lags.
+
+    Returns ``(m5, h1, d1, h1_topped_up_n, d1_topped_up_n)`` so the cycle
+    logger can record exactly how many synthetic bars were appended.
+    """
     m5 = _fetch_bars(broker_symbol, mt5.TIMEFRAME_M5, HISTORY_M5_BARS)
     h1 = _fetch_bars(broker_symbol, mt5.TIMEFRAME_H1, HISTORY_H1_BARS)
     d1 = _fetch_bars(broker_symbol, mt5.TIMEFRAME_D1, HISTORY_D1_BARS)
-    return m5, h1, d1
+    h1, h1_topped = topup_htf_from_m5(h1, "H1", m5)
+    d1, d1_topped = topup_htf_from_m5(d1, "D1", m5)
+    return m5, h1, d1, h1_topped, d1_topped
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -279,7 +375,7 @@ def run_symbol_cycle(ctx: SymbolContext, dry_run: bool) -> dict:
 
     # ── 1) Strategy ─────────────────────────────────────────────────────────-
     try:
-        m5, h1, d1 = fetch_strategy_frames(ctx.broker_symbol)
+        m5, h1, d1, h1_topped, d1_topped = fetch_strategy_frames(ctx.broker_symbol)
     except RuntimeError as exc:
         log.error("data_fetch_error", exc=exc)
         return {"symbol": sym, "skipped": "data_fetch_error", "error": str(exc)}
@@ -298,6 +394,12 @@ def run_symbol_cycle(ctx: SymbolContext, dry_run: bool) -> dict:
     except Exception as exc:
         log.error("strategy_exception", exc=exc)
         return {"symbol": sym, "skipped": "strategy_exception", "error": str(exc)}
+
+    # Record any synthetic bars we appended this cycle so post-hoc audits can
+    # see when the broker lagged HTF publication.
+    if diag is not None and (h1_topped or d1_topped):
+        diag["h1_topped_from_m5"] = int(h1_topped)
+        diag["d1_topped_from_m5"] = int(d1_topped)
 
     last_bar_time = m5.iloc[-1]["time"]
     age_minutes   = (_broker_now() - pd.Timestamp(last_bar_time)).total_seconds() / 60
@@ -439,6 +541,12 @@ def build_contexts(
         log_path = LOGS_DIR / f"{sym}.json"
         magic    = MAGIC_BASE + idx
 
+        # Per-symbol slippage cap — driven by the R&D table near the top of
+        # this file. Errante demo R&D (2026-05-25) showed bar-close drift can
+        # range from a few pts (XAU) to 35+ pts (FX crosses on news), so a
+        # single global value forces a bad trade-off. See SLIPPAGE_MAX_POINTS_BY_SYMBOL.
+        slip_max = slippage_max_for(sym)
+
         engine = ExecutionEngine(
             symbol                    = sym,
             magic                     = magic,
@@ -446,11 +554,17 @@ def build_contexts(
             risk_per_trade            = alloc.risk_per_trade,
             risk_reward               = risk_reward,
             slippage_limit_threshold  = SLIPPAGE_LIMIT_THRESHOLD,
-            slippage_max_points       = SLIPPAGE_MAX_POINTS,
+            slippage_max_points       = slip_max,
             max_spread_points         = MAX_SPREAD_POINTS,
             stale_after_seconds       = LIMIT_ORDER_STALE_SECONDS,
             comment_prefix            = "multi_scalp",
             rotate_daily_logs         = True,
+        )
+        engine.logger.event(
+            "slippage_config",
+            slippage_max_points=slip_max,
+            slippage_limit_threshold=SLIPPAGE_LIMIT_THRESHOLD,
+            from_table=sym in SLIPPAGE_MAX_POINTS_BY_SYMBOL,
         )
 
         # Recover open positions / pendings (idempotent — survives bot restarts).

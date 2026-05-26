@@ -38,9 +38,21 @@ import json
 import os
 import sys
 import traceback
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+
+
+# Broker wall-clock offset (Errante = EET/EEST → +2 winter, +3 summer EEST).
+# Used to derive `timeBroker` so the bar timestamps printed in logs match
+# what's shown on the MT5 terminal clock and what the strategy uses for its
+# session window. NY offset is broker-7h (DEFAULT_BROKER_TO_NY_H).
+#
+# These are intentionally constants (not config) — log readability matters
+# more than handling broker tz changes, which happen twice a year. If DST
+# changes, update here.
+BROKER_WALLCLOCK_OFFSET_HOURS = 3
+BROKER_TO_NY_HOURS            = 7
 
 
 class StructuredLogger:
@@ -125,13 +137,34 @@ class StructuredLogger:
         """
         Append one JSON line. `fields` are merged into the envelope.
 
+        Each entry carries three TIME views for easy log triage:
+            ts            — ISO-8601 UTC with microsecond precision
+                            (legacy field, kept for parser compatibility)
+            timeUTC       — UTC formatted "YYYY-MM-DD HH:MM:SS UTC"
+            timeBroker    — broker wall-clock (Errante = UTC+3 EEST):
+                            this matches what MT5 terminal clock shows AND
+                            the bar_time in cycle events.
+            timeNY        — New York local hour reference (broker −7h)
+                            so session-window checks read at a glance.
+
+        And two contextual fields:
+            event         — snake_case event name
+            symbol        — symbol the logger is bound to
+
         Use snake_case event names; keep field names consistent across calls
         (e.g. always `retcode`, not `rc` or `code`).
         """
+        now_utc      = datetime.now(timezone.utc)
+        now_broker   = now_utc + timedelta(hours=BROKER_WALLCLOCK_OFFSET_HOURS)
+        now_ny       = now_broker - timedelta(hours=BROKER_TO_NY_HOURS)
+
         entry = {
-            "ts":     datetime.now(timezone.utc).isoformat(),
-            "event":  event,
-            "symbol": self.symbol,
+            "ts":         now_utc.isoformat(),
+            "timeUTC":    now_utc.strftime("%Y-%m-%d %H:%M:%S UTC"),
+            "timeBroker": now_broker.strftime("%Y-%m-%d %H:%M:%S BROKER"),
+            "timeNY":     now_ny.strftime("%Y-%m-%d %H:%M:%S NY"),
+            "event":      event,
+            "symbol":     self.symbol,
         }
         entry.update(fields)
 
@@ -143,7 +176,7 @@ class StructuredLogger:
         if self._echo:
             # Console summary -- skip noisy internal fields
             short = {k: v for k, v in fields.items() if k not in ("ob_bar_idx", "stack")}
-            print(f"[{entry['ts']}] {event} | {short}", file=sys.stdout, flush=True)
+            print(f"[{entry['timeBroker']}] {event} | {short}", file=sys.stdout, flush=True)
 
     # ── convenience wrappers ─────────────────────────────────────────────────-
 
