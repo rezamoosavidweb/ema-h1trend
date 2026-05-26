@@ -137,8 +137,8 @@ class FallbackEngine:
         # during broker reconnect). We DELIBERATELY refuse to fall back to
         # volume_min -- an accidental min-lot trade during flaky broker state
         # is worse than skipping the signal.
-        volume = self.risk.calc_volume(self.cfg, side, ob_entry, sl, balance)
-        if volume is None:
+        vol_info = self.risk.calc_volume_detailed(self.cfg, side, ob_entry, sl, balance)
+        if vol_info is None:
             self.logger.error(
                 "risk_calc_failed",
                 stage="initial_sizing",
@@ -146,10 +146,34 @@ class FallbackEngine:
                 last_error=str(mt5.last_error()),
             )
             return FallbackResult(False, "rejected", None, "risk_calc_failed")
-        if volume < self.cfg.volume_min:
-            self.logger.event("skip", reason="volume_too_small",
-                              volume=volume, min=self.cfg.volume_min)
-            return FallbackResult(False, "rejected", None, "volume_too_small")
+        volume = vol_info.volume
+
+        # If the raw computed volume was below broker_min, normalize() clamped
+        # it UP — so the trade now risks MORE than `risk_per_trade` intended.
+        # Warn loudly so the operator notices the under-funded account.
+        if vol_info.was_clamped_to_min:
+            self.logger.event(
+                "volume_clamped_to_min",
+                stage="initial_sizing",
+                raw_volume=round(vol_info.raw_volume, 6),
+                volume=vol_info.volume,
+                volume_min=vol_info.volume_min,
+                effective_risk_multiplier=round(
+                    vol_info.volume / vol_info.raw_volume, 2
+                ) if vol_info.raw_volume > 0 else None,
+                note="effective risk is LARGER than risk_per_trade target — "
+                     "consider lowering position size or increasing balance",
+            )
+
+        # Final broker-side volume sanity check (catches step-grid drift,
+        # min/max violations from any custom override). Cheap, never raises.
+        vchk = self.validator.validate_volume(self.cfg, volume)
+        if not vchk.ok:
+            self.logger.event("broker_validation_failed",
+                              stage="initial_volume",
+                              code=vchk.code, detail=vchk.detail,
+                              **(vchk.fields or {}))
+            return FallbackResult(False, "rejected", None, vchk.code, vchk.fields)
 
         market_price, slippage_pts_price = self._current_slippage(side, ob_entry)
         slippage_pts = slippage_pts_price / self.cfg.point if self.cfg.point else 0.0
@@ -209,8 +233,8 @@ class FallbackEngine:
         # Resize using the actual market price (slippage-adjusted risk).
         # Same fail-safe contract as the initial sizing: None -> skip, never
         # fall back to min lot.
-        volume_final = self.risk.calc_volume(self.cfg, side, market_price, sl, balance)
-        if volume_final is None:
+        vol_info_final = self.risk.calc_volume_detailed(self.cfg, side, market_price, sl, balance)
+        if vol_info_final is None:
             self.logger.error(
                 "risk_calc_failed",
                 stage="slippage_adjusted_sizing",
@@ -218,10 +242,28 @@ class FallbackEngine:
                 last_error=str(mt5.last_error()),
             )
             return FallbackResult(False, "rejected", None, "risk_calc_failed")
-        if volume_final < self.cfg.volume_min:
-            self.logger.event("skip", reason="volume_too_small_after_slippage",
-                              volume=volume_final, min=self.cfg.volume_min)
-            return FallbackResult(False, "rejected", None, "volume_too_small_after_slippage")
+        volume_final = vol_info_final.volume
+
+        if vol_info_final.was_clamped_to_min:
+            self.logger.event(
+                "volume_clamped_to_min",
+                stage="slippage_adjusted_sizing",
+                raw_volume=round(vol_info_final.raw_volume, 6),
+                volume=vol_info_final.volume,
+                volume_min=vol_info_final.volume_min,
+                effective_risk_multiplier=round(
+                    vol_info_final.volume / vol_info_final.raw_volume, 2
+                ) if vol_info_final.raw_volume > 0 else None,
+                note="market-fill sizing also below min lot",
+            )
+
+        vchk2 = self.validator.validate_volume(self.cfg, volume_final)
+        if not vchk2.ok:
+            self.logger.event("broker_validation_failed",
+                              stage="market_volume",
+                              code=vchk2.code, detail=vchk2.detail,
+                              **(vchk2.fields or {}))
+            return FallbackResult(False, "rejected", None, vchk2.code, vchk2.fields)
 
         market_stops = self.validator.validate_market_stops(self.cfg, side, sl, tp_final)
         if not market_stops.ok:

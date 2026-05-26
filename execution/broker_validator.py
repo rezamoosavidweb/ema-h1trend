@@ -165,6 +165,63 @@ class BrokerValidator:
         return ValidationResult(True, fields={"limit_room": limit_room,
                                               "stops_dist": stops_dist})
 
+    # ── volume ───────────────────────────────────────────────────────────────-
+
+    def validate_volume(self, cfg: SymbolConfig, volume: float) -> ValidationResult:
+        """
+        Final volume sanity check before submitting an order. Mirrors what the
+        broker would do server-side (retcode 10014 "Invalid volume"):
+
+            * volume >= volume_min       (otherwise broker rejects)
+            * volume <= volume_max
+            * volume is an exact multiple of volume_step within float tolerance
+
+        ``RiskAdapter.normalize`` already snaps to step + clamps to [min, max],
+        so this is a safety-net for any code path that builds a custom volume
+        (manual override, future strategies, etc). Cheap to run — call it once
+        per order from FallbackEngine right before order_send.
+        """
+        if volume is None or volume <= 0:
+            return ValidationResult(
+                False, "volume_not_positive",
+                f"volume must be > 0; got {volume!r}",
+                {"volume": volume},
+            )
+
+        vmin = float(cfg.volume_min)
+        vmax = float(cfg.volume_max)
+        step = float(cfg.volume_step)
+
+        if volume + 1e-9 < vmin:
+            return ValidationResult(
+                False, "volume_below_min",
+                f"volume {volume} < broker min {vmin}",
+                {"volume": volume, "volume_min": vmin},
+            )
+        if volume > vmax + 1e-9:
+            return ValidationResult(
+                False, "volume_above_max",
+                f"volume {volume} > broker max {vmax}",
+                {"volume": volume, "volume_max": vmax},
+            )
+
+        # Float-safe step check: volume should land on the broker's step grid
+        # within one part in 10^6 of a step.
+        if step > 0:
+            steps_off = round(volume / step)
+            grid_volume = steps_off * step
+            if abs(volume - grid_volume) > step * 1e-6:
+                return ValidationResult(
+                    False, "volume_off_step_grid",
+                    f"volume {volume} not a multiple of step {step} (closest grid: {grid_volume})",
+                    {"volume": volume, "volume_step": step, "closest_grid": grid_volume},
+                )
+
+        return ValidationResult(True, fields={
+            "volume": volume, "volume_min": vmin, "volume_max": vmax,
+            "volume_step": step,
+        })
+
     # ── market order geometry ────────────────────────────────────────────────-
 
     def validate_market_stops(

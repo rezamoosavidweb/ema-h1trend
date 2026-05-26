@@ -378,6 +378,11 @@ def run_symbol_cycle(ctx: SymbolContext, dry_run: bool) -> dict:
         m5, h1, d1, h1_topped, d1_topped = fetch_strategy_frames(ctx.broker_symbol)
     except RuntimeError as exc:
         log.error("data_fetch_error", exc=exc)
+        # Telegram alert — data outage is operator-actionable
+        try:
+            ctx.notifier.notify_error(sym, "data_fetch_error", str(exc))
+        except Exception:
+            pass
         return {"symbol": sym, "skipped": "data_fetch_error", "error": str(exc)}
 
     # detect_signal_verbose returns (Signal|None, diagnostics_dict). The
@@ -393,6 +398,10 @@ def run_symbol_cycle(ctx: SymbolContext, dry_run: bool) -> dict:
             signal = ctx.strategy.detect_signal(m5, h1, d1)
     except Exception as exc:
         log.error("strategy_exception", exc=exc)
+        try:
+            ctx.notifier.notify_error(sym, "strategy_exception", str(exc))
+        except Exception:
+            pass
         return {"symbol": sym, "skipped": "strategy_exception", "error": str(exc)}
 
     # Record any synthetic bars we appended this cycle so post-hoc audits can
@@ -454,6 +463,13 @@ def run_symbol_cycle(ctx: SymbolContext, dry_run: bool) -> dict:
         outcome: ExecutionOutcome = eng.place_signal(signal.as_engine_dict())
     except Exception as exc:
         log.error("execution_exception", exc=exc, bar_time=signal.bar_time)
+        try:
+            ctx.notifier.notify_error(
+                sym, "execution_exception", str(exc),
+                extra={"direction": signal.direction, "bar_time": signal.bar_time},
+            )
+        except Exception:
+            pass
         return {"symbol": sym, "signal": True, "stage": "exception", "error": str(exc)}
 
     # ── 6) Notify outcome ───────────────────────────────────────────────────-
@@ -573,6 +589,21 @@ def build_contexts(
         strategy = Strategy(cfg=member.cfg, broker_to_ny_h=DEFAULT_BROKER_TO_NY_H)
         notifier = Mt5Notifier(logger=engine.logger)
         seen     = load_seen_signals(sym)
+
+        # Announce start to telegram so the operator can confirm the bot is
+        # actually running (and on the right magic / symbol).
+        try:
+            notifier.notify_bot_lifecycle(
+                symbol=sym, phase="start",
+                magic=magic,
+                extras={
+                    "risk_per_trade":  f"{alloc.risk_per_trade:.4%}",
+                    "slippage_max_pts": slip_max,
+                    "broker_symbol":   engine.cfg.name,
+                },
+            )
+        except Exception:
+            pass
 
         contexts.append(SymbolContext(
             symbol       = sym,
@@ -714,9 +745,19 @@ def main() -> None:
         print("\nStopped by user.")
     finally:
         write_portfolio_event("portfolio_stop")
+        # Telegram: one stop-message per symbol so the operator knows the bot
+        # is no longer monitoring. Per-symbol so it survives partial failures.
         for ctx in contexts:
             try:
-                ctx.engine.shutdown()
+                ctx.notifier.notify_bot_lifecycle(
+                    symbol=ctx.symbol, phase="stop",
+                    reason="manual_or_crash",
+                )
+            except Exception:
+                pass
+            try:
+                if hasattr(ctx.engine, "shutdown"):
+                    ctx.engine.shutdown()
             except Exception:
                 pass
         mt5.shutdown()

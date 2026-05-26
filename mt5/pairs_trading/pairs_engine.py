@@ -337,11 +337,24 @@ class PairsExecutionEngine:
             spread_now = spread_now,
             z_now     = z_now,
         )
-        self._notify("OPEN",
-                     f"{pair_key} {side.value.upper()}  "
-                     f"y={y_cfg.name} {sizing.lots_y}@{y_fill_price:.5f}  "
-                     f"x={x_cfg.name} {sizing.lots_x}@{x_fill_price:.5f}  "
-                     f"(z={z_now:+.2f})")
+        # Use the structured pair-open notifier if available; fall back to
+        # the plain text path for older notifier builds.
+        if self.notifier is not None and hasattr(self.notifier, "notify_pair_open"):
+            try:
+                self.notifier.notify_pair_open(
+                    pair_key=pair_key, side=side.value,
+                    y_symbol=y_cfg.name, y_volume=sizing.lots_y, y_price=y_fill_price,
+                    x_symbol=x_cfg.name, x_volume=sizing.lots_x, x_price=x_fill_price,
+                    z_now=z_now,
+                )
+            except Exception as exc:
+                self.logger.error("notifier_send_failed", exc=exc, kind="pair_open")
+        else:
+            self._notify("OPEN",
+                         f"{pair_key} {side.value.upper()}  "
+                         f"y={y_cfg.name} {sizing.lots_y}@{y_fill_price:.5f}  "
+                         f"x={x_cfg.name} {sizing.lots_x}@{x_fill_price:.5f}  "
+                         f"(z={z_now:+.2f})")
         return state
 
     # ── CLOSE pair (two-leg) ────────────────────────────────────────────────

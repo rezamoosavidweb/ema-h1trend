@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import json
 import os
+import ssl
 import time
 import urllib.error
 import urllib.request
@@ -28,6 +29,28 @@ from pathlib import Path
 from typing import Any, Optional, Protocol
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
+
+
+# ── SSL context (fixes "self-signed certificate" failures on hardened servers) ─
+#
+# On Windows servers behind a corporate proxy / older OpenSSL builds, the
+# default OS CA store can be missing or contain a TLS-intercepting cert. The
+# symptom is:
+#     URLError: [SSL: CERTIFICATE_VERIFY_FAILED] self-signed certificate
+# repeated for every Telegram POST.
+#
+# Fix: install `certifi` (Mozilla's vendored CA bundle) and use it explicitly
+# as the trust store for urllib. Falls back to OS default if certifi isn't
+# importable (so dev boxes without it still work).
+def _build_ssl_context() -> ssl.SSLContext:
+    try:
+        import certifi
+        return ssl.create_default_context(cafile=certifi.where())
+    except ImportError:
+        return ssl.create_default_context()
+
+
+_SSL_CONTEXT = _build_ssl_context()
 
 
 # ── tiny duck-typed logger interface ─────────────────────────────────────────-
@@ -124,7 +147,7 @@ class Mt5Notifier:
                     self._url, data=payload,
                     headers={"Content-Type": "application/json"},
                 )
-                with urllib.request.urlopen(req, timeout=self._timeout) as resp:
+                with urllib.request.urlopen(req, timeout=self._timeout, context=_SSL_CONTEXT) as resp:
                     status = resp.status
                     body = resp.read(512).decode("utf-8", errors="replace")
 
@@ -262,3 +285,107 @@ class Mt5Notifier:
             f"Equity:  {equity:,.2f} USD"
         )
         return self.send(text, category="position_closed")
+
+    # ── new: error / warning / lifecycle events ──────────────────────────────-
+
+    def notify_error(
+        self,
+        symbol: str,
+        event_name: str,
+        error_msg: str,
+        extra: Optional[dict] = None,
+    ) -> bool:
+        """
+        Send a serious error/exception to telegram so the operator can react.
+        Use for: data_fetch_error, strategy_exception, execution_exception,
+        broker_validation_failed, partial_fill_emergency, etc.
+        """
+        lines = [
+            f"🚨 <b>ERROR — {symbol}</b>",
+            f"Event:  <code>{event_name}</code>",
+            f"Detail: {error_msg[:300]}",
+        ]
+        if extra:
+            for k, v in list(extra.items())[:6]:   # cap to 6 keys
+                lines.append(f"{k}: {v}")
+        return self.send("\n".join(lines), category="error")
+
+    def notify_volume_clamped(
+        self,
+        symbol: str,
+        raw_volume: float,
+        snapped_volume: float,
+        volume_min: float,
+        effective_risk_multiplier: Optional[float],
+    ) -> bool:
+        """
+        Send a warning when raw computed volume was below broker min and got
+        clamped UP. Means effective risk > target risk_per_trade.
+        """
+        mult = f"{effective_risk_multiplier:.2f}x" if effective_risk_multiplier else "—"
+        text = (
+            f"⚠️ <b>VOLUME CLAMPED TO MIN — {symbol}</b>\n"
+            f"Raw lots:       {raw_volume:.6f}\n"
+            f"Broker min:     {volume_min}\n"
+            f"Sent lots:      {snapped_volume}\n"
+            f"Risk multiplier: <b>{mult}</b>\n"
+            f"(actual risk is larger than risk_per_trade target)"
+        )
+        return self.send(text, category="volume_clamped")
+
+    def notify_bot_lifecycle(
+        self,
+        symbol: str,
+        phase: str,            # "start" or "stop"
+        magic: Optional[int] = None,
+        reason: Optional[str] = None,
+        extras: Optional[dict] = None,
+    ) -> bool:
+        """Compact start / stop notification — one per process lifetime."""
+        icon = "🟢" if phase == "start" else "🔴"
+        lines = [f"{icon} <b>BOT {phase.upper()} — {symbol}</b>"]
+        if magic is not None:
+            lines.append(f"Magic: {magic}")
+        if reason:
+            lines.append(f"Reason: {reason}")
+        if extras:
+            for k, v in list(extras.items())[:5]:
+                lines.append(f"{k}: {v}")
+        return self.send("\n".join(lines), category=f"bot_{phase}")
+
+    def notify_pair_open(
+        self,
+        pair_key: str,
+        side: str,
+        y_symbol: str, y_volume: float, y_price: float,
+        x_symbol: str, x_volume: float, x_price: float,
+        z_now: float,
+    ) -> bool:
+        """Two-leg open notification for pairs trading."""
+        icon = "🟢" if side == "long" else "🔴"
+        text = (
+            f"{icon} <b>PAIR OPEN — {pair_key}</b>\n"
+            f"Side:  <b>{side.upper()} spread</b>  (z={z_now:+.3f})\n"
+            f"Y:     {y_symbol} {y_volume} @ {y_price}\n"
+            f"X:     {x_symbol} {x_volume} @ {x_price}"
+        )
+        return self.send(text, category="pair_open")
+
+    def notify_pair_close(
+        self,
+        pair_key: str,
+        reason: str,
+        bars_in_position: int,
+        z_now: float,
+        spread_pnl_log: Optional[float] = None,
+    ) -> bool:
+        """Two-leg close notification for pairs trading."""
+        pnl_str = f"{spread_pnl_log:+.4f}" if spread_pnl_log is not None else "n/a"
+        text = (
+            f"⏹ <b>PAIR CLOSE — {pair_key}</b>\n"
+            f"Reason: <code>{reason}</code>\n"
+            f"Bars in position: {bars_in_position}\n"
+            f"z at close: {z_now:+.3f}\n"
+            f"Spread PnL (log-space): {pnl_str}"
+        )
+        return self.send(text, category="pair_close")
