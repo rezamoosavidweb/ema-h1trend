@@ -396,6 +396,7 @@ class PairsExecutionEngine:
 
         if ok_y and ok_x:
             self.state_store.remove(state.pair_key)
+            spread_pnl_log = (spread_now - state.spread_at_open) * (1 if state.side == Side.LONG else -1)
             self.logger.event(
                 "pair_close_success",
                 pair_key   = state.pair_key,
@@ -404,12 +405,22 @@ class PairsExecutionEngine:
                 x_ticket   = state.x_ticket,
                 spread_at_open = state.spread_at_open,
                 spread_now     = spread_now,
-                spread_pnl_log = (spread_now - state.spread_at_open) * (1 if state.side == Side.LONG else -1),
+                spread_pnl_log = spread_pnl_log,
                 bars_in_position = state.bars_in_position,
             )
-            self._notify("CLOSE",
-                         f"{state.pair_key} closed ({reason}) "
-                         f"z={z_now:+.2f}  bars={state.bars_in_position}")
+            if self.notifier is not None and hasattr(self.notifier, "notify_pair_close"):
+                try:
+                    self.notifier.notify_pair_close(
+                        pair_key=state.pair_key, reason=reason,
+                        bars_in_position=state.bars_in_position,
+                        z_now=z_now, spread_pnl_log=spread_pnl_log,
+                    )
+                except Exception as exc:
+                    self.logger.error("notifier_send_failed", exc=exc, kind="pair_close")
+            else:
+                self._notify("CLOSE",
+                             f"{state.pair_key} closed ({reason}) "
+                             f"z={z_now:+.2f}  bars={state.bars_in_position}")
             return True
 
         self.logger.event(
