@@ -1,1 +1,45 @@
 [Wed 05/27/2026  9:22:26.91] launching python runner 
+Basket loaded: 4 symbols — ['XAUUSD', 'GBPUSD', 'GBPCAD', 'EURCAD']
+Selection criteria: WR_IS >= 48.0% AND fwd_net_$ >= 0.00
+
+Capital plan (policy=equal, total_risk=2.000%):
+  XAUUSD   weight=25.00%  risk_per_trade=0.5000%
+  GBPUSD   weight=25.00%  risk_per_trade=0.5000%
+  GBPCAD   weight=25.00%  risk_per_trade=0.5000%
+  EURCAD   weight=25.00%  risk_per_trade=0.5000%
+[portfolio] portfolio_start: basket=['XAUUSD', 'GBPUSD', 'GBPCAD', 'EURCAD'] policy=equal portfolio_risk=0.02 criteria=WR_IS >= 48.0% AND fwd_net_$ >= 0.00 dry_run=False
+[2026-05-27 08:52:35 BROKER] bot_start | {'symbol': 'XAUUSD.i', 'requested_symbol': 'XAUUSD', 'magic': 24000000, 'risk_per_trade': 0.005, 'risk_reward': 2.0, 'slippage_limit_threshold': 4.0, 'slippage_max_points': 30.0, 'max_spread_points': 200, 'stale_after_seconds': 300, 'heartbeat_interval_seconds': 600, 'rotate_daily_logs': True}
+[2026-05-27 08:52:35 BROKER] slippage_config | {'slippage_max_points': 30.0, 'slippage_limit_threshold': 4.0, 'from_table': True}
+[2026-05-27 08:52:35 BROKER] state_recovered | {'adopted_pendings': [], 'adopted_positions': [], 'balance': 980.2, 'equity': 980.2}
+[2026-05-27 08:52:35 BROKER] telegram_sent | {'category': 'bot_start', 'attempt': 1, 'status': 200, 'latency_ms': 139.9}
+[2026-05-27 08:52:35 BROKER] bot_start | {'symbol': 'GBPUSD.i', 'requested_symbol': 'GBPUSD', 'magic': 24000001, 'risk_per_trade': 0.005, 'risk_reward': 2.0, 'slippage_limit_threshold': 4.0, 'slippage_max_points': 40.0, 'max_spread_points': 200, 'stale_after_seconds': 300, 'heartbeat_interval_seconds': 600, 'rotate_daily_logs': True}
+[2026-05-27 08:52:35 BROKER] slippage_config | {'slippage_max_points': 40.0, 'slippage_limit_threshold': 4.0, 'from_table': True}
+[2026-05-27 08:52:35 BROKER] state_recovered | {'adopted_pendings': [], 'adopted_positions': [], 'balance': 980.2, 'equity': 980.2}
+[2026-05-27 08:52:35 BROKER] telegram_sent | {'category': 'bot_start', 'attempt': 1, 'status': 200, 'latency_ms': 116.2}
+[2026-05-27 08:52:35 BROKER] bot_start | {'symbol': 'GBPCAD.i', 'requested_symbol': 'GBPCAD', 'magic': 24000002, 'risk_per_trade': 0.005, 'risk_reward': 2.0, 'slippage_limit_threshold': 4.0, 'slippage_max_points': 50.0, 'max_spread_points': 200, 'stale_after_seconds': 300, 'heartbeat_interval_seconds': 600, 'rotate_daily_logs': True}
+[2026-05-27 08:52:35 BROKER] slippage_config | {'slippage_max_points': 50.0, 'slippage_limit_threshold': 4.0, 'from_table': True}
+[2026-05-27 08:52:35 BROKER] state_recovered | {'adopted_pendings': [], 'adopted_positions': [], 'balance': 980.2, 'equity': 980.2}
+[2026-05-27 08:52:35 BROKER] telegram_sent | {'category': 'bot_start', 'attempt': 1, 'status': 200, 'latency_ms': 88.7}
+[2026-05-27 08:52:35 BROKER] bot_start | {'symbol': 'EURCAD.i', 'requested_symbol': 'EURCAD', 'magic': 24000003, 'risk_per_trade': 0.005, 'risk_reward': 2.0, 'slippage_limit_threshold': 4.0, 'slippage_max_points': 35.0, 'max_spread_points': 200, 'stale_after_seconds': 300, 'heartbeat_interval_seconds': 600, 'rotate_daily_logs': True}
+[2026-05-27 08:52:35 BROKER] slippage_config | {'slippage_max_points': 35.0, 'slippage_limit_threshold': 4.0, 'from_table': True}
+[2026-05-27 08:52:35 BROKER] state_recovered | {'adopted_pendings': [], 'adopted_positions': [], 'balance': 980.2, 'equity': 980.2}
+[2026-05-27 08:52:35 BROKER] telegram_sent | {'category': 'bot_start', 'attempt': 1, 'status': 200, 'latency_ms': 158.3}
+
+Multi-symbol scalper running on 4 symbols. Ctrl+C to stop.
+[2026-05-27 08:52:35 BROKER] heartbeat | {'uptime_s': 0.6, 'mt5_connected': True, 'mt5_trade_allowed': True, 'tracked_pendings': 0, 'open_positions': 0, 'cooldown_active': False, 'cooldown_remaining_s': 0.0, 'balance': 980.2, 'equity': 980.2}
+[2026-05-27 08:52:35 BROKER] mt5_connected | {'state': 'healthy', 'connected': True, 'trade_allowed': True, 'ping_ms': 18561, 'recovered_after_failures': 0}
+C:\Users\Administrator\Desktop\tob\ema-h1trend\mt5\run_multi_scalper.py:179: Pandas4Warning: Timestamp.utcnow is deprecated and will be removed in a future version. Use Timestamp.now('UTC') instead.
+  return pd.Timestamp.utcnow().tz_localize(None) + pd.Timedelta(hours=BROKER_WALLCLOCK_OFFSET_HOURS)
+[2026-05-27 08:52:36 BROKER] cycle | {'bars_m5': 599, 'bars_h1': 250, 'bars_d1': 120, 'last_bar_time': '2026-05-27 08:45:00', 'data_age_min': 7.6, 'signal': False, 'risk_per_trade': 0.005, 'weight': 0.25, 'diag': {'n_m5': 599, 'n_h1': 250, 'n_d1': 120, 'bar_time': '2026-05-27 08:45:00', 'open': 4493.46, 'high': 4498.04, 'low': 4491.93, 'close': 4497.94, 'volume': 1320.0, 'trend_dir': -1, 'h1_trend': -1, 'd1_trend': -1, 'h1_rsi': 40.978, 'in_session': False, 'atr_ok': True, 'adx_ok': True, 'ema20': 4503.704606, 'rsi': 42.731, 'atr': 5.797971, 'adx': 23.875, 'bb_up': 4517.205495, 'bb_lo': 4492.558505, 'f_bb': 1, 'f_ema': 0, 'f_rsi': 0, 'f_candle': 0, 'f_rsiR': 0, 'f_macd': -1, 'f_stoch': 1, 'f_vol': 1, 'signal_dir': 0, 'h1_topped_from_m5': 1, 'd1_topped_from_m5': 1}}
+[2026-05-27 08:52:36 BROKER] heartbeat | {'uptime_s': 0.6, 'mt5_connected': True, 'mt5_trade_allowed': True, 'tracked_pendings': 0, 'open_positions': 0, 'cooldown_active': False, 'cooldown_remaining_s': 0.0, 'balance': 980.2, 'equity': 980.2}
+C:\Users\Administrator\Desktop\tob\ema-h1trend\mt5\run_multi_scalper.py:179: Pandas4Warning: Timestamp.utcnow is deprecated and will be removed in a future version. Use Timestamp.now('UTC') instead.
+  return pd.Timestamp.utcnow().tz_localize(None) + pd.Timedelta(hours=BROKER_WALLCLOCK_OFFSET_HOURS)
+[2026-05-27 08:52:36 BROKER] cycle | {'bars_m5': 599, 'bars_h1': 250, 'bars_d1': 120, 'last_bar_time': '2026-05-27 08:45:00', 'data_age_min': 7.6, 'signal': False, 'risk_per_trade': 0.005, 'weight': 0.25, 'diag': {'n_m5': 599, 'n_h1': 250, 'n_d1': 120, 'bar_time': '2026-05-27 08:45:00', 'open': 1.34531, 'high': 1.34532, 'low': 1.34505, 'close': 1.34513, 'volume': 225.0, 'trend_dir': -1, 'h1_trend': -1, 'd1_trend': -1, 'h1_rsi': 43.022, 'in_session': False, 'atr_ok': False, 'adx_ok': True, 'ema20': 1.345374, 'rsi': 40.623, 'atr': 0.00022, 'adx': 17.577, 'bb_up': 1.345647, 'bb_lo': 1.345164, 'f_bb': 1, 'f_ema': -1, 'f_rsi': 0, 'f_candle': -1, 'f_rsiR': 0, 'f_macd': -1, 'f_stoch': 0, 'f_vol': 0, 'signal_dir': 0, 'h1_topped_from_m5': 1, 'd1_topped_from_m5': 1}}
+[2026-05-27 08:52:36 BROKER] heartbeat | {'uptime_s': 1.2, 'mt5_connected': True, 'mt5_trade_allowed': True, 'tracked_pendings': 0, 'open_positions': 0, 'cooldown_active': False, 'cooldown_remaining_s': 0.0, 'balance': 980.2, 'equity': 980.2}
+C:\Users\Administrator\Desktop\tob\ema-h1trend\mt5\run_multi_scalper.py:179: Pandas4Warning: Timestamp.utcnow is deprecated and will be removed in a future version. Use Timestamp.now('UTC') instead.
+  return pd.Timestamp.utcnow().tz_localize(None) + pd.Timedelta(hours=BROKER_WALLCLOCK_OFFSET_HOURS)
+[2026-05-27 08:52:36 BROKER] cycle | {'bars_m5': 599, 'bars_h1': 250, 'bars_d1': 120, 'last_bar_time': '2026-05-27 08:45:00', 'data_age_min': 7.6, 'signal': False, 'risk_per_trade': 0.005, 'weight': 0.25, 'diag': {'n_m5': 599, 'n_h1': 250, 'n_d1': 120, 'bar_time': '2026-05-27 08:45:00', 'open': 1.85807, 'high': 1.85808, 'low': 1.85771, 'close': 1.85779, 'volume': 378.0, 'trend_dir': 0, 'h1_trend': -1, 'd1_trend': 1, 'h1_rsi': 45.116, 'in_session': False, 'atr_ok': False, 'adx_ok': True, 'ema20': 1.857911, 'rsi': 46.856, 'atr': 0.00025, 'adx': 18.765, 'bb_up': 1.858168, 'bb_lo': 1.857679, 'f_bb': 0, 'f_ema': -1, 'f_rsi': 0, 'f_candle': -1, 'f_rsiR': 0, 'f_macd': -1, 'f_stoch': 0, 'f_vol': 0, 'signal_dir': 0, 'h1_topped_from_m5': 1, 'd1_topped_from_m5': 1}}
+[2026-05-27 08:52:36 BROKER] heartbeat | {'uptime_s': 1.3, 'mt5_connected': True, 'mt5_trade_allowed': True, 'tracked_pendings': 0, 'open_positions': 0, 'cooldown_active': False, 'cooldown_remaining_s': 0.0, 'balance': 980.2, 'equity': 980.2}
+C:\Users\Administrator\Desktop\tob\ema-h1trend\mt5\run_multi_scalper.py:179: Pandas4Warning: Timestamp.utcnow is deprecated and will be removed in a future version. Use Timestamp.now('UTC') instead.
+  return pd.Timestamp.utcnow().tz_localize(None) + pd.Timedelta(hours=BROKER_WALLCLOCK_OFFSET_HOURS)
+[2026-05-27 08:52:37 BROKER] cycle | {'bars_m5': 599, 'bars_h1': 250, 'bars_d1': 120, 'last_bar_time': '2026-05-27 08:45:00', 'data_age_min': 7.6, 'signal': False, 'risk_per_trade': 0.005, 'weight': 0.25, 'diag': {'n_m5': 599, 'n_h1': 250, 'n_d1': 120, 'bar_time': '2026-05-27 08:45:00', 'open': 1.60777, 'high': 1.60778, 'low': 1.6076000000000001, 'close': 1.60763, 'volume': 370.0, 'trend_dir': 1, 'h1_trend': 1, 'd1_trend': 1, 'h1_rsi': 62.051, 'in_session': False, 'atr_ok': False, 'adx_ok': True, 'ema20': 1.607574, 'rsi': 55.049, 'atr': 0.000169, 'adx': 33.275, 'bb_up': 1.607832, 'bb_lo': 1.607332, 'f_bb': 0, 'f_ema': 1, 'f_rsi': 0, 'f_candle': -1, 'f_rsiR': -1, 'f_macd': -1, 'f_stoch': 0, 'f_vol': 0, 'signal_dir': 0, 'h1_topped_from_m5': 1, 'd1_topped_from_m5': 1}}
