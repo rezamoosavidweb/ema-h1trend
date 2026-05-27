@@ -369,6 +369,30 @@ def run_symbol_cycle(ctx: SymbolContext, dry_run: bool) -> dict:
     eng.begin_cycle(active_ob_keys=[])    # we set valid keys after detection
     eng.heartbeat_if_due()
 
+    # ── 0b) Forward any newly-closed positions to Telegram ──────────────────
+    # `begin_cycle` runs the sweep; we drain the buffer so the operator gets
+    # one telegram per closed trade (entry, exit, P&L, balance).
+    try:
+        for ev in eng.consume_close_events():
+            try:
+                ctx.notifier.notify_position_closed(
+                    ticket      = ev.get("ticket"),
+                    profit      = float(ev.get("profit", 0.0)),
+                    balance     = float(ev.get("balance", 0.0)),
+                    equity      = float(ev.get("equity", 0.0)),
+                    symbol      = sym,
+                    side        = ev.get("side"),
+                    volume      = ev.get("volume"),
+                    entry_price = ev.get("entry_price"),
+                    exit_price  = ev.get("exit_price"),
+                    opened_at   = ev.get("opened_at"),
+                    closed_at   = ev.get("closed_at"),
+                )
+            except Exception as exc:
+                log.error("notify_close_failed", exc=exc, ticket=ev.get("ticket"))
+    except Exception as exc:
+        log.error("consume_close_events_failed", exc=exc)
+
     if not eng.is_mt5_healthy():
         log.event("cycle_skipped", reason="mt5_unhealthy")
         return {"symbol": sym, "skipped": "mt5_unhealthy"}
@@ -441,15 +465,28 @@ def run_symbol_cycle(ctx: SymbolContext, dry_run: bool) -> dict:
         return {"symbol": sym, "skipped": "already_traded"}
 
     # ── 4) Telegram + structured log of the fresh signal ────────────────────-
+    # Always log to disk. Telegram is suppressed when a position with this
+    # bot's magic is already open on this symbol — otherwise telegram fills
+    # up with repeated signals on consecutive bars while one trade is live
+    # (they are all going to be skipped with `position_open` anyway).
     log.event("signal",
               direction=signal.direction, entry=signal.entry,
               sl=signal.sl, tp=signal.tp,
               bar_time=signal.bar_time, **signal.confidence)
-    tg_payload = {**signal.as_engine_dict(), "symbol": sym}
-    try:
-        ctx.notifier.notify_signal(tg_payload)
-    except Exception as exc:
-        log.error("notify_signal_failed", exc=exc)
+    has_open_position = any(
+        p.magic == ctx.engine.factory.magic
+        for p in (mt5.positions_get(symbol=ctx.broker_symbol) or [])
+    )
+    if has_open_position:
+        log.event("signal_telegram_suppressed",
+                  reason="position_open_for_symbol",
+                  bar_time=signal.bar_time, direction=signal.direction)
+    else:
+        tg_payload = {**signal.as_engine_dict(), "symbol": sym}
+        try:
+            ctx.notifier.notify_signal(tg_payload)
+        except Exception as exc:
+            log.error("notify_signal_failed", exc=exc)
 
     if dry_run:
         log.event("dry_run", msg="no_order_sent",
@@ -476,6 +513,10 @@ def run_symbol_cycle(ctx: SymbolContext, dry_run: bool) -> dict:
     if outcome.placed:
         ctx.seen_signals.add(sig_key)
         save_seen_signals(sym, ctx.seen_signals)
+        # `market_price` is the ACTUAL fill price (only set on market path);
+        # for limit fills, the broker fills at the requested price, so fall
+        # back to signal.entry which equals the limit price.
+        fill_price = outcome.fields.get("market_price", signal.entry)
         try:
             ctx.notifier.notify_order_placed({
                 "symbol":       sym,
@@ -483,6 +524,8 @@ def run_symbol_cycle(ctx: SymbolContext, dry_run: bool) -> dict:
                 "order_type":   outcome.stage,
                 "direction":    signal.direction,
                 "volume":       outcome.fields.get("volume"),
+                "fill_price":   fill_price,
+                "signal_entry": signal.entry,
                 "sl":           signal.sl,
                 "tp":           outcome.fields.get("tp_final", signal.tp),
                 "slippage_pts": outcome.fields.get("slippage_pts"),

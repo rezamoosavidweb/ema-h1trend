@@ -228,17 +228,40 @@ class Mt5Notifier:
         return self.send(text, category="slippage_adjusted")
 
     def notify_order_placed(self, data: dict) -> bool:
+        """
+        ORDER PLACED message — now shows the ACTUAL fill price the order was
+        executed at (`fill_price`), alongside the originally-requested entry
+        from the signal (`signal_entry`). If only one is supplied, that one
+        is shown without the parenthetical comparison.
+        """
         direction = data.get("direction", "?")
         icon = "🟢" if direction == "BUY" else "🔴"
         order_type = data.get("order_type", "market").upper()
+        slippage_pts = data.get("slippage_pts")
+        slippage_str = (f"{float(slippage_pts):.1f}"
+                        if isinstance(slippage_pts, (int, float)) else "—")
+
+        fill_price    = data.get("fill_price")
+        signal_entry  = data.get("signal_entry")
+        if fill_price is not None and signal_entry is not None and \
+           abs(float(fill_price) - float(signal_entry)) > 1e-9:
+            fill_line = f"Fill Price: {fill_price}  (signal asked: {signal_entry})"
+        elif fill_price is not None:
+            fill_line = f"Fill Price: {fill_price}"
+        elif signal_entry is not None:
+            fill_line = f"Entry:      {signal_entry}"
+        else:
+            fill_line = "Entry:      —"
+
         text = (
             f"✅ <b>ORDER PLACED ({order_type}) — {data.get('symbol', 'XAUUSD')}</b>\n"
             f"Ticket:    {data.get('ticket')}\n"
             f"Direction: {icon} <b>{direction}</b>\n"
             f"Volume:    {data.get('volume')}\n"
+            f"{fill_line}\n"
             f"SL:        {data.get('sl')}\n"
             f"TP:        {data.get('tp')}\n"
-            f"Slippage:  {data.get('slippage_pts')} pts"
+            f"Slippage:  {slippage_str} pts"
         )
         return self.send(text, category="order_placed")
 
@@ -272,19 +295,56 @@ class Mt5Notifier:
         balance: float,
         equity: float,
         symbol: str = "XAUUSD",
+        side: Optional[str] = None,
+        volume: Optional[float] = None,
+        entry_price: Optional[float] = None,
+        exit_price: Optional[float] = None,
+        opened_at: Optional[str] = None,
+        closed_at: Optional[str] = None,
     ) -> bool:
+        """
+        Per-position close report. Sent automatically after the cycle sweep
+        detects a ticket has disappeared from positions_get. Carries entry,
+        exit, side, volume and dollar P&L so the operator can audit each
+        trade without opening MT5.
+        """
         pnl_icon = "📈" if profit >= 0 else "📉"
-        outcome  = "TP HIT ✅" if profit >= 0 else "SL HIT 🛑"
-        text = (
-            f"{pnl_icon} <b>POSITION CLOSED — {symbol}</b>\n"
-            f"Ticket: {ticket}\n"
-            f"Result: <b>{outcome}</b>\n"
-            f"Profit: {profit:+.2f} USD\n\n"
-            f"💰 <b>Account Balance</b>\n"
-            f"Balance: {balance:,.2f} USD\n"
-            f"Equity:  {equity:,.2f} USD"
-        )
-        return self.send(text, category="position_closed")
+        outcome  = "WIN ✅" if profit >= 0 else "LOSS 🛑"
+        side_icon = ""
+        if side:
+            side_icon = "🟢 BUY " if side.lower() == "buy" else "🔴 SELL "
+
+        # Pip move (informational — only when we have both prices). For
+        # 5-digit FX 1 pip = 10 points (0.0001); for XAU/JPY it's symbol-
+        # specific. We just show raw price delta to keep this universal.
+        delta_line = ""
+        if entry_price is not None and exit_price is not None:
+            delta = exit_price - entry_price
+            sign  = "+" if delta >= 0 else ""
+            delta_line = f"Δ price:  {sign}{delta:.5f}\n"
+
+        lines = [f"{pnl_icon} <b>POSITION CLOSED — {symbol}</b>",
+                 f"Ticket: {ticket}",
+                 f"Result: <b>{outcome}</b>"]
+        if side or volume is not None:
+            lines.append(f"Side:   {side_icon}{volume if volume is not None else ''}".rstrip())
+        if entry_price is not None:
+            lines.append(f"Entry:  {entry_price}")
+        if exit_price is not None:
+            lines.append(f"Exit:   {exit_price}")
+        if delta_line:
+            lines.append(delta_line.rstrip())
+        if opened_at:
+            lines.append(f"Opened: {opened_at[:19]}")
+        if closed_at:
+            lines.append(f"Closed: {closed_at[:19]}")
+        lines.append(f"<b>Profit: {profit:+.2f} USD</b>")
+        lines.append("")
+        lines.append("💰 <b>Account</b>")
+        lines.append(f"Balance: {balance:,.2f} USD")
+        lines.append(f"Equity:  {equity:,.2f} USD")
+
+        return self.send("\n".join(lines), category="position_closed")
 
     # ── new: error / warning / lifecycle events ──────────────────────────────-
 

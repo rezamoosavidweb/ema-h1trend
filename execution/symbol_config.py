@@ -90,14 +90,29 @@ def resolve_symbol(requested: str) -> SymbolConfig:
     candidates: list[str] = [requested]
     candidates.extend(requested + suffix for suffix in _SUFFIX_CANDIDATES)
 
+    # Errante (and several other brokers) expose BOTH a non-tradable bare
+    # quote ("GBPUSD", trade_mode=0) and a tradable suffixed contract
+    # ("GBPUSD.i", trade_mode=4). Picking the first hit silently grabbed the
+    # disabled one and every order failed preflight with trade_mode=0. Prefer
+    # a SYMBOL_TRADE_MODE_FULL candidate; fall back to the first-found name
+    # only if nothing tradable is available.
     resolved: Optional[str] = None
+    fallback: Optional[str] = None
     for name in candidates:
         # symbol_select(True) forces visibility in Market Watch (required for orders)
-        if mt5.symbol_select(name, True):
-            si = mt5.symbol_info(name)
-            if si is not None:
-                resolved = name
-                break
+        if not mt5.symbol_select(name, True):
+            continue
+        si = mt5.symbol_info(name)
+        if si is None:
+            continue
+        if int(getattr(si, "trade_mode", 0)) == mt5.SYMBOL_TRADE_MODE_FULL:
+            resolved = name
+            break
+        if fallback is None:
+            fallback = name
+
+    if resolved is None:
+        resolved = fallback
 
     if resolved is None:
         raise RuntimeError(

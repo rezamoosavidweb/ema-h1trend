@@ -1,11 +1,8 @@
 {
   "basket": [
-    "EURUSD",
     "XAUUSD",
     "GBPUSD",
-    "USDMXN",
     "GBPCAD",
-    "CADCHF",
     "EURCAD"
   ],
   "criteria": "WR_IS \u2265 48.0% AND fwd_net \u2265 0",

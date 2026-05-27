@@ -130,6 +130,11 @@ class ExecutionEngine:
 
         # Position-close detection
         self._tracked_position_tickets: set[int] = set()
+        # Buffer of close events that occurred during the most recent sweep.
+        # Drained by the bot runner via `consume_close_events()` so it can
+        # forward each one to Telegram. We use a buffer (not a callback) so
+        # the engine has zero dependency on the notifier and stays testable.
+        self._pending_close_events: list[dict] = []
 
         # Heartbeat -- cycle-driven, no background thread.
         self._heartbeat_interval = max(60, int(heartbeat_interval_seconds))
@@ -283,8 +288,14 @@ class ExecutionEngine:
     def _sweep_closed_positions(self) -> list[dict]:
         """
         Compare tracked tickets vs live positions; emit `position_closed_detected`
-        for any that disappeared. Returns a list of close events for the caller
-        to forward to Telegram.
+        for any that disappeared. Returns a list of close events; ALSO buffers
+        them in `self._pending_close_events` so the bot runner can drain them
+        via `consume_close_events()` and forward to Telegram.
+
+        Each event includes (when extractable from history_deals):
+            ticket, profit, balance, equity,
+            entry_price, exit_price, volume, side, opened_at, closed_at,
+            close_reason ('tp' / 'sl' / 'time' / 'manual')
         """
         live_tickets = {p.ticket for p in (mt5.positions_get(symbol=self.cfg.name) or [])
                         if p.magic == self.factory.magic}
@@ -298,25 +309,73 @@ class ExecutionEngine:
         now_utc = datetime.now(timezone.utc)
         lookback = now_utc - timedelta(hours=24)
         deals = mt5.history_deals_get(lookback, now_utc) or []
-        profit_by_position: dict[int, float] = {}
+
+        # Bucket deals by position_id so we can pull entry + exit + profit
+        # for each closed ticket. MT5 records two deals per position:
+        # one with entry=DEAL_ENTRY_IN (open) and one with DEAL_ENTRY_OUT (close).
+        in_deals:  dict[int, list] = {}
+        out_deals: dict[int, list] = {}
         for d in deals:
-            if d.entry == mt5.DEAL_ENTRY_OUT:
-                profit_by_position[d.position_id] = (
-                    profit_by_position.get(d.position_id, 0.0) + d.profit
-                )
+            if d.entry == mt5.DEAL_ENTRY_IN:
+                in_deals.setdefault(d.position_id, []).append(d)
+            elif d.entry == mt5.DEAL_ENTRY_OUT:
+                out_deals.setdefault(d.position_id, []).append(d)
 
         ai = mt5.account_info()
         balance = float(ai.balance) if ai else 0.0
         equity  = float(ai.equity)  if ai else 0.0
 
         for ticket in closed:
-            profit = profit_by_position.get(ticket, 0.0)
-            ev = {"ticket": ticket, "profit": round(profit, 2),
-                  "balance": round(balance, 2), "equity": round(equity, 2)}
+            entry_price = None
+            opened_at   = None
+            side        = None
+            volume      = None
+            if ticket in in_deals and in_deals[ticket]:
+                d0 = in_deals[ticket][0]
+                entry_price = float(d0.price)
+                opened_at   = datetime.fromtimestamp(int(d0.time), tz=timezone.utc).isoformat()
+                side        = "buy" if d0.type == mt5.DEAL_TYPE_BUY else "sell"
+                volume      = float(d0.volume)
+
+            exit_price = None
+            closed_at  = None
+            profit     = 0.0
+            if ticket in out_deals and out_deals[ticket]:
+                d1 = out_deals[ticket][-1]   # latest OUT deal
+                exit_price = float(d1.price)
+                closed_at  = datetime.fromtimestamp(int(d1.time), tz=timezone.utc).isoformat()
+                profit     = sum(float(d.profit) for d in out_deals[ticket])
+
+            ev = {
+                "ticket":     ticket,
+                "symbol":     self.cfg.name,
+                "side":       side,
+                "volume":     volume,
+                "entry_price": entry_price,
+                "exit_price":  exit_price,
+                "profit":     round(profit, 2),
+                "balance":    round(balance, 2),
+                "equity":     round(equity, 2),
+                "opened_at":  opened_at,
+                "closed_at":  closed_at,
+            }
             self.logger.event("position_closed_detected", **ev)
             events.append(ev)
+            self._pending_close_events.append(ev)
 
         self._tracked_position_tickets = live_tickets
+        return events
+
+    def consume_close_events(self) -> list[dict]:
+        """Drain and return any close events buffered since the last call.
+
+        The bot runner calls this once per cycle (right after `begin_cycle`
+        has run the sweep) and forwards each event to Telegram. Returning
+        the buffered list and resetting it in one step makes the consumer
+        responsible for delivery; the engine doesn't care if delivery fails.
+        """
+        events = self._pending_close_events
+        self._pending_close_events = []
         return events
 
     # ── safety gates ─────────────────────────────────────────────────────────-

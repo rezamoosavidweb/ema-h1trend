@@ -54,25 +54,25 @@ AUDCAD,"{'adx_min': 18.0, 'require_macd_align': True}",124,45.16,0.355,1.25,0.0,
 AUDCAD,{'adx_min': 22.0},134,43.28,0.299,1.35,0.0,-4.72
 AUDCAD,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",93,50.54,0.516,1.5,0.0,-7.46
 AUDCAD,"{'require_h1_rsi_align': True, 'require_macd_align': True}",119,50.42,0.513,1.64,0.0,-7.58
-USDMXN,{'require_h1_rsi_align': True},209,59.81,0.794,2.75,80.0,51.81
-USDMXN,{'require_macd_align': True},199,56.78,0.704,2.23,80.0,48.78
-USDMXN,{'add_vol_confirm': True},299,56.19,0.686,2.33,80.0,48.19
-USDMXN,{},255,55.29,0.659,2.21,80.0,47.29
-USDMXN,{'adx_min': 18.0},229,53.71,0.611,2.07,80.0,45.71
-USDMXN,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",184,58.7,0.761,2.61,60.0,40.7
-USDMXN,"{'adx_min': 18.0, 'require_macd_align': True}",174,55.17,0.655,2.04,60.0,37.17
-USDMXN,"{'require_h1_rsi_align': True, 'require_macd_align': True}",169,60.36,0.811,2.69,40.0,32.36
-USDMXN,"{'adx_min': 18.0, 'add_vol_confirm': True}",274,54.38,0.631,2.16,40.0,26.38
-USDMXN,{'adx_min': 22.0},169,53.85,0.615,2.06,40.0,25.85
-USDMXN,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",121,58.68,0.76,2.52,0.0,10.68
-XAUUSD,{},256,52.73,0.582,1.97,66.7,38.07
-XAUUSD,{'adx_min': 18.0},238,52.1,0.563,1.89,66.7,37.43
-XAUUSD,{'add_vol_confirm': True},318,50.63,0.519,1.86,66.7,35.96
+USDMXN,{'add_vol_confirm': True},297,56.57,0.697,2.37,100.0,58.57
+USDMXN,{'require_h1_rsi_align': True},207,60.39,0.812,2.82,80.0,52.39
+USDMXN,{},253,55.73,0.672,2.25,80.0,47.73
+USDMXN,{'adx_min': 18.0},227,54.19,0.626,2.11,80.0,46.19
+USDMXN,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",182,59.34,0.78,2.68,60.0,41.34
+USDMXN,{'require_macd_align': True},197,57.36,0.721,2.29,60.0,39.36
+USDMXN,"{'adx_min': 18.0, 'require_macd_align': True}",173,55.49,0.665,2.07,60.0,37.49
+USDMXN,"{'require_h1_rsi_align': True, 'require_macd_align': True}",167,61.08,0.832,2.78,40.0,33.08
+USDMXN,"{'adx_min': 18.0, 'add_vol_confirm': True}",272,54.78,0.643,2.2,40.0,26.78
+USDMXN,{'adx_min': 22.0},168,54.17,0.625,2.09,40.0,26.17
+USDMXN,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",120,59.17,0.775,2.58,0.0,11.17
+XAUUSD,{},255,52.94,0.588,1.99,66.7,38.27
+XAUUSD,{'adx_min': 18.0},237,52.32,0.57,1.9,66.7,37.65
+XAUUSD,{'add_vol_confirm': True},317,50.79,0.524,1.88,66.7,36.12
 XAUUSD,{'require_h1_rsi_align': True},204,53.92,0.618,2.11,50.0,30.92
 XAUUSD,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",187,52.94,0.588,1.99,50.0,29.94
-XAUUSD,{'adx_min': 22.0},196,51.02,0.531,1.73,50.0,28.02
-XAUUSD,"{'adx_min': 18.0, 'add_vol_confirm': True}",291,49.14,0.474,1.76,50.0,26.14
-XAUUSD,"{'adx_min': 18.0, 'require_macd_align': True}",166,53.01,0.59,1.83,33.3,21.68
+XAUUSD,{'adx_min': 22.0},195,51.28,0.538,1.74,50.0,28.28
+XAUUSD,"{'adx_min': 18.0, 'add_vol_confirm': True}",290,49.31,0.479,1.77,50.0,26.31
+XAUUSD,"{'adx_min': 18.0, 'require_macd_align': True}",165,53.33,0.6,1.86,33.3,22.0
 XAUUSD,"{'require_h1_rsi_align': True, 'require_macd_align': True}",158,52.53,0.576,1.9,33.3,21.2
-XAUUSD,{'require_macd_align': True},190,52.11,0.563,1.8,33.3,20.77
+XAUUSD,{'require_macd_align': True},189,52.38,0.571,1.82,33.3,21.05
 XAUUSD,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",120,50.0,0.5,1.61,16.7,10.33
