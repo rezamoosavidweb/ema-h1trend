@@ -1,9 +1,11 @@
 {
   "basket": [
-    "XAUUSD",
     "GBPUSD",
+    "XAUUSD",
     "GBPCAD",
-    "EURCAD"
+    "USDMXN",
+    "EURCAD",
+    "AUDCAD"
   ],
   "criteria": "WR_IS \u2265 48.0% AND fwd_net \u2265 0",
   "starting_capital": 1000.0,

@@ -11,7 +11,7 @@
       13
     ],
     "sl_method": "structural",
-    "atr_min_mult": 0.9,
+    "atr_min_mult": 0.0,
     "htf_strength_min": 0.0,
     "require_h1_rsi_align": true
   },
@@ -25,28 +25,31 @@
     "rsi_memory": 10,
     "session": [
       8,
-      12
+      13
     ],
     "sl_method": "structural",
     "atr_min_mult": 0.9,
     "htf_strength_min": 0.0,
-    "require_h1_rsi_align": true
+    "require_h1_rsi_align": true,
+    "require_macd_align": true
   },
   "EURJPY": {
-    "mode": "RSI-gated",
+    "mode": "OR",
     "confirms": [
       "f_candle",
       "f_ema"
     ],
-    "rsi_memory": 15,
+    "min_reactions": 1,
+    "rsi_memory": 10,
     "session": [
       8,
       13
     ],
     "sl_method": "structural",
-    "atr_min_mult": 0.0,
+    "atr_min_mult": 0.9,
     "htf_strength_min": 0.0,
-    "require_h1_rsi_align": true
+    "require_h1_rsi_align": true,
+    "require_macd_align": true
   },
   "GBPCAD": {
     "mode": "OR",
@@ -88,8 +91,7 @@
     "mode": "RSI-gated",
     "confirms": [
       "f_candle",
-      "f_ema",
-      "f_vol"
+      "f_ema"
     ],
     "rsi_memory": 15,
     "session": [
@@ -98,7 +100,8 @@
     ],
     "sl_method": "structural",
     "atr_min_mult": 0.9,
-    "htf_strength_min": 0.0
+    "htf_strength_min": 0.0,
+    "require_h1_rsi_align": true
   },
   "XAUUSD": {
     "mode": "RSI-gated",
@@ -113,6 +116,7 @@
     ],
     "sl_method": "structural",
     "atr_min_mult": 0.0,
-    "htf_strength_min": 0.0
+    "htf_strength_min": 0.0,
+    "require_h1_rsi_align": true
   }
 }

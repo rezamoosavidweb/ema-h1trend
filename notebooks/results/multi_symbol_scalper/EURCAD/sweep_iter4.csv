@@ -1,12 +1,12 @@
 symbol,overlay,trades,WR_%,exp_R,PF,q_pass_%,score
-EURCAD,{'require_h1_rsi_align': True},435,49.89,0.497,1.76,80.0,41.89
-EURCAD,"{'require_h1_rsi_align': True, 'require_macd_align': True}",307,48.21,0.446,1.54,80.0,40.21
-EURCAD,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",357,49.02,0.471,1.67,60.0,31.02
-EURCAD,{'adx_min': 22.0},321,48.29,0.449,1.66,60.0,30.29
-EURCAD,{},482,46.89,0.407,1.55,60.0,28.89
-EURCAD,{'add_vol_confirm': True},514,46.69,0.401,1.58,60.0,28.69
-EURCAD,"{'adx_min': 18.0, 'add_vol_confirm': True}",425,46.59,0.398,1.53,60.0,28.59
-EURCAD,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",220,48.18,0.445,1.5,40.0,20.18
-EURCAD,{'adx_min': 18.0},395,46.84,0.405,1.51,40.0,18.84
-EURCAD,{'require_macd_align': True},334,45.21,0.356,1.36,40.0,17.21
-EURCAD,"{'adx_min': 18.0, 'require_macd_align': True}",271,45.02,0.351,1.33,40.0,17.02
+EURCAD,"{'require_h1_rsi_align': True, 'require_macd_align': True}",957,51.83,0.555,1.72,84.6,46.14
+EURCAD,{'require_h1_rsi_align': True},1339,51.61,0.548,1.85,84.6,45.91
+EURCAD,"{'adx_min': 20.0, 'require_h1_rsi_align': True, 'require_macd_align': True}",723,51.59,0.548,1.62,76.9,42.05
+EURCAD,"{'adx_min': 18.0, 'require_h1_rsi_align': True}",1155,50.91,0.527,1.74,76.9,41.37
+EURCAD,{'require_macd_align': True},1059,48.54,0.456,1.5,69.2,35.15
+EURCAD,{'add_vol_confirm': True},1665,48.53,0.456,1.65,69.2,35.14
+EURCAD,"{'adx_min': 18.0, 'require_macd_align': True}",891,48.82,0.465,1.48,61.5,31.59
+EURCAD,"{'adx_min': 18.0, 'add_vol_confirm': True}",1425,48.63,0.459,1.61,61.5,31.4
+EURCAD,{'adx_min': 22.0},1070,46.92,0.407,1.49,53.8,25.84
+EURCAD,{},1515,48.05,0.442,1.6,46.2,23.13
+EURCAD,{'adx_min': 18.0},1301,47.58,0.427,1.54,38.5,18.81
