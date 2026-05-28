@@ -76,6 +76,14 @@ from mt5.multi_symbol_bot.strategy import (                           # noqa: E4
     HISTORY_M5_BARS, HISTORY_H1_BARS, HISTORY_D1_BARS,
     DEFAULT_BROKER_TO_NY_H, RR,
 )
+# OBSERVABILITY (additive — does not affect trading logic)
+from mt5.multi_symbol_bot.observability import (                      # noqa: E402
+    make_run_id,
+    compute_portfolio_config_hash, compute_symbol_config_hash,
+    current_git_commit,
+    htf_policy_snapshot, htf_source_info, bar_integrity_snapshot,
+    decision_trace, cascade_id as _cascade_id_for,
+)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -137,6 +145,20 @@ MAX_SPREAD_POINTS         = 200
 DEFAULT_PORTFOLIO_RISK    = 0.02          # 2% portfolio at risk if all 1× open
 
 M5_SECONDS               = 300
+
+# ═══════════════════════════════════════════════════════════════════════════
+# HTF POLICY  (observability — see notebooks/HTF_POLICY_REPORT.md)
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# Current effective policy is "B" (always-synth both). When the recommended
+# C_15 policy ships, flip USE_SYNTH_D1 to False and set H1_FRESHNESS_THRESHOLD_MIN
+# to 15 (or whatever threshold the report concludes after stride-1 re-run).
+# These constants exist so the live behaviour is hashable + observable, NOT
+# so trading logic can be changed via flags. Changing them is a deploy.
+USE_SYNTH_H1                  = True
+USE_SYNTH_D1                  = True
+H1_FRESHNESS_THRESHOLD_MIN    = 0.0
+D1_FRESHNESS_THRESHOLD_MIN    = 0.0
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -285,18 +307,29 @@ def topup_htf_from_m5(htf_df: pd.DataFrame, tf: str, m5_df: pd.DataFrame) -> tup
 
 def fetch_strategy_frames(
     broker_symbol: str,
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, int, int]:
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, int, int, dict]:
     """Fetch all three frames, then top-up H1/D1 from M5 if broker lags.
 
-    Returns ``(m5, h1, d1, h1_topped_up_n, d1_topped_up_n)`` so the cycle
-    logger can record exactly how many synthetic bars were appended.
+    Returns ``(m5, h1, d1, h1_topped_up_n, d1_topped_up_n, htf_meta)``.
+    `htf_meta` carries the broker-published last bar times CAPTURED
+    BEFORE the synth top-up — needed by the observability layer to log
+    h1/d1 source provenance and broker freshness per cycle.
     """
     m5 = _fetch_bars(broker_symbol, mt5.TIMEFRAME_M5, HISTORY_M5_BARS)
     h1 = _fetch_bars(broker_symbol, mt5.TIMEFRAME_H1, HISTORY_H1_BARS)
     d1 = _fetch_bars(broker_symbol, mt5.TIMEFRAME_D1, HISTORY_D1_BARS)
+
+    # Capture broker truth BEFORE any synth — observability requires it.
+    htf_meta = {
+        "h1_last_broker_time": h1["time"].iloc[-1] if not h1.empty else None,
+        "d1_last_broker_time": d1["time"].iloc[-1] if not d1.empty else None,
+        "h1_last_broker_bars_n": int(len(h1)),
+        "d1_last_broker_bars_n": int(len(d1)),
+    }
+
     h1, h1_topped = topup_htf_from_m5(h1, "H1", m5)
     d1, d1_topped = topup_htf_from_m5(d1, "D1", m5)
-    return m5, h1, d1, h1_topped, d1_topped
+    return m5, h1, d1, h1_topped, d1_topped, htf_meta
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -341,6 +374,11 @@ class SymbolContext:
     notifier:        Mt5Notifier
     allocation:      SymbolAllocation
     seen_signals:    set = field(default_factory=set)
+    # OBSERVABILITY (additive — not used by any trading code path):
+    run_id:                str = ""
+    portfolio_config_hash: str = ""
+    symbol_config_hash:    str = ""
+    htf_policy:            dict = field(default_factory=dict)
 
     @property
     def broker_symbol(self) -> str:
@@ -399,7 +437,7 @@ def run_symbol_cycle(ctx: SymbolContext, dry_run: bool) -> dict:
 
     # ── 1) Strategy ─────────────────────────────────────────────────────────-
     try:
-        m5, h1, d1, h1_topped, d1_topped = fetch_strategy_frames(ctx.broker_symbol)
+        m5, h1, d1, h1_topped, d1_topped, htf_meta = fetch_strategy_frames(ctx.broker_symbol)
     except RuntimeError as exc:
         log.error("data_fetch_error", exc=exc)
         # Telegram alert — data outage is operator-actionable
@@ -435,7 +473,48 @@ def run_symbol_cycle(ctx: SymbolContext, dry_run: bool) -> dict:
         diag["d1_topped_from_m5"] = int(d1_topped)
 
     last_bar_time = m5.iloc[-1]["time"]
-    age_minutes   = (_broker_now() - pd.Timestamp(last_bar_time)).total_seconds() / 60
+    now_broker    = _broker_now()
+    age_minutes   = (now_broker - pd.Timestamp(last_bar_time)).total_seconds() / 60
+
+    # ── OBSERVABILITY (additive — see notebooks/observability section) ──────-
+    # All derived from data we already have. No new strategy logic.
+    try:
+        htf_src = htf_source_info(
+            h1_topped_from_m5=int(h1_topped),
+            d1_topped_from_m5=int(d1_topped),
+            h1_last_broker_time=htf_meta.get("h1_last_broker_time"),
+            d1_last_broker_time=htf_meta.get("d1_last_broker_time"),
+            now_broker_ts=now_broker,
+        )
+    except Exception:
+        htf_src = {}
+    try:
+        bar_int = bar_integrity_snapshot(m5_len=len(m5), csv_source="live")
+    except Exception:
+        bar_int = {}
+    try:
+        dec_trace = decision_trace(diag or {})
+    except Exception:
+        dec_trace = {}
+    # cascade_id: when a position is open for THIS bot's magic, every
+    # subsequent signal-bearing cycle shares the same cascade_id with the
+    # original signal that opened the position. Lets us reconstruct chains.
+    casc_id = None
+    try:
+        open_pos = next(
+            (p for p in (mt5.positions_get(symbol=ctx.broker_symbol) or [])
+             if p.magic == ctx.engine.factory.magic),
+            None,
+        )
+        if open_pos is not None:
+            open_since_iso = datetime.fromtimestamp(int(open_pos.time),
+                                                     tz=timezone.utc).isoformat()
+            casc_id = _cascade_id_for(
+                symbol=sym, open_ticket=int(open_pos.ticket),
+                open_since_iso=open_since_iso,
+            )
+    except Exception:
+        casc_id = None
 
     log.event(
         "cycle",
@@ -446,6 +525,15 @@ def run_symbol_cycle(ctx: SymbolContext, dry_run: bool) -> dict:
         risk_per_trade=ctx.allocation.risk_per_trade,
         weight=ctx.allocation.weight,
         diag=diag,
+        # ── NEW OBSERVABILITY FIELDS ─────────────────────────────────────-
+        run_id=ctx.run_id,
+        config_hash=ctx.portfolio_config_hash,
+        symbol_config_hash=ctx.symbol_config_hash,
+        htf_policy=ctx.htf_policy,
+        htf_source=htf_src,
+        bar_integrity=bar_int,
+        decision_trace=dec_trace,
+        cascade_id=casc_id,
     )
 
     # ── 2) Stale-data guard ─────────────────────────────────────────────────-
@@ -579,15 +667,26 @@ def build_contexts(
     basket: SymbolBasket,
     allocations: list[SymbolAllocation],
     risk_reward: float,
+    *,
+    run_id: str = "",
+    portfolio_config_hash: str = "",
+    htf_policy: dict | None = None,
 ) -> list[SymbolContext]:
     """
     For each basket member: create Strategy, ExecutionEngine, Notifier, seen-set.
 
     Each ExecutionEngine writes to its own `logs/<SYMBOL>.json` with a unique
     magic so multi-bot ticket attribution stays clean.
+
+    The OBSERVABILITY kwargs (run_id, portfolio_config_hash, htf_policy) are
+    threaded into every per-symbol log file via the StructuredLogger's
+    default_fields, so each event in logs/<SYMBOL>.json automatically
+    carries run identity. They're also stashed on SymbolContext so the
+    cycle handler can include them in cycle event diagnostics.
     """
     contexts: list[SymbolContext] = []
     alloc_by_sym = {a.symbol: a for a in allocations}
+    htf_policy   = htf_policy or {}
 
     for idx, member in enumerate(basket):
         sym = member.symbol
@@ -606,6 +705,22 @@ def build_contexts(
         # single global value forces a bad trade-off. See SLIPPAGE_MAX_POINTS_BY_SYMBOL.
         slip_max = slippage_max_for(sym)
 
+        # OBSERVABILITY: compute per-symbol config hash and thread run_id +
+        # both hashes through to the StructuredLogger so every event in
+        # logs/<SYMBOL>.json carries the run identity (cheap; computed once
+        # per symbol per process; no per-cycle overhead).
+        sym_cfg_hash = compute_symbol_config_hash(
+            strategy_cfg        = member.cfg,
+            slippage_max_points = slip_max,
+            risk_per_trade      = alloc.risk_per_trade,
+            risk_reward         = risk_reward,
+        )
+        logger_defaults = {
+            "run_id":             run_id,
+            "config_hash":        portfolio_config_hash,
+            "symbol_config_hash": sym_cfg_hash,
+        }
+
         engine = ExecutionEngine(
             symbol                    = sym,
             magic                     = magic,
@@ -618,6 +733,7 @@ def build_contexts(
             stale_after_seconds       = LIMIT_ORDER_STALE_SECONDS,
             comment_prefix            = "multi_scalp",
             rotate_daily_logs         = True,
+            logger_default_fields     = logger_defaults,
         )
         engine.logger.event(
             "slippage_config",
@@ -649,12 +765,17 @@ def build_contexts(
             pass
 
         contexts.append(SymbolContext(
-            symbol       = sym,
-            strategy     = strategy,
-            engine       = engine,
-            notifier     = notifier,
-            allocation   = alloc,
-            seen_signals = seen,
+            symbol                 = sym,
+            strategy               = strategy,
+            engine                 = engine,
+            notifier               = notifier,
+            allocation             = alloc,
+            seen_signals           = seen,
+            # observability (additive)
+            run_id                 = run_id,
+            portfolio_config_hash  = portfolio_config_hash,
+            symbol_config_hash     = sym_cfg_hash,
+            htf_policy             = htf_policy,
         ))
 
     return contexts
@@ -749,9 +870,92 @@ def main() -> None:
     for a in allocations:
         print(f"  {a.symbol:8} weight={a.weight:6.2%}  risk_per_trade={a.risk_per_trade:.4%}")
 
+    # ── 2b) OBSERVABILITY: compute run identity + config fingerprint ─────────
+    # Done once per process. All downstream events reference these.
+    run_id           = make_run_id()
+    htf_policy       = htf_policy_snapshot(
+        use_synth_h1               = USE_SYNTH_H1,
+        use_synth_d1               = USE_SYNTH_D1,
+        h1_freshness_threshold_min = H1_FRESHNESS_THRESHOLD_MIN,
+        d1_freshness_threshold_min = D1_FRESHNESS_THRESHOLD_MIN,
+    )
+    runner_constants = {
+        "MAGIC_BASE":                    MAGIC_BASE,
+        "SLIPPAGE_LIMIT_THRESHOLD":      SLIPPAGE_LIMIT_THRESHOLD,
+        "SLIPPAGE_MAX_POINTS_DEFAULT":   SLIPPAGE_MAX_POINTS_DEFAULT,
+        "SLIPPAGE_MAX_POINTS_BY_SYMBOL": dict(SLIPPAGE_MAX_POINTS_BY_SYMBOL),
+        "LIMIT_ORDER_STALE_SECONDS":     LIMIT_ORDER_STALE_SECONDS,
+        "MAX_SPREAD_POINTS":             MAX_SPREAD_POINTS,
+        "DEFAULT_PORTFOLIO_RISK":        DEFAULT_PORTFOLIO_RISK,
+        "M5_SECONDS":                    M5_SECONDS,
+        "BROKER_WALLCLOCK_OFFSET_HOURS": BROKER_WALLCLOCK_OFFSET_HOURS,
+        "RR":                            RR,
+        "HISTORY_M5_BARS":               HISTORY_M5_BARS,
+        "HISTORY_H1_BARS":               HISTORY_H1_BARS,
+        "HISTORY_D1_BARS":               HISTORY_D1_BARS,
+        "DEFAULT_BROKER_TO_NY_H":        DEFAULT_BROKER_TO_NY_H,
+    }
+    per_symbol_payloads = {
+        m.symbol: {
+            "strategy_config": m.cfg,
+            "stats_score":     m.stats.get("score") if isinstance(m.stats, dict) else None,
+        }
+        for m in basket
+    }
+    portfolio_config_hash = compute_portfolio_config_hash(
+        per_symbol_payloads = per_symbol_payloads,
+        runner_constants    = runner_constants,
+        htf_policy          = htf_policy,
+    )
+    git_commit = current_git_commit()
+
     # ── 3) Boot MT5 ─────────────────────────────────────────────────────────-
     mt5_connect()
     assert_terminal_ready()
+
+    # OBSERVABILITY: one-time bot_run_started event with the full snapshot
+    # of what's running. Emitted to portfolio log so a single grep gives
+    # the timeline of every process start + its config.
+    write_portfolio_event(
+        "bot_run_started",
+        run_id            = run_id,
+        config_hash       = portfolio_config_hash,
+        config_version    = {
+            "hash":             portfolio_config_hash,
+            "loaded_at":        datetime.now(timezone.utc).isoformat(),
+            "config_file_path": str(RESULTS_DIR),
+            "git_commit":       git_commit,
+            "pid":              os.getpid(),
+        },
+        htf_policy        = htf_policy,
+        runner_constants  = runner_constants,
+        basket            = basket.symbols,
+        per_symbol_config = {
+            m.symbol: {
+                "config": {
+                    "mode":                 m.cfg.mode,
+                    "confirms":             list(m.cfg.confirms),
+                    "rsi_memory":           m.cfg.rsi_memory,
+                    "session":              list(m.cfg.session),
+                    "sl_method":            m.cfg.sl_method,
+                    "atr_min_mult":         m.cfg.atr_min_mult,
+                    "adx_min":              m.cfg.adx_min,
+                    "min_reactions":        m.cfg.min_reactions,
+                    "require_h1_rsi_align": m.cfg.require_h1_rsi_align,
+                    "require_macd_align":   m.cfg.require_macd_align,
+                    "vol_spike_mult":       m.cfg.vol_spike_mult,
+                },
+                "hash": compute_symbol_config_hash(
+                    strategy_cfg        = m.cfg,
+                    slippage_max_points = slippage_max_for(m.symbol),
+                    risk_per_trade      = next((a.risk_per_trade for a in allocations
+                                                 if a.symbol == m.symbol), 0.0),
+                    risk_reward         = RR,
+                ),
+            }
+            for m in basket
+        },
+    )
 
     write_portfolio_event(
         "portfolio_start",
@@ -760,10 +964,17 @@ def main() -> None:
         portfolio_risk=args.portfolio_risk,
         criteria=basket.criteria,
         dry_run=args.dry_run,
+        run_id=run_id,
+        config_hash=portfolio_config_hash,
     )
 
     # ── 4) Build per-symbol contexts ────────────────────────────────────────-
-    contexts = build_contexts(basket, allocations, risk_reward=RR)
+    contexts = build_contexts(
+        basket, allocations, risk_reward=RR,
+        run_id                = run_id,
+        portfolio_config_hash = portfolio_config_hash,
+        htf_policy            = htf_policy,
+    )
 
     # Single shared watchdog (MT5 connection is process-wide).
     watchdog = Mt5Watchdog(logger=contexts[0].engine.logger, connect_fn=mt5_connect)

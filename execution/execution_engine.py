@@ -91,16 +91,20 @@ class ExecutionEngine:
         max_retries_per_ob: int = DEFAULT_MAX_RETRIES_PER_OB,
         heartbeat_interval_seconds: int = DEFAULT_HEARTBEAT_INTERVAL_SECONDS,
         rotate_daily_logs: bool = True,
+        logger_default_fields: dict | None = None,
     ) -> None:
         # Symbol -- this is the one and only place we resolve the broker name
         self.cfg = resolve_symbol(symbol)
 
         # Observability -- daily rotation by default so deploys / restarts
-        # cannot wipe historical events.
+        # cannot wipe historical events. `logger_default_fields` is the
+        # mechanism the runner uses to stamp every event with run_id and
+        # config_hash; passed through to StructuredLogger.
         self.logger = StructuredLogger(
             symbol=self.cfg.name,
             log_path=log_path,
             rotate_daily=rotate_daily_logs,
+            default_fields=logger_default_fields,
         )
 
         # Components
@@ -437,6 +441,11 @@ class ExecutionEngine:
             return ExecutionOutcome(False, "skipped", None, "duplicate_pending")
 
         if self._has_open_position():
+            # OBSERVABILITY: enrich the cascade-blocked event with the
+            # state of the position that's blocking us. After 30 days we
+            # use cascade_id to chain together every signal swallowed by
+            # the same open position.
+            position_state, casc_id = self._open_position_observability()
             self.logger.event(
                 "skip",
                 reason="position_open",
@@ -444,6 +453,8 @@ class ExecutionEngine:
                 missed_signal={"direction": signal["direction"],
                                "entry": signal["entry"],
                                "sl": signal["sl"], "tp": signal["tp"]},
+                position_state=position_state,
+                cascade_id=casc_id,
             )
             return ExecutionOutcome(False, "skipped", None, "position_open")
 
@@ -502,6 +513,48 @@ class ExecutionEngine:
     def _has_open_position(self) -> bool:
         positions = mt5.positions_get(symbol=self.cfg.name) or []
         return any(p.magic == self.factory.magic for p in positions)
+
+    def _open_position_observability(self) -> tuple[dict, str | None]:
+        """Return (position_state, cascade_id) for the open position blocking
+        new signals on this symbol. Used only when emitting the
+        `position_open` skip event — never raises.
+
+        Imported lazily so this module doesn't import the bot package
+        directly (avoids circular import risk).
+        """
+        try:
+            from mt5.multi_symbol_bot.observability import (
+                position_state_snapshot, cascade_id as _cascade_id,
+            )
+        except Exception:
+            return (
+                {"has_open_position": True, "blocks_new_signal": True},
+                None,
+            )
+
+        try:
+            positions = mt5.positions_get(symbol=self.cfg.name) or []
+            ours = next((p for p in positions if p.magic == self.factory.magic), None)
+            if ours is None:
+                return ({"has_open_position": False, "blocks_new_signal": False}, None)
+            open_since_iso = datetime.fromtimestamp(int(ours.time), tz=timezone.utc).isoformat()
+            ps = position_state_snapshot(
+                has_open_position=True,
+                open_ticket=int(ours.ticket),
+                open_symbol=self.cfg.name,
+                open_since_iso=open_since_iso,
+                open_pnl=float(getattr(ours, "profit", 0.0) or 0.0),
+                blocks_new_signal=True,
+                now_ts=datetime.now(timezone.utc),
+            )
+            casc = _cascade_id(
+                symbol=self.cfg.name,
+                open_ticket=int(ours.ticket),
+                open_since_iso=open_since_iso,
+            )
+            return ps, casc
+        except Exception:
+            return ({"has_open_position": True, "blocks_new_signal": True}, None)
 
     # ── shutdown ─────────────────────────────────────────────────────────────-
 
