@@ -73,6 +73,7 @@ class StructuredLogger:
         log_path: Path,
         echo_to_stdout: bool = True,
         rotate_daily: bool = True,
+        default_fields: dict | None = None,
     ) -> None:
         self.symbol = symbol
         self._base_path = Path(log_path)
@@ -81,6 +82,11 @@ class StructuredLogger:
         self._rotate_daily = rotate_daily
         self._cached_date: str | None = None
         self._cached_path: Path = self._base_path  # filled by _current_path()
+        # OBSERVABILITY: optional per-instance defaults injected into every
+        # event (e.g. run_id, config_hash). Caller-supplied event fields
+        # always win; defaults only fill gaps. Used by the runner so every
+        # event in logs/<SYMBOL>.json carries the run identity.
+        self._default_fields: dict = dict(default_fields or {})
 
     # ── path resolution ──────────────────────────────────────────────────────-
 
@@ -166,6 +172,11 @@ class StructuredLogger:
             "event":      event,
             "symbol":     self.symbol,
         }
+        # Merge defaults FIRST so caller fields can override (they shouldn't,
+        # but explicit > implicit). Defaults stay constant per process.
+        if self._default_fields:
+            for k, v in self._default_fields.items():
+                entry.setdefault(k, v)
         entry.update(fields)
 
         line = json.dumps(entry, default=str)
