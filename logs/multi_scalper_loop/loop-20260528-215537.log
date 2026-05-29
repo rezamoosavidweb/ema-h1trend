@@ -4777,3 +4777,88 @@ C:\Users\Administrator\Desktop\tob\ema-h1trend\mt5\run_multi_scalper.py:201: Pan
 [2026-05-29 19:45:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
 [2026-05-29 19:45:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
 [2026-05-29 19:45:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[portfolio] cycle_complete: symbols=6 signals=0 placed=0 skipped=6 elapsed_s=0.02 per_symbol=[{'symbol': 'GBPUSD', 'skipped': 'mt5_unhealthy'}, {'symbol': 'XAUUSD', 'skipped': 'mt5_unhealthy'}, {'symbol': 'GBPCAD', 'skipped': 'mt5_unhealthy'}, {'symbol': 'USDMXN', 'skipped': 'mt5_unhealthy'}, {'symbol': 'EURCAD', 'skipped': 'mt5_unhealthy'}, {'symbol': 'AUDCAD', 'skipped': 'mt5_unhealthy'}]
+  → sleeping 300s until next M5 close ...
+[2026-05-29 19:50:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
+[2026-05-29 19:50:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[2026-05-29 19:50:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
+[2026-05-29 19:50:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[2026-05-29 19:50:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
+[2026-05-29 19:50:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[2026-05-29 19:50:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
+[2026-05-29 19:50:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[2026-05-29 19:50:00 BROKER] heartbeat | {'uptime_s': 80651.6, 'mt5_connected': False, 'mt5_trade_allowed': False, 'tracked_pendings': 0, 'open_positions': 0, 'cooldown_active': False, 'cooldown_remaining_s': 0.0, 'balance': None, 'equity': None}
+[2026-05-29 19:50:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
+[2026-05-29 19:50:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[2026-05-29 19:50:00 BROKER] heartbeat | {'uptime_s': 80651.4, 'mt5_connected': False, 'mt5_trade_allowed': False, 'tracked_pendings': 0, 'open_positions': 0, 'cooldown_active': False, 'cooldown_remaining_s': 0.0, 'balance': None, 'equity': None}
+[2026-05-29 19:50:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
+[2026-05-29 19:50:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[portfolio] cycle_complete: symbols=6 signals=0 placed=0 skipped=6 elapsed_s=0.01 per_symbol=[{'symbol': 'GBPUSD', 'skipped': 'mt5_unhealthy'}, {'symbol': 'XAUUSD', 'skipped': 'mt5_unhealthy'}, {'symbol': 'GBPCAD', 'skipped': 'mt5_unhealthy'}, {'symbol': 'USDMXN', 'skipped': 'mt5_unhealthy'}, {'symbol': 'EURCAD', 'skipped': 'mt5_unhealthy'}, {'symbol': 'AUDCAD', 'skipped': 'mt5_unhealthy'}]
+  → sleeping 300s until next M5 close ...
+[2026-05-29 19:55:00 BROKER] heartbeat | {'uptime_s': 80952.2, 'mt5_connected': False, 'mt5_trade_allowed': False, 'tracked_pendings': 0, 'open_positions': 0, 'cooldown_active': False, 'cooldown_remaining_s': 0.0, 'balance': None, 'equity': None}
+[2026-05-29 19:55:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
+[2026-05-29 19:55:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[2026-05-29 19:55:00 BROKER] heartbeat | {'uptime_s': 80952.0, 'mt5_connected': False, 'mt5_trade_allowed': False, 'tracked_pendings': 0, 'open_positions': 0, 'cooldown_active': False, 'cooldown_remaining_s': 0.0, 'balance': None, 'equity': None}
+[2026-05-29 19:55:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
+[2026-05-29 19:55:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[2026-05-29 19:55:00 BROKER] heartbeat | {'uptime_s': 80951.8, 'mt5_connected': False, 'mt5_trade_allowed': False, 'tracked_pendings': 0, 'open_positions': 0, 'cooldown_active': False, 'cooldown_remaining_s': 0.0, 'balance': None, 'equity': None}
+[2026-05-29 19:55:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
+[2026-05-29 19:55:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[2026-05-29 19:55:00 BROKER] heartbeat | {'uptime_s': 80951.7, 'mt5_connected': False, 'mt5_trade_allowed': False, 'tracked_pendings': 0, 'open_positions': 0, 'cooldown_active': False, 'cooldown_remaining_s': 0.0, 'balance': None, 'equity': None}
+[2026-05-29 19:55:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
+[2026-05-29 19:55:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[2026-05-29 19:55:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
+[2026-05-29 19:55:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[2026-05-29 19:55:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
+[2026-05-29 19:55:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[portfolio] cycle_complete: symbols=6 signals=0 placed=0 skipped=6 elapsed_s=0.01 per_symbol=[{'symbol': 'GBPUSD', 'skipped': 'mt5_unhealthy'}, {'symbol': 'XAUUSD', 'skipped': 'mt5_unhealthy'}, {'symbol': 'GBPCAD', 'skipped': 'mt5_unhealthy'}, {'symbol': 'USDMXN', 'skipped': 'mt5_unhealthy'}, {'symbol': 'EURCAD', 'skipped': 'mt5_unhealthy'}, {'symbol': 'AUDCAD', 'skipped': 'mt5_unhealthy'}]
+  → sleeping 300s until next M5 close ...
+
+Stopped by user.
+[portfolio] portfolio_stop: 
+[2026-05-29 19:57:33 BROKER] telegram_sent | {'category': 'bot_stop', 'attempt': 1, 'status': 200, 'latency_ms': 140.9}
+[2026-05-29 19:57:33 BROKER] bot_stop | {'tracked_pendings': []}
+[2026-05-29 19:57:33 BROKER] telegram_sent | {'category': 'bot_stop', 'attempt': 1, 'status': 200, 'latency_ms': 138.7}
+[2026-05-29 19:57:33 BROKER] bot_stop | {'tracked_pendings': []}
+[2026-05-29 19:57:33 BROKER] telegram_sent | {'category': 'bot_stop', 'attempt': 1, 'status': 200, 'latency_ms': 99.1}
+[2026-05-29 19:57:33 BROKER] bot_stop | {'tracked_pendings': []}
+[2026-05-29 19:57:33 BROKER] telegram_sent | {'category': 'bot_stop', 'attempt': 1, 'status': 200, 'latency_ms': 101.1}
+[2026-05-29 19:57:33 BROKER] bot_stop | {'tracked_pendings': []}
+[2026-05-29 19:57:33 BROKER] telegram_sent | {'category': 'bot_stop', 'attempt': 1, 'status': 200, 'latency_ms': 86.7}
+[2026-05-29 19:57:33 BROKER] bot_stop | {'tracked_pendings': []}
+Traceback (most recent call last):
+  File "C:\Users\Administrator\Desktop\tob\ema-h1trend\mt5\run_multi_scalper.py", line 1021, in <module>
+    main()
+  File "C:\Users\Administrator\Desktop\tob\ema-h1trend\mt5\run_multi_scalper.py", line 1006, in main
+    ctx.notifier.notify_bot_lifecycle(
+  File "C:\Users\Administrator\Desktop\tob\ema-h1trend\telegram_bot\mt5_notifier.py", line 414, in notify_bot_lifecycle
+    return self.send("\n".join(lines), category=f"bot_{phase}")
+  File "C:\Users\Administrator\Desktop\tob\ema-h1trend\telegram_bot\mt5_notifier.py", line 150, in send
+    with urllib.request.urlopen(req, timeout=self._timeout, context=_SSL_CONTEXT) as resp:
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\urllib\request.py", line 189, in urlopen
+    return opener.open(url, data, timeout)
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\urllib\request.py", line 489, in open
+    response = self._open(req, data)
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\urllib\request.py", line 506, in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\urllib\request.py", line 466, in _call_chain
+    result = func(*args)
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\urllib\request.py", line 1367, in https_open
+    return self.do_open(http.client.HTTPSConnection, req,
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\urllib\request.py", line 1323, in do_open
+    r = h.getresponse()
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 1450, in getresponse
+    response.begin()
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 336, in begin
+    version, status, reason = self._read_status()
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\http\client.py", line 297, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\socket.py", line 719, in readinto
+    return self._sock.recv_into(b)
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\ssl.py", line 1304, in recv_into
+    return self.read(nbytes, buffer)
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python313\Lib\ssl.py", line 1138, in read
+    return self._sslobj.read(len, buffer)
+KeyboardInterrupt
+^C[Fri 05/29/2026 20:27:39.63] python exited with code -1073741510 
+[Fri 05/29/2026 20:27:39.63] sleeping 60s before restart 
