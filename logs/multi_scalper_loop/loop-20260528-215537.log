@@ -4729,3 +4729,51 @@ C:\Users\Administrator\Desktop\tob\ema-h1trend\mt5\run_multi_scalper.py:201: Pan
 [2026-05-29 19:30:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
 [2026-05-29 19:30:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
 [2026-05-29 19:30:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[portfolio] cycle_complete: symbols=6 signals=0 placed=0 skipped=6 elapsed_s=0.01 per_symbol=[{'symbol': 'GBPUSD', 'skipped': 'mt5_unhealthy'}, {'symbol': 'XAUUSD', 'skipped': 'mt5_unhealthy'}, {'symbol': 'GBPCAD', 'skipped': 'mt5_unhealthy'}, {'symbol': 'USDMXN', 'skipped': 'mt5_unhealthy'}, {'symbol': 'EURCAD', 'skipped': 'mt5_unhealthy'}, {'symbol': 'AUDCAD', 'skipped': 'mt5_unhealthy'}]
+  → sleeping 300s until next M5 close ...
+[2026-05-29 19:35:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
+[2026-05-29 19:35:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[2026-05-29 19:35:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
+[2026-05-29 19:35:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[2026-05-29 19:35:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
+[2026-05-29 19:35:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[2026-05-29 19:35:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
+[2026-05-29 19:35:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[2026-05-29 19:35:00 BROKER] heartbeat | {'uptime_s': 79751.6, 'mt5_connected': False, 'mt5_trade_allowed': False, 'tracked_pendings': 0, 'open_positions': 0, 'cooldown_active': False, 'cooldown_remaining_s': 0.0, 'balance': None, 'equity': None}
+[2026-05-29 19:35:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
+[2026-05-29 19:35:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[2026-05-29 19:35:00 BROKER] heartbeat | {'uptime_s': 79751.4, 'mt5_connected': False, 'mt5_trade_allowed': False, 'tracked_pendings': 0, 'open_positions': 0, 'cooldown_active': False, 'cooldown_remaining_s': 0.0, 'balance': None, 'equity': None}
+[2026-05-29 19:35:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
+[2026-05-29 19:35:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[portfolio] cycle_complete: symbols=6 signals=0 placed=0 skipped=6 elapsed_s=0.02 per_symbol=[{'symbol': 'GBPUSD', 'skipped': 'mt5_unhealthy'}, {'symbol': 'XAUUSD', 'skipped': 'mt5_unhealthy'}, {'symbol': 'GBPCAD', 'skipped': 'mt5_unhealthy'}, {'symbol': 'USDMXN', 'skipped': 'mt5_unhealthy'}, {'symbol': 'EURCAD', 'skipped': 'mt5_unhealthy'}, {'symbol': 'AUDCAD', 'skipped': 'mt5_unhealthy'}]
+  → sleeping 300s until next M5 close ...
+[2026-05-29 19:40:00 BROKER] heartbeat | {'uptime_s': 80052.2, 'mt5_connected': False, 'mt5_trade_allowed': False, 'tracked_pendings': 0, 'open_positions': 0, 'cooldown_active': False, 'cooldown_remaining_s': 0.0, 'balance': None, 'equity': None}
+[2026-05-29 19:40:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
+[2026-05-29 19:40:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[2026-05-29 19:40:00 BROKER] heartbeat | {'uptime_s': 80052.0, 'mt5_connected': False, 'mt5_trade_allowed': False, 'tracked_pendings': 0, 'open_positions': 0, 'cooldown_active': False, 'cooldown_remaining_s': 0.0, 'balance': None, 'equity': None}
+[2026-05-29 19:40:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
+[2026-05-29 19:40:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[2026-05-29 19:40:00 BROKER] heartbeat | {'uptime_s': 80051.8, 'mt5_connected': False, 'mt5_trade_allowed': False, 'tracked_pendings': 0, 'open_positions': 0, 'cooldown_active': False, 'cooldown_remaining_s': 0.0, 'balance': None, 'equity': None}
+[2026-05-29 19:40:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
+[2026-05-29 19:40:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[2026-05-29 19:40:00 BROKER] heartbeat | {'uptime_s': 80051.7, 'mt5_connected': False, 'mt5_trade_allowed': False, 'tracked_pendings': 0, 'open_positions': 0, 'cooldown_active': False, 'cooldown_remaining_s': 0.0, 'balance': None, 'equity': None}
+[2026-05-29 19:40:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
+[2026-05-29 19:40:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[2026-05-29 19:40:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
+[2026-05-29 19:40:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[2026-05-29 19:40:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
+[2026-05-29 19:40:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[portfolio] cycle_complete: symbols=6 signals=0 placed=0 skipped=6 elapsed_s=0.02 per_symbol=[{'symbol': 'GBPUSD', 'skipped': 'mt5_unhealthy'}, {'symbol': 'XAUUSD', 'skipped': 'mt5_unhealthy'}, {'symbol': 'GBPCAD', 'skipped': 'mt5_unhealthy'}, {'symbol': 'USDMXN', 'skipped': 'mt5_unhealthy'}, {'symbol': 'EURCAD', 'skipped': 'mt5_unhealthy'}, {'symbol': 'AUDCAD', 'skipped': 'mt5_unhealthy'}]
+  → sleeping 300s until next M5 close ...
+[2026-05-29 19:45:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
+[2026-05-29 19:45:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[2026-05-29 19:45:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
+[2026-05-29 19:45:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[2026-05-29 19:45:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
+[2026-05-29 19:45:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[2026-05-29 19:45:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
+[2026-05-29 19:45:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[2026-05-29 19:45:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
+[2026-05-29 19:45:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
+[2026-05-29 19:45:00 BROKER] mt5_reconnect_giveup | {'attempts': 6, 'advice': 'Operator intervention required.'}
+[2026-05-29 19:45:00 BROKER] cycle_skipped | {'reason': 'mt5_unhealthy'}
