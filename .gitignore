@@ -75,8 +75,10 @@ htmlcov/
 /errante-report/
 
 # statarb_live (Phase 5) runtime outputs — SQLite DBs, reports, logs are not committed.
-# The frozen universe.json is regenerated deterministically from the NB38 formation window.
-/statarb_live/_data/
+# EXCEPTION: the frozen universe.json IS committed so a fresh server (with no H1 CSV
+# cache) can load the exact same pair book without re-running the formation selection.
+/statarb_live/_data/*
+!/statarb_live/_data/universe.json
 /statarb_live/_reports/
 /logs/statarb_live/
 statarb_live/deploy/.env

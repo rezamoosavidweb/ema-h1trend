@@ -1,0 +1,91 @@
+{
+  "strategy_version": "nb38-phase4-frozen-2026",
+  "selected_at": "2026-06-11T12:34:57.700785+00:00",
+  "formation_start": "2010-06-23 15:00:00+00:00",
+  "formation_end": "2016-12-13 20:00:00+00:00",
+  "carry_symbols": [
+    "AUDCAD",
+    "AUDJPY",
+    "AUDNZD",
+    "AUDUSD",
+    "CADCHF",
+    "CADJPY",
+    "CHFJPY",
+    "EURCAD",
+    "EURCHF",
+    "EURGBP",
+    "EURJPY",
+    "EURUSD",
+    "GBPCAD",
+    "GBPCHF",
+    "GBPJPY",
+    "GBPUSD",
+    "NZDJPY",
+    "NZDUSD",
+    "USDCAD",
+    "USDCHF",
+    "USDJPY"
+  ],
+  "pairs": [
+    {
+      "a": "CHFJPY",
+      "b": "EURJPY",
+      "corr": 0.7704369826291079,
+      "beta": 0.9995722587122557,
+      "alpha": -0.16521098411473067,
+      "coint_p": 0.0385743941823934,
+      "half_life": 2202.7225906666035,
+      "cluster": -1
+    },
+    {
+      "a": "CADCHF",
+      "b": "EURCAD",
+      "corr": -0.7301936315430441,
+      "beta": -0.9419342609139157,
+      "alpha": 0.12437618434491193,
+      "coint_p": 0.028904887786018435,
+      "half_life": 2394.931299921344,
+      "cluster": -1
+    },
+    {
+      "a": "AUDJPY",
+      "b": "EURJPY",
+      "corr": 0.6655528893107571,
+      "beta": 0.4888982992556882,
+      "alpha": 2.1139300668168852,
+      "coint_p": 0.02403393523483887,
+      "half_life": 1337.554858328998,
+      "cluster": -1
+    },
+    {
+      "a": "AUDUSD",
+      "b": "USDCAD",
+      "corr": -0.6289909936538544,
+      "beta": -1.1506974362167128,
+      "alpha": 0.001920930554881557,
+      "coint_p": 0.0009069784042861185,
+      "half_life": 849.8758236249837,
+      "cluster": -1
+    },
+    {
+      "a": "AUDJPY",
+      "b": "CHFJPY",
+      "corr": 0.5272586894206218,
+      "beta": 0.47560294305400047,
+      "alpha": 2.2571764555181915,
+      "coint_p": 0.004881837807598952,
+      "half_life": 948.2125514720404,
+      "cluster": -1
+    },
+    {
+      "a": "EURCAD",
+      "b": "EURGBP",
+      "corr": 0.4760151146877828,
+      "beta": -0.1535629510901224,
+      "alpha": 0.2917449198165366,
+      "coint_p": 0.08471111220435112,
+      "half_life": 2079.4747000874204,
+      "cluster": -1
+    }
+  ]
+}
