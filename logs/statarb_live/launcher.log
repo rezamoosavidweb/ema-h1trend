@@ -36,3 +36,29 @@ ModuleNotFoundError: statarb_live could not import the research engine 'notebook
 [Thu 06/11/2026 16:47:46.25]         Most common cause: missing deps on this machine.
 [Thu 06/11/2026 16:47:46.26]         Fix: C:\Users\Administrator\Desktop\tob\ema-h1trend\.venv\Scripts\python.exe -m pip install -r requirements.txt
 [Thu 06/11/2026 16:47:46.27] launcher ABORTED. Read the messages above / C:\Users\Administrator\Desktop\tob\ema-h1trend\logs\statarb_live\launcher.log.
+[Thu 06/11/2026 17:03:27.58] ============================================================
+[Thu 06/11/2026 17:03:27.60] launcher start: Thu 06/11/2026 17:03:27.59
+[Thu 06/11/2026 17:03:27.61] SCRIPT_DIR  = C:\Users\Administrator\Desktop\tob\ema-h1trend\statarb_live\
+[Thu 06/11/2026 17:03:27.62] REPO_ROOT   = C:\Users\Administrator\Desktop\tob\ema-h1trend
+[Thu 06/11/2026 17:03:27.63] VENV_PYTHON = C:\Users\Administrator\Desktop\tob\ema-h1trend\.venv\Scripts\python.exe
+[Thu 06/11/2026 17:03:27.65] DIAG_LOG    = C:\Users\Administrator\Desktop\tob\ema-h1trend\logs\statarb_live\launcher.log
+[Thu 06/11/2026 17:03:27.66] SAL_BROKER  = mt5   SAL_MODE = paper
+[Thu 06/11/2026 17:03:27.67] ============================================================
+[Thu 06/11/2026 17:03:27.69] using interpreter: C:\Users\Administrator\Desktop\tob\ema-h1trend\.venv\Scripts\python.exe
+Python 3.13.12
+[Thu 06/11/2026 17:03:27.74] cwd = C:\Users\Administrator\Desktop\tob\ema-h1trend
+[Thu 06/11/2026 17:03:27.75] testing imports (statarb_live + engine)...
+import OK
+[Thu 06/11/2026 17:03:34.37] [OK] imports fine
+[Thu 06/11/2026 17:03:34.38] checking config + frozen universe...
+=== statarb_live config ===
+mode=paper broker=mt5 timeframe=H1
+db=sqlite:///C:/Users/Administrator/Desktop/tob/ema-h1trend/statarb_live/_data/statarb_live.db
+data_dir=C:\Users\Administrator\Desktop\tob\ema-h1trend\notebooks\data
+strategy=nb38-phase4-frozen-2026
+  z_entry=2.0 z_exit=0.0 z_stop=3.5 z_window=480
+  target_ann_vol=0.1 vol_window=480 max_lev=3.0
+  carry_w_rev=0.5 regime=hmm/1.5
+universe pairs: ['CHFJPY~EURJPY', 'CADCHF~EURCAD', 'AUDJPY~EURJPY', 'AUDUSD~USDCAD', 'AUDJPY~CHFJPY', 'EURCAD~EURGBP']
+carry universe: 21 symbols
+[Thu 06/11/2026 17:03:40.00] [OK] config + universe loaded
