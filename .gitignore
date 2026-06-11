@@ -77,8 +77,8 @@ htmlcov/
 # statarb_live (Phase 5) runtime outputs — SQLite DBs, reports, logs are not committed.
 # EXCEPTION: the frozen universe.json IS committed so a fresh server (with no H1 CSV
 # cache) can load the exact same pair book without re-running the formation selection.
-/statarb_live/_data/*
-!/statarb_live/_data/universe.json
-/statarb_live/_reports/
-/logs/statarb_live/
-statarb_live/deploy/.env
+# /statarb_live/_data/*
+# !/statarb_live/_data/universe.json
+# /statarb_live/_reports/
+# /logs/statarb_live/
+# statarb_live/deploy/.env
