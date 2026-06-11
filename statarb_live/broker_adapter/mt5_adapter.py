@@ -21,19 +21,29 @@ from .base import AccountInfo, BrokerAdapter, OrderResult, SymbolInfo, Tick
 
 _TF_MAP_NAMES = {"H1": "TIMEFRAME_H1", "H4": "TIMEFRAME_H4", "D1": "TIMEFRAME_D1"}
 
+# Broker-specific symbol suffixes to try when our canonical name (e.g. "AUDCAD") is not the
+# exact broker symbol. Errante uses ".i" on crosses; other brokers use ".m/.ecn/.pro/.raw".
+# Order matters: "" (exact) first, then the most common variants.
+_SUFFIX_CANDIDATES = ("", ".i", ".m", ".ecn", ".pro", ".raw", ".r", ".c",
+                      "_i", "-i", "i", "m", "c")
+
 
 class MT5BrokerAdapter(BrokerAdapter):
     name = "mt5"
 
     def __init__(self, *, login: int = 0, password: str = "", server: str = "",
-                 terminal_path: str = "", broker_tz: str = "Europe/Nicosia") -> None:
+                 terminal_path: str = "", broker_tz: str = "Europe/Nicosia",
+                 symbol_suffixes: tuple[str, ...] | None = None) -> None:
         self.login = login
         self.password = password
         self.server = server
         self.terminal_path = terminal_path
         self.tz = ZoneInfo(broker_tz)
+        self.suffixes = symbol_suffixes or _SUFFIX_CANDIDATES
         self._mt5 = None
         self._connected = False
+        # canonical name (AUDCAD) -> actual broker name (AUDCAD.i), or None if not found
+        self._resolve_cache: dict[str, str | None] = {}
 
     # ── connection ──────────────────────────────────────────────────────────
     def _import_mt5(self):
@@ -72,12 +82,40 @@ class MT5BrokerAdapter(BrokerAdapter):
         mt5 = self._import_mt5()
         return getattr(mt5, _TF_MAP_NAMES[timeframe])
 
+    # ── symbol resolution (handle broker suffixes like ".i") ────────────────
+    def _resolve(self, canonical: str) -> str | None:
+        """Map our canonical name (e.g. 'AUDCAD') to the broker's actual symbol
+        (e.g. 'AUDCAD.i') and make it visible in Market Watch. Cached. Returns None
+        if no variant exists on the broker."""
+        if canonical in self._resolve_cache:
+            return self._resolve_cache[canonical]
+        mt5 = self._import_mt5()
+        resolved: str | None = None
+        for suf in self.suffixes:
+            name = canonical + suf
+            info = mt5.symbol_info(name)
+            if info is not None:
+                if not info.visible:
+                    mt5.symbol_select(name, True)
+                resolved = name
+                break
+        self._resolve_cache[canonical] = resolved
+        return resolved
+
+    def validate_symbols(self, symbols: list[str]) -> tuple[list[str], list[str]]:
+        """Available = symbols that resolve to a broker symbol (any suffix variant)."""
+        ok, missing = [], []
+        for s in symbols:
+            (ok if self._resolve(s) else missing).append(s)
+        return ok, missing
+
     # ── market data ─────────────────────────────────────────────────────────
     def get_bars(self, symbol: str, timeframe: str, n_bars: int) -> pd.DataFrame:
         mt5 = self._import_mt5()
-        rates = mt5.copy_rates_from_pos(symbol, self._tf(timeframe), 0, n_bars + 1)
+        broker_sym = self._resolve(symbol) or symbol
+        rates = mt5.copy_rates_from_pos(broker_sym, self._tf(timeframe), 0, n_bars + 1)
         if rates is None or len(rates) == 0:
-            raise RuntimeError(f"MT5 copy_rates {symbol} {timeframe} failed: {mt5.last_error()}")
+            raise RuntimeError(f"MT5 copy_rates {broker_sym} {timeframe} failed: {mt5.last_error()}")
         df = pd.DataFrame(rates)
         idx = self._to_local(df["time"])
         df = df.set_index(idx).sort_index()
@@ -95,21 +133,23 @@ class MT5BrokerAdapter(BrokerAdapter):
 
     def get_tick(self, symbol: str) -> Tick:
         mt5 = self._import_mt5()
-        t = mt5.symbol_info_tick(symbol)
+        broker_sym = self._resolve(symbol) or symbol
+        t = mt5.symbol_info_tick(broker_sym)
         if t is None:
-            raise RuntimeError(f"MT5 tick {symbol} failed: {mt5.last_error()}")
+            raise RuntimeError(f"MT5 tick {broker_sym} failed: {mt5.last_error()}")
         ts = pd.to_datetime(t.time, unit="s").tz_localize(self.tz, nonexistent="shift_forward",
                                                           ambiguous="NaT")
         return Tick(symbol=symbol, ts=ts, bid=float(t.bid), ask=float(t.ask))
 
     def symbol_info(self, symbol: str) -> SymbolInfo:
         mt5 = self._import_mt5()
-        info = mt5.symbol_info(symbol)
+        broker_sym = self._resolve(symbol) or symbol
+        info = mt5.symbol_info(broker_sym)
         if info is None:
-            raise RuntimeError(f"MT5 symbol_info {symbol} failed: {mt5.last_error()}")
+            raise RuntimeError(f"MT5 symbol_info {broker_sym} failed: {mt5.last_error()}")
         if not info.visible:
-            mt5.symbol_select(symbol, True)
-            info = mt5.symbol_info(symbol)
+            mt5.symbol_select(broker_sym, True)
+            info = mt5.symbol_info(broker_sym)
         return SymbolInfo(
             symbol=symbol,
             contract_size=float(info.trade_contract_size),
@@ -140,14 +180,15 @@ class MT5BrokerAdapter(BrokerAdapter):
     def market_order(self, symbol: str, side: str, volume: float, *,
                      magic: int = 0, comment: str = "") -> OrderResult:
         mt5 = self._import_mt5()
-        tick = mt5.symbol_info_tick(symbol)
+        broker_sym = self._resolve(symbol) or symbol
+        tick = mt5.symbol_info_tick(broker_sym)
         if tick is None:
-            return OrderResult(ok=False, comment=f"no tick for {symbol}")
+            return OrderResult(ok=False, comment=f"no tick for {broker_sym}")
         is_buy = side.lower() == "buy"
         price = tick.ask if is_buy else tick.bid
         req = {
             "action": mt5.TRADE_ACTION_DEAL,
-            "symbol": symbol,
+            "symbol": broker_sym,
             "volume": float(volume),
             "type": mt5.ORDER_TYPE_BUY if is_buy else mt5.ORDER_TYPE_SELL,
             "price": price,
