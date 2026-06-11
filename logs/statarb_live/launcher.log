@@ -1,0 +1,38 @@
+[Thu 06/11/2026 16:47:37.90] ============================================================
+[Thu 06/11/2026 16:47:37.91] launcher start: Thu 06/11/2026 16:47:37.90
+[Thu 06/11/2026 16:47:37.92] SCRIPT_DIR  = C:\Users\Administrator\Desktop\tob\ema-h1trend\statarb_live\
+[Thu 06/11/2026 16:47:37.94] REPO_ROOT   = C:\Users\Administrator\Desktop\tob\ema-h1trend
+[Thu 06/11/2026 16:47:37.95] VENV_PYTHON = C:\Users\Administrator\Desktop\tob\ema-h1trend\.venv\Scripts\python.exe
+[Thu 06/11/2026 16:47:37.96] DIAG_LOG    = C:\Users\Administrator\Desktop\tob\ema-h1trend\logs\statarb_live\launcher.log
+[Thu 06/11/2026 16:47:37.97] SAL_BROKER  = mt5   SAL_MODE = paper
+[Thu 06/11/2026 16:47:37.98] ============================================================
+[Thu 06/11/2026 16:47:38.00] using interpreter: C:\Users\Administrator\Desktop\tob\ema-h1trend\.venv\Scripts\python.exe
+Python 3.13.12
+[Thu 06/11/2026 16:47:38.08] cwd = C:\Users\Administrator\Desktop\tob\ema-h1trend
+[Thu 06/11/2026 16:47:38.09] testing imports (statarb_live + engine)...
+Traceback (most recent call last):
+  File "C:\Users\Administrator\Desktop\tob\ema-h1trend\statarb_live\engine_bridge.py", line 36, in <module>
+    from notebooks.statarb import regime as eng_regime      # noqa: E402
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\Desktop\tob\ema-h1trend\notebooks\statarb\regime.py", line 24, in <module>
+    from .factor import vol_regime  # noqa: F401  (re-export)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\Desktop\tob\ema-h1trend\notebooks\statarb\factor.py", line 18, in <module>
+    from sklearn.decomposition import PCA
+ModuleNotFoundError: No module named 'sklearn'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import statarb_live; from statarb_live.engine_bridge import eng_pairs; from statarb_live.orchestrator import Orchestrator; print('import OK')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\Desktop\tob\ema-h1trend\statarb_live\engine_bridge.py", line 39, in <module>
+    raise ModuleNotFoundError(
+    ...<5 lines>...
+    ) from exc
+ModuleNotFoundError: statarb_live could not import the research engine 'notebooks.statarb'. The engine modules (pairs/backtest/carry/regime/...) must be present under C:\Users\Administrator\Desktop\tob\ema-h1trend\notebooks\statarb and 'scikit-learn' must be installed. Note: a stale 'notebooks/statarb/data/' package shadows 'data.py' — remove it. Original error: No module named 'sklearn'
+[Thu 06/11/2026 16:47:46.24] [ERROR] import FAILED - see traceback above in C:\Users\Administrator\Desktop\tob\ema-h1trend\logs\statarb_live\launcher.log
+[Thu 06/11/2026 16:47:46.25]         Most common cause: missing deps on this machine.
+[Thu 06/11/2026 16:47:46.26]         Fix: C:\Users\Administrator\Desktop\tob\ema-h1trend\.venv\Scripts\python.exe -m pip install -r requirements.txt
+[Thu 06/11/2026 16:47:46.27] launcher ABORTED. Read the messages above / C:\Users\Administrator\Desktop\tob\ema-h1trend\logs\statarb_live\launcher.log.
