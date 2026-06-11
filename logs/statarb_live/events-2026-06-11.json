@@ -4,3 +4,5 @@
 {"ts": "2026-06-11T13:04:47.927514+00:00", "event_type": "bot_stop", "severity": "info", "cycle_id": null, "message": "shutting down", "payload": {}}
 {"ts": "2026-06-11T13:08:43.410119+00:00", "event_type": "bot_start", "severity": "info", "cycle_id": null, "message": "mode=paper broker=mt5 pairs=['CHFJPY~EURJPY', 'CADCHF~EURCAD', 'AUDJPY~EURJPY', 'AUDUSD~USDCAD', 'AUDJPY~CHFJPY', 'EURCAD~EURGBP'] strategy=nb38-phase4-frozen-2026", "payload": {"payload": {"db": "sqlite:///D:/bot/ema-1d trend/ema-h1trend/statarb_live/_data/statarb_live.db", "connected": true}}}
 {"ts": "2026-06-11T13:08:43.431236+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260611T130843", "message": "as_of=None", "payload": {}}
+{"ts": "2026-06-11T13:08:56.805711+00:00", "event_type": "cycle_skipped", "severity": "warning", "cycle_id": "20260611T130843", "message": "feed not ok; missing=['AUDCAD', 'AUDJPY', 'AUDNZD', 'AUDUSD', 'CADCHF']", "payload": {"payload": {"dropped_rows": 0}}}
+{"ts": "2026-06-11T13:08:56.808786+00:00", "event_type": "bot_stop", "severity": "info", "cycle_id": null, "message": "shutting down", "payload": {}}
