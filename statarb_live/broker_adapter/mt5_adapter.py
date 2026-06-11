@@ -75,7 +75,10 @@ class MT5BrokerAdapter(BrokerAdapter):
 
     # ── time ────────────────────────────────────────────────────────────────
     def _to_local(self, seconds) -> pd.DatetimeIndex:
-        parsed = pd.to_datetime(seconds, unit="s")
+        # Build a DatetimeIndex (NOT a Series) so .tz_localize localises the timestamps
+        # themselves. MT5 `time` is broker wall-clock encoded as Unix seconds -> relabel
+        # to broker tz (no shift), matching the H1 CSV cache.
+        parsed = pd.DatetimeIndex(pd.to_datetime(seconds, unit="s"))
         return parsed.tz_localize(self.tz, nonexistent="shift_forward", ambiguous="NaT")
 
     def _tf(self, timeframe: str) -> int:
