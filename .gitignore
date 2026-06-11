@@ -70,3 +70,13 @@ htmlcov/
 # outputs (golden basket + per-symbol stats that the live runner reads).
 /notebooks/results/*
 !/notebooks/results/multi_symbol_scalper/
+
+# Broker account exports (sensitive — account numbers, balances, trade history).
+/errante-report/
+
+# statarb_live (Phase 5) runtime outputs — SQLite DBs, reports, logs are not committed.
+# The frozen universe.json is regenerated deterministically from the NB38 formation window.
+/statarb_live/_data/
+/statarb_live/_reports/
+/logs/statarb_live/
+statarb_live/deploy/.env

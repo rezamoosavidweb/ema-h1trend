@@ -1,0 +1,67 @@
+# statarb_live — paper-trading stack (Linux VPS).
+#
+# Services:
+#   db       PostgreSQL — the production storage backend.
+#   bot      the statarb_live runner (sim broker / paper mode on Linux).
+#   reporter one-shot/cron-able report generator (profile: tools).
+#
+# Usage:
+#   docker compose -f statarb_live/deploy/docker-compose.yml up -d --build
+#   docker compose ... run --rm reporter        # generate a report on demand
+#
+# For LIVE MT5 demo execution use a Windows VPS instead (see README) — MT5 cannot run here.
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-statarb}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-statarb}
+      POSTGRES_DB: ${POSTGRES_DB:-statarb}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-statarb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  bot:
+    build:
+      context: ../..
+      dockerfile: statarb_live/deploy/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SAL_BROKER: sim
+      SAL_MODE: paper
+      SAL_DB_URL: postgresql+psycopg://${POSTGRES_USER:-statarb}:${POSTGRES_PASSWORD:-statarb}@db:5432/${POSTGRES_DB:-statarb}
+      SAL_DATA_DIR: /data
+    volumes:
+      - ../../notebooks/data:/data:ro          # H1 CSV cache (read-only) for the sim broker
+      - sal_outputs:/app/_data
+      - sal_reports:/app/_reports
+      - sal_logs:/app/logs
+
+  reporter:
+    profiles: ["tools"]
+    build:
+      context: ../..
+      dockerfile: statarb_live/deploy/Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SAL_DB_URL: postgresql+psycopg://${POSTGRES_USER:-statarb}:${POSTGRES_PASSWORD:-statarb}@db:5432/${POSTGRES_DB:-statarb}
+    volumes:
+      - sal_reports:/app/_reports
+    command: ["python", "-m", "statarb_live", "report", "--period", "monthly"]
+
+volumes:
+  pgdata:
+  sal_outputs:
+  sal_reports:
+  sal_logs:

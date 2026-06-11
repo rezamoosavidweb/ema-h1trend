@@ -67,3 +67,12 @@ mplfinance
 plotly
 statsmodels
 certifi
+
+# Machine learning — HMM regime sizing / clustering / factor models in statarb engine
+scikit-learn>=1.4
+
+# Phase-5 live paper-trading system (statarb_live)
+psycopg[binary]>=3.1        # PostgreSQL driver for the VPS storage backend
+SQLAlchemy>=2.0             # storage ORM/core (already implied; pinned for the live system)
+jinja2>=3.1                # HTML report templating
+weasyprint>=61.0 ; platform_system != "Windows"   # HTML->PDF (optional; reports fall back to HTML-only without it)
