@@ -160,6 +160,10 @@ if _HAVE_PYDANTIC:
         broker_tz: str = "Europe/Nicosia"
         cycle_grace_seconds: int = 30
         warmup_extra_bars: int = 100
+        # Never trade on a panel whose latest bar is more than this many bars behind
+        # wall-clock (live MT5 only). Guards against the first-cycle stale-data bug where
+        # freshly symbol_select'd symbols return weeks-old history.
+        max_staleness_bars: int = 3
 
         # ── Storage ─────────────────────────────────────────────────────────
         # SQLite on the dev box; set SAL_DB_URL to a postgresql+psycopg URL on the VPS.
@@ -226,6 +230,10 @@ else:  # pragma: no cover — minimal fallback if pydantic-settings missing
         broker_tz: str = "Europe/Nicosia"
         cycle_grace_seconds: int = 30
         warmup_extra_bars: int = 100
+        # Never trade on a panel whose latest bar is more than this many bars behind
+        # wall-clock (live MT5 only). Guards against the first-cycle stale-data bug where
+        # freshly symbol_select'd symbols return weeks-old history.
+        max_staleness_bars: int = 3
         db_url: str = ""
         storage_dir: str = ""
         starting_equity: float = 100_000.0

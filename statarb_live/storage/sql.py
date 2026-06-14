@@ -109,6 +109,17 @@ class SqlStorage(Storage):
         return self._insert(S.trades, row)
 
     def record_equity(self, row: Mapping[str, Any]) -> int:
+        # Idempotent on `ts` (unique): if a snapshot for this bar already exists, skip
+        # rather than raise. Prevents the duplicate-insert crash when the same bar is
+        # re-processed (e.g. weekends with no new bar, or a restart within the same bar).
+        ts = row.get("ts")
+        if ts is not None:
+            with self.engine.connect() as cx:
+                exists = cx.execute(
+                    select(S.equity.c.id).where(S.equity.c.ts == ts)
+                ).first()
+            if exists:
+                return 0
         return self._insert(S.equity, row)
 
     def record_metric(self, row: Mapping[str, Any]) -> int:

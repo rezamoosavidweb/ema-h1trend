@@ -76,6 +76,7 @@ class Orchestrator:
             STRATEGY.z_window + STRATEGY.vol_window + self.cfg.warmup_extra_bars, 2000
         )
         self._connected = False
+        self._last_processed_bar: pd.Timestamp | None = None  # no-new-bar guard
 
     # ── lifecycle ──────────────────────────────────────────────────────────
     def start(self) -> None:
@@ -87,6 +88,17 @@ class Orchestrator:
         if not self._connected:
             self.events.emit("broker_unavailable", severity="warning",
                              message=f"{self.broker.name} did not connect")
+        # Warm-up: pre-select every universe symbol so the broker (MT5) starts loading
+        # their history immediately. Until that history is fresh, the staleness guard in
+        # run_cycle skips trading — this is what prevents the first-cycle stale-data bug.
+        if self._connected:
+            try:
+                ok, missing = self.broker.validate_symbols(self.uni.all_symbols())
+                self.events.emit("symbols_warmed_up",
+                                 message=f"{len(ok)} symbols selected, {len(missing)} missing",
+                                 payload={"missing": missing[:10]})
+            except Exception as exc:
+                self.events.emit("symbol_warmup_error", severity="warning", message=str(exc))
         self._recover()
 
     def stop(self) -> None:
@@ -123,6 +135,13 @@ class Orchestrator:
         if rows:
             self.events.emit("state_recovered", message=f"recovered {len(self.book.positions)} positions")
 
+    def _bars_behind_now(self, last_ts: pd.Timestamp) -> float:
+        """How many `timeframe` bars the panel's latest bar lags wall-clock now."""
+        tf_hours = {"H1": 1, "H4": 4, "D1": 24}.get(self.cfg.timeframe, 1)
+        tz = getattr(last_ts, "tz", None)
+        now = pd.Timestamp.now(tz=tz) if tz is not None else pd.Timestamp.now(tz=timezone.utc)
+        return (now - last_ts).total_seconds() / 3600.0 / tf_hours
+
     # ── one cycle ────────────────────────────────────────────────────────────
     def run_cycle(self, *, as_of: pd.Timestamp | None = None) -> CycleReport | None:
         cycle_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
@@ -139,6 +158,33 @@ class Orchestrator:
                              payload={"dropped_rows": feed.dropped_rows})
             return None
         panel = feed.panel
+        last_ts = feed.last_ts if feed.last_ts is not None else panel.index[-1]
+
+        # ── staleness guard (live MT5 only) ──────────────────────────────────
+        # Never trade on a panel whose latest bar is far behind wall-clock. This is the
+        # core fix for the bug where the first cycle after connect aligned the inner-join
+        # to a weeks-old common bar (freshly selected symbols returned stale history).
+        if as_of is None and self.broker.name == "mt5":
+            bars_behind = self._bars_behind_now(last_ts)
+            if bars_behind > self.cfg.max_staleness_bars:
+                self.events.emit("cycle_skipped", cycle_id=cycle_id, severity="warning",
+                                 message=(f"stale data: last bar {last_ts} is "
+                                          f"{bars_behind:.1f} bars behind now — not trading"),
+                                 payload={"last_ts": str(last_ts),
+                                          "bars_behind": round(bars_behind, 1)})
+                return None
+
+        # ── no-new-bar guard ─────────────────────────────────────────────────
+        # If the latest closed bar hasn't advanced since last cycle (weekends, market
+        # closed, or sub-bar polling), skip before doing any work — avoids duplicate
+        # signals and the equity.ts duplicate-insert crash.
+        if self._last_processed_bar is not None and last_ts == self._last_processed_bar:
+            self.events.emit("cycle_skipped", cycle_id=cycle_id,
+                             message=f"no new bar since {last_ts}",
+                             payload={"last_ts": str(last_ts)})
+            return None
+        self._last_processed_bar = last_ts
+
         prices = {s: float(panel[s].iloc[-1]) for s in panel.columns}
 
         signals = self.signal_engine.evaluate(panel, cycle_id)
