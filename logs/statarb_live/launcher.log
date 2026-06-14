@@ -62,3 +62,29 @@ strategy=nb38-phase4-frozen-2026
 universe pairs: ['CHFJPY~EURJPY', 'CADCHF~EURCAD', 'AUDJPY~EURJPY', 'AUDUSD~USDCAD', 'AUDJPY~CHFJPY', 'EURCAD~EURGBP']
 carry universe: 21 symbols
 [Thu 06/11/2026 17:03:40.00] [OK] config + universe loaded
+[Sun 06/14/2026  7:00:31.77] ============================================================
+[Sun 06/14/2026  7:00:31.78] launcher start: Sun 06/14/2026  7:00:31.78
+[Sun 06/14/2026  7:00:31.79] SCRIPT_DIR  = C:\Users\Administrator\Desktop\tob\ema-h1trend\statarb_live\
+[Sun 06/14/2026  7:00:31.80] REPO_ROOT   = C:\Users\Administrator\Desktop\tob\ema-h1trend
+[Sun 06/14/2026  7:00:31.81] VENV_PYTHON = C:\Users\Administrator\Desktop\tob\ema-h1trend\.venv\Scripts\python.exe
+[Sun 06/14/2026  7:00:31.83] DIAG_LOG    = C:\Users\Administrator\Desktop\tob\ema-h1trend\logs\statarb_live\launcher.log
+[Sun 06/14/2026  7:00:31.83] SAL_BROKER  = mt5   SAL_MODE = paper
+[Sun 06/14/2026  7:00:31.84] ============================================================
+[Sun 06/14/2026  7:00:31.86] using interpreter: C:\Users\Administrator\Desktop\tob\ema-h1trend\.venv\Scripts\python.exe
+Python 3.13.12
+[Sun 06/14/2026  7:00:31.91] cwd = C:\Users\Administrator\Desktop\tob\ema-h1trend
+[Sun 06/14/2026  7:00:31.92] testing imports (statarb_live + engine)...
+import OK
+[Sun 06/14/2026  7:00:37.82] [OK] imports fine
+[Sun 06/14/2026  7:00:37.84] checking config + frozen universe...
+=== statarb_live config ===
+mode=paper broker=mt5 timeframe=H1
+db=sqlite:///C:/Users/Administrator/Desktop/tob/ema-h1trend/statarb_live/_data/statarb_live.db
+data_dir=C:\Users\Administrator\Desktop\tob\ema-h1trend\notebooks\data
+strategy=nb38-phase4-frozen-2026
+  z_entry=2.0 z_exit=0.0 z_stop=3.5 z_window=480
+  target_ann_vol=0.1 vol_window=480 max_lev=3.0
+  carry_w_rev=0.5 regime=hmm/1.5
+universe pairs: ['CHFJPY~EURJPY', 'CADCHF~EURCAD', 'AUDJPY~EURJPY', 'AUDUSD~USDCAD', 'AUDJPY~CHFJPY', 'EURCAD~EURGBP']
+carry universe: 21 symbols
+[Sun 06/14/2026  7:00:43.03] [OK] config + universe loaded
