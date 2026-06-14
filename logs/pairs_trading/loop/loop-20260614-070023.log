@@ -3873,3 +3873,23 @@
 [2026-06-14 20:20:05 BROKER] portfolio_load_failed | {'error_type': 'FileNotFoundError', 'error_msg': "[Errno 2] No such file or directory: 'C:\\\\Users\\\\Administrator\\\\Desktop\\\\tob\\\\ema-h1trend\\\\notebooks\\\\data\\\\stat_arb\\\\portfolio_selected_H4.csv'"}
 [Sun 06/14/2026 20:50:05.84] python exited with code 2 
 [Sun 06/14/2026 20:50:05.85] sleeping 60s before restart 
+[Sun 06/14/2026 20:51:05.17] launching python runner 
+[2026-06-14 20:21:08 BROKER] bot_start | {'tf': 'H4', 'dry_run': True, 'once': False, 'portfolio_csv': 'C:\\Users\\Administrator\\Desktop\\tob\\ema-h1trend\\notebooks\\data\\stat_arb\\portfolio_selected_H4.csv', 'risk_per_leg_pct': 0.1, 'max_open_pairs': 4, 'entry_z': 2.0, 'exit_z': 0.5, 'stop_z': 4.0, 'adf_gate_p': 0.1, 'train_months': 12, 'z_window_bars': 200, 'requested_pairs': None}
+[2026-06-14 20:21:08 BROKER] portfolio_load_failed | {'error_type': 'FileNotFoundError', 'error_msg': "[Errno 2] No such file or directory: 'C:\\\\Users\\\\Administrator\\\\Desktop\\\\tob\\\\ema-h1trend\\\\notebooks\\\\data\\\\stat_arb\\\\portfolio_selected_H4.csv'"}
+[Sun 06/14/2026 20:51:08.93] python exited with code 2 
+[Sun 06/14/2026 20:51:08.93] sleeping 60s before restart 
+[Sun 06/14/2026 20:52:08.17] launching python runner 
+[2026-06-14 20:22:11 BROKER] bot_start | {'tf': 'H4', 'dry_run': True, 'once': False, 'portfolio_csv': 'C:\\Users\\Administrator\\Desktop\\tob\\ema-h1trend\\notebooks\\data\\stat_arb\\portfolio_selected_H4.csv', 'risk_per_leg_pct': 0.1, 'max_open_pairs': 4, 'entry_z': 2.0, 'exit_z': 0.5, 'stop_z': 4.0, 'adf_gate_p': 0.1, 'train_months': 12, 'z_window_bars': 200, 'requested_pairs': None}
+[2026-06-14 20:22:11 BROKER] portfolio_load_failed | {'error_type': 'FileNotFoundError', 'error_msg': "[Errno 2] No such file or directory: 'C:\\\\Users\\\\Administrator\\\\Desktop\\\\tob\\\\ema-h1trend\\\\notebooks\\\\data\\\\stat_arb\\\\portfolio_selected_H4.csv'"}
+[Sun 06/14/2026 20:52:11.81] python exited with code 2 
+[Sun 06/14/2026 20:52:11.81] sleeping 60s before restart 
+[Sun 06/14/2026 20:53:11.15] launching python runner 
+[2026-06-14 20:23:14 BROKER] bot_start | {'tf': 'H4', 'dry_run': True, 'once': False, 'portfolio_csv': 'C:\\Users\\Administrator\\Desktop\\tob\\ema-h1trend\\notebooks\\data\\stat_arb\\portfolio_selected_H4.csv', 'risk_per_leg_pct': 0.1, 'max_open_pairs': 4, 'entry_z': 2.0, 'exit_z': 0.5, 'stop_z': 4.0, 'adf_gate_p': 0.1, 'train_months': 12, 'z_window_bars': 200, 'requested_pairs': None}
+[2026-06-14 20:23:14 BROKER] portfolio_load_failed | {'error_type': 'FileNotFoundError', 'error_msg': "[Errno 2] No such file or directory: 'C:\\\\Users\\\\Administrator\\\\Desktop\\\\tob\\\\ema-h1trend\\\\notebooks\\\\data\\\\stat_arb\\\\portfolio_selected_H4.csv'"}
+[Sun 06/14/2026 20:53:14.79] python exited with code 2 
+[Sun 06/14/2026 20:53:14.79] sleeping 60s before restart 
+[Sun 06/14/2026 20:54:14.17] launching python runner 
+[2026-06-14 20:24:17 BROKER] bot_start | {'tf': 'H4', 'dry_run': True, 'once': False, 'portfolio_csv': 'C:\\Users\\Administrator\\Desktop\\tob\\ema-h1trend\\notebooks\\data\\stat_arb\\portfolio_selected_H4.csv', 'risk_per_leg_pct': 0.1, 'max_open_pairs': 4, 'entry_z': 2.0, 'exit_z': 0.5, 'stop_z': 4.0, 'adf_gate_p': 0.1, 'train_months': 12, 'z_window_bars': 200, 'requested_pairs': None}
+[2026-06-14 20:24:17 BROKER] portfolio_load_failed | {'error_type': 'FileNotFoundError', 'error_msg': "[Errno 2] No such file or directory: 'C:\\\\Users\\\\Administrator\\\\Desktop\\\\tob\\\\ema-h1trend\\\\notebooks\\\\data\\\\stat_arb\\\\portfolio_selected_H4.csv'"}
+[Sun 06/14/2026 20:54:17.87] python exited with code 2 
+[Sun 06/14/2026 20:54:17.88] sleeping 60s before restart 

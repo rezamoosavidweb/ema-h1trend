@@ -1,0 +1,60 @@
+[Sun 06/14/2026  7:08:27.65] launching runner -
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\Administrator\Desktop\tob\ema-h1trend\statarb_live\__main__.py", line 4, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "C:\Users\Administrator\Desktop\tob\ema-h1trend\statarb_live\cli.py", line 89, in main
+    orch = Orchestrator(cfg, reselect=True)
+    ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\Desktop\tob\ema-h1trend\statarb_live\orchestrator.py", line 442, in run_forever
+    net = sum(p.legs[0].direction * abs(p.legs[0].notional) for p in self.book.positions.values())
+            ^^^^^^^^^^^^^^^^
+KeyboardInterrupt
+03:38:33 INFO     bot_start: mode=paper broker=mt5 pairs=['CHFJPY~EURJPY', 'CADCHF~EURCAD', 'AUDJPY~EURJPY', 'AUDUSD~USDCAD', 'AUDJPY~CHFJPY', 'EURCAD~EURGBP'] strategy=nb38-phase4-frozen-2026
+03:38:33 INFO     symbols_warmed_up: 21 symbols selected, 0 missing
+03:38:33 INFO     [20260614T033833] cycle_start: as_of=None
+03:39:23 WARNING  [20260614T033833] cycle_skipped: stale data: last bar 2026-06-12 22:00:00+03:00 is 32.7 bars behind now — not trading
+03:39:23 INFO     heartbeat: sleeping 1267s until next bar
+04:00:30 INFO     [20260614T040030] cycle_start: as_of=None
+04:00:56 WARNING  [20260614T040030] cycle_skipped: stale data: last bar 2026-06-12 22:00:00+03:00 is 33.0 bars behind now — not trading
+04:00:56 INFO     heartbeat: sleeping 3574s until next bar
+05:00:30 INFO     [20260614T050030] cycle_start: as_of=None
+05:00:57 WARNING  [20260614T050030] cycle_skipped: stale data: last bar 2026-06-12 22:00:00+03:00 is 34.0 bars behind now — not trading
+05:00:57 INFO     heartbeat: sleeping 3573s until next bar
+06:00:30 INFO     [20260614T060030] cycle_start: as_of=None
+06:00:56 WARNING  [20260614T060030] cycle_skipped: stale data: last bar 2026-06-12 22:00:00+03:00 is 35.0 bars behind now — not trading
+06:00:56 INFO     heartbeat: sleeping 3573s until next bar
+07:00:30 INFO     [20260614T070030] cycle_start: as_of=None
+07:00:57 WARNING  [20260614T070030] cycle_skipped: stale data: last bar 2026-06-12 22:00:00+03:00 is 36.0 bars behind now — not trading
+07:00:57 INFO     heartbeat: sleeping 3572s until next bar
+08:00:30 INFO     [20260614T080030] cycle_start: as_of=None
+08:00:57 WARNING  [20260614T080030] cycle_skipped: stale data: last bar 2026-06-12 22:00:00+03:00 is 37.0 bars behind now — not trading
+08:00:57 INFO     heartbeat: sleeping 3573s until next bar
+09:00:30 INFO     [20260614T090030] cycle_start: as_of=None
+09:00:57 WARNING  [20260614T090030] cycle_skipped: stale data: last bar 2026-06-12 22:00:00+03:00 is 38.0 bars behind now — not trading
+09:00:57 INFO     heartbeat: sleeping 3573s until next bar
+10:00:30 INFO     [20260614T100030] cycle_start: as_of=None
+10:00:56 WARNING  [20260614T100030] cycle_skipped: stale data: last bar 2026-06-12 22:00:00+03:00 is 39.0 bars behind now — not trading
+10:00:56 INFO     heartbeat: sleeping 3573s until next bar
+11:00:30 INFO     [20260614T110030] cycle_start: as_of=None
+11:00:57 WARNING  [20260614T110030] cycle_skipped: stale data: last bar 2026-06-12 22:00:00+03:00 is 40.0 bars behind now — not trading
+11:00:57 INFO     heartbeat: sleeping 3573s until next bar
+12:00:30 INFO     [20260614T120030] cycle_start: as_of=None
+12:00:56 WARNING  [20260614T120030] cycle_skipped: stale data: last bar 2026-06-12 22:00:00+03:00 is 41.0 bars behind now — not trading
+12:00:56 INFO     heartbeat: sleeping 3573s until next bar
+13:00:30 INFO     [20260614T130030] cycle_start: as_of=None
+13:00:56 WARNING  [20260614T130030] cycle_skipped: stale data: last bar 2026-06-12 22:00:00+03:00 is 42.0 bars behind now — not trading
+13:00:56 INFO     heartbeat: sleeping 3573s until next bar
+14:00:30 INFO     [20260614T140030] cycle_start: as_of=None
+14:00:56 WARNING  [20260614T140030] cycle_skipped: stale data: last bar 2026-06-12 22:00:00+03:00 is 43.0 bars behind now — not trading
+14:00:56 INFO     heartbeat: sleeping 3573s until next bar
+15:00:30 INFO     [20260614T150030] cycle_start: as_of=None
+15:00:57 WARNING  [20260614T150030] cycle_skipped: stale data: last bar 2026-06-12 22:00:00+03:00 is 44.0 bars behind now — not trading
+15:00:57 INFO     heartbeat: sleeping 3573s until next bar
+16:00:30 INFO     [20260614T160030] cycle_start: as_of=None
+16:00:56 WARNING  [20260614T160030] cycle_skipped: stale data: last bar 2026-06-12 22:00:00+03:00 is 45.0 bars behind now — not trading
+16:00:56 INFO     heartbeat: sleeping 3573s until next bar
+16:54:12 INFO     bot_stop: shutting down
+^C
