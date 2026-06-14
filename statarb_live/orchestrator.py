@@ -77,14 +77,22 @@ class Orchestrator:
         )
         self._connected = False
         self._last_processed_bar: pd.Timestamp | None = None  # no-new-bar guard
+        # Shadow-live: in addition to the paper book, fire real MT5 demo orders and record
+        # their execution next to the simulated fill (for later paper-vs-real reconciliation).
+        self.send_live = bool(self.cfg.send_live_orders)
 
     # ── lifecycle ──────────────────────────────────────────────────────────
     def start(self) -> None:
         self._connected = self.broker.connect()
         self.events.emit("bot_start", message=(
-            f"mode={self.cfg.mode} broker={self.broker.name} pairs={self.uni.pair_keys} "
-            f"strategy={STRATEGY.version}"
-        ), payload={"db": self.cfg.resolved_db_url(), "connected": self._connected})
+            f"mode={self.cfg.mode} broker={self.broker.name} live_orders={self.send_live} "
+            f"pairs={self.uni.pair_keys} strategy={STRATEGY.version}"
+        ), payload={"db": self.cfg.resolved_db_url(), "connected": self._connected,
+                    "live_orders": self.send_live})
+        if self.send_live:
+            self.events.emit("live_orders_enabled", severity="warning", message=(
+                "LIVE ORDERS ON — real market orders will be sent to the demo account "
+                f"(magic={self.cfg.magic_base}, comment={self.cfg.comment_prefix})"))
         if not self._connected:
             self.events.emit("broker_unavailable", severity="warning",
                              message=f"{self.broker.name} did not connect")
@@ -121,6 +129,7 @@ class Orchestrator:
                 contract_size=float(l["contract_size"]), entry_actual=float(l["entry_actual"]),
                 entry_mid=float(l["entry_mid"]), carry_rate_annual=float(l.get("carry_rate", 0.0)),
                 entry_slippage_bps=float(l.get("entry_slip", 0.0)),
+                broker_ticket=int(l.get("broker_ticket") or 0),
             ) for l in legs_meta]
             pos = OpenPosition(
                 pair_key=r["pair_key"], kind=meta.get("kind", "reversion"), legs=legs,
@@ -260,6 +269,54 @@ class Orchestrator:
                 opened.append(t.pair_key)
         return opened, closed
 
+    # ── real (shadow) order helpers ──────────────────────────────────────────
+    def _send_real_order(self, cycle_id: str, symbol: str, side: str, lots: float,
+                         *, kind: str) -> dict:
+        """Fire a real MT5 market order (when live_orders is on) and return the broker
+        fields to store next to the simulated fill. No-op (exec_mode='paper') otherwise."""
+        if not self.send_live:
+            return {"exec_mode": "paper"}
+        try:
+            res = self.broker.market_order(
+                symbol, side, lots, magic=self.cfg.magic_base,
+                comment=f"{self.cfg.comment_prefix}:{kind}")
+        except Exception as exc:
+            self.events.emit("live_order_error", severity="error", cycle_id=cycle_id,
+                             message=f"{symbol} {side} {lots}: {exc}")
+            return {"exec_mode": "live", "broker_ok": False, "broker_comment": str(exc)[:64]}
+        if not res.ok:
+            self.events.emit("live_order_rejected", severity="error", cycle_id=cycle_id,
+                             message=f"{symbol} {side} {lots}: {res.comment}")
+        return {
+            "exec_mode": "live",
+            "broker_ticket": int(res.ticket) or None,
+            "broker_fill_price": float(res.filled_price) or None,
+            "broker_fill_ts": datetime.now(timezone.utc),
+            "broker_latency_ms": float(res.latency_ms),
+            "broker_ok": bool(res.ok),
+            "broker_comment": (res.comment or "")[:64],
+        }
+
+    def _close_real_ticket(self, cycle_id: str, ticket: int) -> dict:
+        if not self.send_live or not ticket:
+            return {"exec_mode": "paper"}
+        try:
+            res = self.broker.close_ticket(int(ticket))
+        except Exception as exc:
+            self.events.emit("live_close_error", severity="error", cycle_id=cycle_id,
+                             message=f"ticket {ticket}: {exc}")
+            return {"exec_mode": "live", "broker_ok": False, "broker_comment": str(exc)[:64]}
+        if not res.ok:
+            self.events.emit("live_close_rejected", severity="error", cycle_id=cycle_id,
+                             message=f"ticket {ticket}: {res.comment}")
+        return {
+            "exec_mode": "live", "broker_ticket": int(ticket),
+            "broker_fill_price": float(res.filled_price) or None,
+            "broker_fill_ts": datetime.now(timezone.utc),
+            "broker_latency_ms": float(res.latency_ms),
+            "broker_ok": bool(res.ok), "broker_comment": (res.comment or "")[:64],
+        }
+
     def _open_holding(self, cycle_id: str, signals: CycleSignals, t: TargetHolding,
                       prices: dict[str, float], spreads: dict[str, float]) -> None:
         legs: list[OpenLeg] = []
@@ -273,11 +330,14 @@ class Orchestrator:
                                       spreads.get(leg.symbol, float("nan")))
             info = self.portfolio._info(leg.symbol)
             direction = 1 if leg.side == "buy" else -1
+            broker = self._send_real_order(cycle_id, leg.symbol, leg.side, leg.lots,
+                                           kind="entry")
             legs.append(OpenLeg(
                 symbol=leg.symbol, direction=direction, lots=leg.lots,
                 contract_size=info.contract_size, entry_actual=fill.actual_price,
                 entry_mid=ref, carry_rate_annual=signals.carry_rates.get(leg.symbol, 0.0),
                 entry_slippage_bps=fill.slippage_bps,
+                broker_ticket=int(broker.get("broker_ticket") or 0),
             ))
             fill_rows.append({
                 "pair_key": t.pair_key, "leg": "y" if leg is t.legs[0] else "x",
@@ -287,6 +347,7 @@ class Orchestrator:
                 "latency_ms": fill.latency_ms,
                 "signal_ts": signals.signal_ts.to_pydatetime(),
                 "fill_ts": datetime.now(timezone.utc),
+                **broker,
             })
         if not legs:
             return
@@ -305,7 +366,8 @@ class Orchestrator:
             "legs": [{"symbol": l.symbol, "direction": l.direction, "lots": l.lots,
                       "contract_size": l.contract_size, "entry_actual": l.entry_actual,
                       "entry_mid": l.entry_mid, "carry_rate": l.carry_rate_annual,
-                      "entry_slip": l.entry_slippage_bps} for l in legs],
+                      "entry_slip": l.entry_slippage_bps,
+                      "broker_ticket": l.broker_ticket} for l in legs],
         }
         pos.storage_id = self.storage.open_position({
             "pair_key": t.pair_key, "y_symbol": legs[0].symbol,
@@ -336,12 +398,14 @@ class Orchestrator:
             f = self.exec_sim.fill(l.symbol, exit_side, l.lots, ref,
                                    spreads.get(l.symbol, float("nan")))
             exit_fills[l.symbol] = f
+            broker = self._close_real_ticket(cycle_id, l.broker_ticket)
             self.storage.record_fill({
                 "position_id": pos.storage_id, "pair_key": key, "symbol": l.symbol,
                 "kind": "exit", "side": exit_side, "volume": l.lots,
                 "intended_price": ref, "actual_price": f.actual_price,
                 "slippage_bps": f.slippage_bps, "spread_bps": f.spread_bps,
                 "latency_ms": f.latency_ms, "fill_ts": datetime.now(timezone.utc),
+                **broker,
             })
         trade = self.book.close(key, exit_fills, prices)
         if trade is None:

@@ -31,6 +31,7 @@ class OpenLeg:
     entry_mid: float          # reference mid at entry
     carry_rate_annual: float  # rate(base)-rate(quote), % — for carry accrual
     entry_slippage_bps: float = 0.0
+    broker_ticket: int = 0    # real MT5 ticket when live_orders is on (0 = paper-only)
 
     @property
     def notional(self) -> float:

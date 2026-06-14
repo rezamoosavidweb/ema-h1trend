@@ -121,7 +121,15 @@ fills = Table(
     Column("spread_bps", Float),
     Column("latency_ms", Float),
     Column("signal_ts", DateTime(timezone=True)),
-    Column("fill_ts", DateTime(timezone=True)),
+    Column("fill_ts", DateTime(timezone=True)),       # paper (simulated) fill wall-clock
+    # --- real broker execution (populated only when live_orders is on) ---
+    Column("exec_mode", String(8)),                   # 'paper' | 'live'
+    Column("broker_ticket", Integer),                 # MT5 order/deal ticket
+    Column("broker_fill_price", Float),               # actual broker fill price
+    Column("broker_fill_ts", DateTime(timezone=True)),# when the real order completed
+    Column("broker_latency_ms", Float),               # round-trip order_send latency
+    Column("broker_ok", Boolean),                     # True if the real order filled
+    Column("broker_comment", String(64)),             # retcode / error if it didn't
     Column("meta", JSON),
     Index("ix_fill_pos", "position_id"),
 )

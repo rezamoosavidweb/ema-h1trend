@@ -147,12 +147,22 @@ if _HAVE_PYDANTIC:
         )
 
         # ── Mode ────────────────────────────────────────────────────────────
-        # 'paper'  -> route fills through ExecutionSimulator (no broker orders)
-        # 'live'   -> (future) send demo-account orders via MT5 broker adapter
+        # The paper book ALWAYS runs (decisions + PnL + the existing logging are
+        # unchanged). `live_orders` is an ADDITIONAL shadow path: when True (and broker
+        # is mt5) every paper fill also fires a real MT5 market order on the DEMO account,
+        # and the real execution (ticket/price/time/latency) is stored next to the
+        # simulated fill so the two can be reconciled later.
+        #   SAL_MODE=live           -> enables live_orders
+        #   SAL_LIVE_ORDERS=true    -> enables live_orders explicitly
         mode: Literal["paper", "live"] = "paper"
+        live_orders: bool = False
         broker: Literal["mt5", "sim"] = "mt5"
         dry_run: bool = False
         once: bool = False
+
+        @property
+        def send_live_orders(self) -> bool:
+            return (self.live_orders or self.mode == "live") and self.broker == "mt5"
 
         # ── Data / timing ───────────────────────────────────────────────────
         data_dir: str = "notebooks/data"  # H1 CSV cache root (engine data_dir layout)
@@ -222,9 +232,14 @@ else:  # pragma: no cover — minimal fallback if pydantic-settings missing
     @dataclass
     class SystemConfig:  # type: ignore[no-redef]
         mode: str = "paper"
+        live_orders: bool = False
         broker: str = "mt5"
         dry_run: bool = False
         once: bool = False
+
+        @property
+        def send_live_orders(self) -> bool:
+            return (self.live_orders or self.mode == "live") and self.broker == "mt5"
         data_dir: str = "notebooks/data"
         timeframe: str = "H1"
         broker_tz: str = "Europe/Nicosia"

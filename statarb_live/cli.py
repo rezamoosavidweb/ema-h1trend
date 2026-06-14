@@ -50,6 +50,8 @@ def main(argv: list[str] | None = None) -> int:
                           default="daily")
     p_report.add_argument("--date", default=None, help="anchor date YYYY-MM-DD")
 
+    sub.add_parser("reconcile", help="compare paper (logged) fills vs real broker orders")
+
     sub.add_parser("info", help="show resolved config + frozen universe")
 
     args = parser.parse_args(argv)
@@ -63,6 +65,17 @@ def main(argv: list[str] | None = None) -> int:
         from .reporting import generate_report
         path = generate_report(cfg, period=args.period, anchor=args.date)
         print(f"report written: {path}")
+        return 0
+    if args.cmd == "reconcile":
+        from .reconcile import run_reconcile
+        res = run_reconcile(cfg)
+        print("=== paper-vs-real reconciliation ===")
+        for k, v in res["summary"].items():
+            print(f"  {k:26s} {v}")
+        if res["csv"]:
+            print(f"\nper-fill CSV: {res['csv']}")
+        else:
+            print("\n(no filled live orders yet — run with SAL_LIVE_ORDERS=true first)")
         return 0
 
     from .orchestrator import Orchestrator

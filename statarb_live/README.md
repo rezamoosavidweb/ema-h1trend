@@ -87,6 +87,36 @@ python -m statarb_live run
 Set `MT5_LOGIN/PASSWORD/SERVER/TERMINAL_PATH` in `.env`. Point `SAL_DB_URL` at the VPS
 Postgres if you want a single shared store; otherwise it falls back to local SQLite.
 
+## Live (shadow) orders + paper-vs-real reconciliation
+
+By default the system is pure paper (no broker orders). To **also** send real orders to the
+demo account while keeping the existing simulation/logging intact, enable shadow-live:
+
+```bash
+SAL_BROKER=mt5 SAL_LIVE_ORDERS=true python -m statarb_live run   # (or SAL_MODE=live)
+```
+
+In this mode the paper book still drives every decision, PnL and log line; in addition, each
+paper fill fires a real MT5 market order (magic `29_000_000`, comment `sal_v1:*` so it's
+identifiable in MT5 history). Both executions are stored in the same `fills` row — simulated
+(`actual_price`, `latency_ms`, `fill_ts`) **and** real (`broker_fill_price`, `broker_latency_ms`,
+`broker_fill_ts`, `broker_ticket`, `broker_ok`).
+
+After a few days, compare them:
+
+```bash
+python -m statarb_live reconcile
+```
+
+It prints the median/mean **price gap** (real vs simulated fill, in pips), **time gap**
+(real fill time vs logged time, and signal→real-fill seconds), real vs simulated **slippage**
+and **latency**, and the **fill rate** (how many real orders actually filled) — and writes a
+per-fill `reconciliation.csv`. This quantifies exactly how far the bot's logged output is from
+what really happens at the broker.
+
+> Real orders go to the **demo** account only. Start from a **fresh DB** when switching modes
+> so paper-only and shadow-live positions don't mix.
+
 ## Storage backends
 
 One `SqlStorage` class serves both — the URL decides the engine:
