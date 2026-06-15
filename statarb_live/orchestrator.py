@@ -107,6 +107,22 @@ class Orchestrator:
                                  payload={"missing": missing[:10]})
             except Exception as exc:
                 self.events.emit("symbol_warmup_error", severity="warning", message=str(exc))
+        # When sending real orders, size the book on the REAL account equity so orders fit
+        # the actual account (avoids NO_MONEY rejections / over-leverage) and keeps the
+        # paper sim sized identically to the live orders for a fair reconciliation.
+        if self.send_live and self._connected:
+            try:
+                acct = self.broker.account()
+                self.book.starting_equity = float(acct.equity)
+                self.events.emit("equity_synced", message=(
+                    f"sizing on REAL account equity ${acct.equity:,.2f} "
+                    f"(balance ${acct.balance:,.2f}) — paper sim matched to it"))
+                if acct.equity < 5_000:
+                    self.events.emit("low_account_balance", severity="warning", message=(
+                        f"account equity ${acct.equity:,.2f} is small — many positions will "
+                        f"round below min lot and be skipped; use a larger demo for full sizing"))
+            except Exception as exc:
+                self.events.emit("account_sync_error", severity="warning", message=str(exc))
         self._recover()
 
     def stop(self) -> None:
@@ -369,19 +385,27 @@ class Orchestrator:
                       "entry_slip": l.entry_slippage_bps,
                       "broker_ticket": l.broker_ticket} for l in legs],
         }
-        pos.storage_id = self.storage.open_position({
-            "pair_key": t.pair_key, "y_symbol": legs[0].symbol,
-            "x_symbol": legs[1].symbol if len(legs) > 1 else None, "side": side,
-            "opened_cycle": cycle_id, "opened_at": pos.opened_ts,
-            "y_volume": legs[0].lots, "x_volume": legs[1].lots if len(legs) > 1 else None,
-            "beta_at_open": t.beta, "alpha_at_open": pos.alpha_at_open,
-            "z_at_open": pos.z_at_open, "regime_at_open": signals.regime.label,
-            "gross_notional": pos.gross_notional, "meta": meta,
-        })
-        for fr in fill_rows:
-            fr["position_id"] = pos.storage_id
-            self.storage.record_fill(fr)
+        # Track in the in-memory book FIRST. If the real order(s) already fired, the
+        # position is real — a storage failure must NOT prevent tracking, otherwise the
+        # next cycle would think the pair is flat and re-open it (duplicate real orders).
         self.book.open(pos)
+        try:
+            pos.storage_id = self.storage.open_position({
+                "pair_key": t.pair_key, "y_symbol": legs[0].symbol,
+                "x_symbol": legs[1].symbol if len(legs) > 1 else None, "side": side,
+                "opened_cycle": cycle_id, "opened_at": pos.opened_ts,
+                "y_volume": legs[0].lots, "x_volume": legs[1].lots if len(legs) > 1 else None,
+                "beta_at_open": t.beta, "alpha_at_open": pos.alpha_at_open,
+                "z_at_open": pos.z_at_open, "regime_at_open": signals.regime.label,
+                "gross_notional": pos.gross_notional, "meta": meta,
+            })
+            for fr in fill_rows:
+                fr["position_id"] = pos.storage_id
+                self.storage.record_fill(fr)
+        except Exception as exc:
+            # Position is tracked in-memory; just couldn't persist. Loud, but non-fatal.
+            self.events.emit("storage_write_failed", severity="error", cycle_id=cycle_id,
+                             message=f"{t.pair_key} open not persisted (check DB schema): {exc}")
         self.events.emit("pair_open", cycle_id=cycle_id,
                          message=f"{t.pair_key} {side} gross={pos.gross_notional:,.0f}",
                          payload={"z": pos.z_at_open, "kind": t.kind})
