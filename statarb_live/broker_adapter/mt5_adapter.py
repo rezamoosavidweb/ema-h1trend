@@ -179,6 +179,15 @@ class MT5BrokerAdapter(BrokerAdapter):
         syms = mt5.symbols_get()
         return [s.name for s in syms] if syms else []
 
+    def list_positions(self, magic: int = 0) -> list:
+        """Open positions, optionally filtered by magic. Returns raw MT5 position objects
+        (each exposes .ticket/.symbol/.volume/.type/.magic)."""
+        mt5 = self._import_mt5()
+        pos = mt5.positions_get()
+        if not pos:
+            return []
+        return [p for p in pos if (magic == 0 or p.magic == magic)]
+
     # ── account ─────────────────────────────────────────────────────────────
     def account(self) -> AccountInfo:
         mt5 = self._import_mt5()

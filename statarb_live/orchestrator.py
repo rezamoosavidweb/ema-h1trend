@@ -124,6 +124,9 @@ class Orchestrator:
             except Exception as exc:
                 self.events.emit("account_sync_error", severity="warning", message=str(exc))
         self._recover()
+        # Make the book agree with the real account (live mode) — self-heals desyncs from
+        # rapid restarts, manual closes, or duplicate opens before this fix.
+        self._reconcile_with_broker()
 
     def stop(self) -> None:
         self.events.emit("bot_stop", message="shutting down")
@@ -159,6 +162,67 @@ class Orchestrator:
             self.book.open(pos)
         if rows:
             self.events.emit("state_recovered", message=f"recovered {len(self.book.positions)} positions")
+
+    def _reconcile_with_broker(self) -> None:
+        """Make the in-memory book consistent with the REAL demo account (live mode only).
+
+        Reality (the broker) wins. After this:
+          * book positions whose real legs are gone (closed externally / never filled) are
+            dropped — any still-alive leg of a half-broken pair is closed first;
+          * real positions with our magic that the book doesn't track (orphans from a crash
+            or duplicate open) are closed.
+        This self-heals the book↔broker desync that rapid restarts / manual closes can cause.
+        """
+        if not (self.send_live and self._connected):
+            return
+        try:
+            real = self.broker.list_positions(self.cfg.magic_base)
+        except Exception as exc:
+            self.events.emit("reconcile_error", severity="warning", message=str(exc))
+            return
+        real_tickets = {int(p.ticket) for p in real}
+        handled: set[int] = set()               # tickets we've already closed here
+
+        # 1) drop book positions not fully backed by real legs
+        for key in list(self.book.positions.keys()):
+            pos = self.book.positions[key]
+            live = [l.broker_ticket for l in pos.legs if l.broker_ticket]
+            if not live:
+                continue  # paper-only position (predates live) — leave it
+            alive = [t for t in live if t in real_tickets]
+            if len(alive) == len(live):
+                continue  # fully backed — keep
+            for t in alive:                     # close any still-open legs of a broken pair
+                try: self.broker.close_ticket(int(t))
+                except Exception: pass
+                handled.add(int(t))
+            self.book.positions.pop(key, None)
+            if pos.storage_id is not None:
+                try:
+                    self.storage.close_position(pos.storage_id, {"realized_pnl": 0.0})
+                except Exception: pass
+            self.events.emit("position_reconciled_dropped", severity="warning",
+                             message=f"{key}: {len(alive)}/{len(live)} legs on broker — "
+                                     f"closed remainder + dropped from book")
+
+        # 2) close orphan broker positions the book doesn't track
+        matched = {l.broker_ticket for pos in self.book.positions.values()
+                   for l in pos.legs if l.broker_ticket}
+        closed_orphans = 0
+        for p in real:
+            if int(p.ticket) not in matched and int(p.ticket) not in handled:
+                try:
+                    self.broker.close_ticket(int(p.ticket))
+                    closed_orphans += 1
+                    self.events.emit("orphan_position_closed", severity="warning",
+                                     message=f"closed untracked broker position {p.ticket} "
+                                             f"{p.symbol} vol={p.volume}")
+                except Exception as exc:
+                    self.events.emit("orphan_close_error", severity="error",
+                                     message=f"{p.ticket}: {exc}")
+        self.events.emit("broker_reconciled", message=(
+            f"book={len(self.book.positions)} real_was={len(real)} "
+            f"orphans_closed={closed_orphans}"))
 
     def _bars_behind_now(self, last_ts: pd.Timestamp) -> float:
         """How many `timeframe` bars the panel's latest bar lags wall-clock now."""
