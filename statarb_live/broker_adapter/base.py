@@ -103,6 +103,11 @@ class BrokerAdapter(abc.ABC):
     def close_ticket(self, ticket: int) -> OrderResult:
         raise NotImplementedError(f"{self.name} adapter does not support live orders")
 
+    def list_positions(self, magic: int = 0) -> list:
+        """Open broker positions (optionally filtered by magic). Each item must expose
+        ``ticket``, ``symbol``, ``volume`` and ``type``. Default: none (paper/sim)."""
+        return []
+
     # ── helpers shared by backends ──────────────────────────────────────────
     def validate_symbols(self, symbols: list[str]) -> tuple[list[str], list[str]]:
         """Split requested symbols into (available, missing) against the broker."""

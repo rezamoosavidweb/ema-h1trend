@@ -55,3 +55,12 @@
 {"ts": "2026-06-15T09:13:12.415549+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260615T091312", "message": "as_of=None", "payload": {}}
 {"ts": "2026-06-15T09:13:42.797250+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260615T091312", "message": "eq=100,739 open=15 +0 -0 gross=1.15x regime=calm", "payload": {"payload": {"opened": [], "closed": []}}}
 {"ts": "2026-06-15T09:13:42.800647+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 2807s until next bar", "payload": {}}
+{"ts": "2026-06-15T11:28:27.808315+00:00", "event_type": "position_reconciled_dropped", "severity": "warning", "cycle_id": null, "message": "C~D: 1/2 legs on broker \u2014 closed remainder + dropped from book", "payload": {}}
+{"ts": "2026-06-15T11:28:27.816662+00:00", "event_type": "position_reconciled_dropped", "severity": "warning", "cycle_id": null, "message": "E~F: 0/2 legs on broker \u2014 closed remainder + dropped from book", "payload": {}}
+{"ts": "2026-06-15T11:28:27.818326+00:00", "event_type": "orphan_position_closed", "severity": "warning", "cycle_id": null, "message": "closed untracked broker position 200 S vol=0.1", "payload": {}}
+{"ts": "2026-06-15T11:28:27.819744+00:00", "event_type": "orphan_position_closed", "severity": "warning", "cycle_id": null, "message": "closed untracked broker position 999 S vol=0.1", "payload": {}}
+{"ts": "2026-06-15T11:28:27.820972+00:00", "event_type": "broker_reconciled", "severity": "info", "cycle_id": null, "message": "book=1 real_was=4 orphans_closed=2", "payload": {}}
+{"ts": "2026-06-15T11:29:28.998410+00:00", "event_type": "position_reconciled_dropped", "severity": "warning", "cycle_id": null, "message": "C~D: 1/2 legs on broker \u2014 closed remainder + dropped from book", "payload": {}}
+{"ts": "2026-06-15T11:29:29.014483+00:00", "event_type": "position_reconciled_dropped", "severity": "warning", "cycle_id": null, "message": "E~F: 0/2 legs on broker \u2014 closed remainder + dropped from book", "payload": {}}
+{"ts": "2026-06-15T11:29:29.015873+00:00", "event_type": "orphan_position_closed", "severity": "warning", "cycle_id": null, "message": "closed untracked broker position 999 S vol=0.1", "payload": {}}
+{"ts": "2026-06-15T11:29:29.016717+00:00", "event_type": "broker_reconciled", "severity": "info", "cycle_id": null, "message": "book=1 real_was=4 orphans_closed=1", "payload": {}}
