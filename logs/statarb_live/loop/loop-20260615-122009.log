@@ -1,0 +1,41 @@
+[Mon 06/15/2026 12:20:09.25] launching runner -
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\Administrator\Desktop\tob\ema-h1trend\statarb_live\__main__.py", line 4, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "C:\Users\Administrator\Desktop\tob\ema-h1trend\statarb_live\cli.py", line 102, in main
+    orch.run_forever()
+    ~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Administrator\Desktop\tob\ema-h1trend\statarb_live\orchestrator.py", line 530, in run_forever
+    time.sleep(wait)
+    ~~~~~~~~~~^^^^^^
+KeyboardInterrupt
+08:50:15 INFO     bot_start: mode=paper broker=mt5 live_orders=True pairs=['CHFJPY~EURJPY', 'CADCHF~EURCAD', 'AUDJPY~EURJPY', 'AUDUSD~USDCAD', 'AUDJPY~CHFJPY', 'EURCAD~EURGBP'] strategy=nb38-phase4-frozen-2026
+08:50:15 WARNING  live_orders_enabled: LIVE ORDERS ON — real market orders will be sent to the demo account (magic=29000000, comment=sal_v1)
+08:50:15 INFO     symbols_warmed_up: 21 symbols selected, 0 missing
+08:50:15 INFO     equity_synced: sizing on REAL account equity $100,795.79 (balance $100,795.79) — paper sim matched to it
+08:50:15 INFO     [20260615T085015] cycle_start: as_of=None
+08:51:16 INFO     [20260615T085015] pair_open: CADCHF~EURCAD long gross=34,382
+08:51:17 INFO     [20260615T085015] pair_open: AUDUSD~USDCAD short gross=34,435
+08:51:17 INFO     [20260615T085015] pair_open: EURCAD~EURGBP long gross=31,032
+08:51:17 INFO     [20260615T085015] pair_open: CARRY:AUDCAD short gross=988
+08:51:18 INFO     [20260615T085015] pair_open: CARRY:AUDNZD short gross=2,419
+08:51:18 INFO     [20260615T085015] pair_open: CARRY:AUDUSD short gross=2,121
+08:51:18 INFO     [20260615T085015] pair_open: CARRY:CADCHF long gross=1,135
+08:51:18 INFO     [20260615T085015] pair_open: CARRY:EURCAD short gross=1,622
+08:51:19 INFO     [20260615T085015] pair_open: CARRY:EURCHF long gross=921
+08:51:19 INFO     [20260615T085015] pair_open: CARRY:EURGBP short gross=3,456
+08:51:19 INFO     [20260615T085015] pair_open: CARRY:EURUSD short gross=3,482
+08:51:20 INFO     [20260615T085015] pair_open: CARRY:GBPCHF long gross=2,131
+08:51:20 INFO     [20260615T085015] pair_open: CARRY:GBPUSD short gross=1,343
+08:51:20 INFO     [20260615T085015] pair_open: CARRY:NZDUSD short gross=1,754
+08:51:20 INFO     [20260615T085015] pair_open: CARRY:USDCHF long gross=2,380
+08:51:20 INFO     [20260615T085015] cycle_end: eq=100,796 open=15 +15 -0 gross=1.32x regime=calm
+08:51:20 INFO     heartbeat: sleeping 549s until next bar
+09:00:30 INFO     [20260615T090030] cycle_start: as_of=None
+09:01:01 INFO     [20260615T090030] cycle_end: eq=100,783 open=15 +0 -0 gross=1.15x regime=calm
+09:01:01 INFO     heartbeat: sleeping 3569s until next bar
+09:03:24 INFO     bot_stop: shutting down
+^C
