@@ -1,0 +1,43 @@
+================================================================
+ statarb_live HEALTH  —  generated 2026-06-15 12:50:37 UTC
+================================================================
+
+[1] LIVENESS
+  events           : 9  (2026-06-15T12:12:04 -> 2026-06-15T12:12:35)
+  last event       : heartbeat  (38 min ago)
+  last cycle_end   : eq=100,733 open=15 +0 -0 gross=1.36x regime=calm
+  last bot_start   : mode=paper broker=mt5 live_orders=True pairs=['CHFJPY~EURJPY', 'CADCHF~EURCAD', 'AUDJPY~EU
+  event counts     : {'bot_start': 1, 'live_orders_enabled': 1, 'symbols_warmed_up': 1, 'equity_synced': 1, 'state_recovered': 1, 'broker_reconciled': 1, 'cycle_start': 1, 'cycle_end': 1, 'heartbeat': 1}
+  errors (all)     : 0
+
+[2] STRATEGY (must be the FROZEN NB38 config)
+  version          : nb38-phase4-frozen-2026
+  signal           : z_entry=2.0 z_exit=0.0 z_stop=3.5 z_window=480
+  sizing           : target_ann_vol=0.1 vol_window=480 max_lev=3.0
+  carry / regime   : w_rev=0.5  regime=hmm/1.5
+  universe pairs   : ['AUDJPY~CHFJPY', 'AUDJPY~EURJPY', 'AUDUSD~USDCAD', 'CADCHF~EURCAD', 'CHFJPY~EURJPY', 'EURCAD~EURGBP']
+  matches NB38     : YES ✓
+
+[3] BOOK / ACCOUNT (from DB)
+  open positions   : 15
+     - CADCHF~EURCAD    long  z@open=1.2512416250443945  regime=calm
+     - AUDUSD~USDCAD    short z@open=0.8504144623937088  regime=calm
+     - EURCAD~EURGBP    long  z@open=2.6336541024769904  regime=calm
+     - CARRY:AUDCAD     short z@open=0.0  regime=calm
+     - CARRY:AUDNZD     short z@open=0.0  regime=calm
+     - CARRY:AUDUSD     short z@open=0.0  regime=calm
+     - CARRY:CADCHF     long  z@open=0.0  regime=calm
+     - CARRY:EURCAD     short z@open=0.0  regime=calm
+  last equity      : 100,738.85  gross=1.29x net=0.20x  regime=calm (mult=1.48)
+  live orders      : 18 sent, fill_ok=100%
+
+[4] PAPER (simulated) vs REAL broker fills
+  real fills        : 18 ok / 18 sent (fill rate 1.0)
+  price gap (pips)  : median 8.14  p95 23.3   (real fill - simulated fill)
+  slippage (pips)   : simulated -6.93  vs  real 9.5
+  time gap (s)      : log->real -0.0  signal->real -7137.3
+  latency (ms)      : simulated 50.4  vs  real 302.7
+
+================================================================
+ VERDICT: ✅  HEALTHY — running the frozen strategy, no errors
+================================================================

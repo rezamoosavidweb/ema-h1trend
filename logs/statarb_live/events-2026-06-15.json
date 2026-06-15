@@ -5,3 +5,5 @@
 {"ts": "2026-06-15T12:12:04.852705+00:00", "event_type": "state_recovered", "severity": "info", "cycle_id": null, "message": "recovered 15 positions", "payload": {}}
 {"ts": "2026-06-15T12:12:04.854894+00:00", "event_type": "broker_reconciled", "severity": "info", "cycle_id": null, "message": "book=15 real_was=18 orphans_closed=0", "payload": {}}
 {"ts": "2026-06-15T12:12:04.857471+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260615T121204", "message": "as_of=None", "payload": {}}
+{"ts": "2026-06-15T12:12:35.852563+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260615T121204", "message": "eq=100,733 open=15 +0 -0 gross=1.36x regime=calm", "payload": {"payload": {"opened": [], "closed": []}}}
+{"ts": "2026-06-15T12:12:35.985867+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 2874s until next bar", "payload": {}}
