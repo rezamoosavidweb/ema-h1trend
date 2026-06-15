@@ -53,3 +53,5 @@
 {"ts": "2026-06-15T09:13:12.406490+00:00", "event_type": "equity_synced", "severity": "info", "cycle_id": null, "message": "sizing on REAL account equity $100,738.76 (balance $100,738.76) \u2014 paper sim matched to it", "payload": {}}
 {"ts": "2026-06-15T09:13:12.413928+00:00", "event_type": "state_recovered", "severity": "info", "cycle_id": null, "message": "recovered 15 positions", "payload": {}}
 {"ts": "2026-06-15T09:13:12.415549+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260615T091312", "message": "as_of=None", "payload": {}}
+{"ts": "2026-06-15T09:13:42.797250+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260615T091312", "message": "eq=100,739 open=15 +0 -0 gross=1.15x regime=calm", "payload": {"payload": {"opened": [], "closed": []}}}
+{"ts": "2026-06-15T09:13:42.800647+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 2807s until next bar", "payload": {}}
