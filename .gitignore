@@ -81,7 +81,7 @@ htmlcov/
 # brings back an old schema and breaks the bot). universe.json is the only _data file kept.
 /statarb_live/_data/*
 !/statarb_live/_data/universe.json
-/statarb_live/_reports/
+# /statarb_live/_reports/
 statarb_live/deploy/.env
 # NOTE: logs/statarb_live IS committed (so the server can push them and you can pull them).
 # See .gitattributes (merge=union) — log files auto-merge instead of conflicting.
