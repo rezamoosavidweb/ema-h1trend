@@ -77,11 +77,15 @@ htmlcov/
 # statarb_live (Phase 5) runtime outputs — SQLite DBs, reports, logs are not committed.
 # EXCEPTION: the frozen universe.json IS committed so a fresh server (with no H1 CSV
 # cache) can load the exact same pair book without re-running the formation selection.
+# DB stays OUT of git (binary SQLite, written constantly; restoring it on `git reset`
+# brings back an old schema and breaks the bot). universe.json is the only _data file kept.
 /statarb_live/_data/*
 !/statarb_live/_data/universe.json
 /statarb_live/_reports/
-/logs/statarb_live/
 statarb_live/deploy/.env
+# NOTE: logs/statarb_live IS committed (so the server can push them and you can pull them).
+# See .gitattributes (merge=union) — log files auto-merge instead of conflicting.
+# Discipline: only the SERVER commits logs; locally just `git pull` to read them.
 
 # auto_commit_bot's own operational log — local only, otherwise every cycle
 # would write here and dirty the tree, forcing an empty "no-op" commit each run.

@@ -1,0 +1,5 @@
+# statarb_live runtime logs are committed for transfer (server -> your machine).
+# `merge=union` makes git auto-resolve any concurrent edits by keeping BOTH sides' lines
+# instead of producing a conflict — append-only JSON/line logs merge cleanly this way.
+# (The SQLite DB is NOT tracked — see .gitignore — so it can never be restored on reset.)
+logs/statarb_live/** merge=union
