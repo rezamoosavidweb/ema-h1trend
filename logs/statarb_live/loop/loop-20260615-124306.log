@@ -1,1 +1,24 @@
 [Mon 06/15/2026 12:43:06.84] launching runner -
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\Administrator\Desktop\tob\ema-h1trend\statarb_live\__main__.py", line 4, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "C:\Users\Administrator\Desktop\tob\ema-h1trend\statarb_live\cli.py", line 102, in main
+    orch.run_forever()
+    ~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Administrator\Desktop\tob\ema-h1trend\statarb_live\orchestrator.py", line 530, in run_forever
+    time.sleep(wait)
+    ~~~~~~~~~~^^^^^^
+KeyboardInterrupt
+09:13:12 INFO     bot_start: mode=paper broker=mt5 live_orders=True pairs=['CHFJPY~EURJPY', 'CADCHF~EURCAD', 'AUDJPY~EURJPY', 'AUDUSD~USDCAD', 'AUDJPY~CHFJPY', 'EURCAD~EURGBP'] strategy=nb38-phase4-frozen-2026
+09:13:12 WARNING  live_orders_enabled: LIVE ORDERS ON — real market orders will be sent to the demo account (magic=29000000, comment=sal_v1)
+09:13:12 INFO     symbols_warmed_up: 21 symbols selected, 0 missing
+09:13:12 INFO     equity_synced: sizing on REAL account equity $100,738.76 (balance $100,738.76) — paper sim matched to it
+09:13:12 INFO     state_recovered: recovered 15 positions
+09:13:12 INFO     [20260615T091312] cycle_start: as_of=None
+09:13:42 INFO     [20260615T091312] cycle_end: eq=100,739 open=15 +0 -0 gross=1.15x regime=calm
+09:13:42 INFO     heartbeat: sleeping 2807s until next bar
+09:27:31 INFO     bot_stop: shutting down
+^C
