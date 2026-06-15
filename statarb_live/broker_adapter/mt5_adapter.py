@@ -87,21 +87,31 @@ class MT5BrokerAdapter(BrokerAdapter):
 
     # ── symbol resolution (handle broker suffixes like ".i") ────────────────
     def _resolve(self, canonical: str) -> str | None:
-        """Map our canonical name (e.g. 'AUDCAD') to the broker's actual symbol
-        (e.g. 'AUDCAD.i') and make it visible in Market Watch. Cached. Returns None
-        if no variant exists on the broker."""
+        """Map our canonical name (e.g. 'AUDCAD') to the broker's actual *tradable* symbol
+        (e.g. 'AUDCAD.i') and make it visible in Market Watch. Cached. Returns None if no
+        variant exists.
+
+        Some brokers (e.g. Errante) expose a plain symbol that is DISPLAY-ONLY
+        (``trade_mode == SYMBOL_TRADE_MODE_DISABLED``) plus a ``.i`` variant that is the
+        actual tradable instrument. Picking the plain one makes data work but every order
+        is rejected with retcode 10017 (TRADE_DISABLED). So we prefer a fully-tradable
+        variant, falling back to any existing one only for data-only use."""
         if canonical in self._resolve_cache:
             return self._resolve_cache[canonical]
         mt5 = self._import_mt5()
-        resolved: str | None = None
+        candidates: list[tuple[str, object]] = []
         for suf in self.suffixes:
             name = canonical + suf
             info = mt5.symbol_info(name)
             if info is not None:
-                if not info.visible:
-                    mt5.symbol_select(name, True)
-                resolved = name
-                break
+                candidates.append((name, info))
+        full = [n for n, i in candidates
+                if getattr(i, "trade_mode", 0) == mt5.SYMBOL_TRADE_MODE_FULL]
+        resolved = full[0] if full else (candidates[0][0] if candidates else None)
+        if resolved is not None:
+            info = mt5.symbol_info(resolved)
+            if info is not None and not info.visible:
+                mt5.symbol_select(resolved, True)
         self._resolve_cache[canonical] = resolved
         return resolved
 
