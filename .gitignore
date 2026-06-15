@@ -82,3 +82,7 @@ htmlcov/
 # /statarb_live/_reports/
 # /logs/statarb_live/
 statarb_live/deploy/.env
+
+# auto_commit_bot's own operational log — local only, otherwise every cycle
+# would write here and dirty the tree, forcing an empty "no-op" commit each run.
+/logs/auto_commit/
