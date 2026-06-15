@@ -577,6 +577,15 @@ class Orchestrator:
             self.stop()
         return reports
 
+    def _write_health(self) -> None:
+        """Refresh logs/statarb_live/health.txt so it can be pulled for a status snapshot.
+        Best-effort: a health-write failure must never disturb the trading loop."""
+        try:
+            from .health import run_health
+            run_health(self.cfg, write=True)
+        except Exception as exc:
+            self.events.emit("health_write_error", severity="warning", message=str(exc))
+
     def run_forever(self) -> None:
         from .data_feed import DataFeed  # noqa
         self.start()
@@ -586,6 +595,7 @@ class Orchestrator:
                     self.run_cycle()
                 except Exception as exc:  # keep the loop alive
                     self.events.emit("cycle_error", severity="error", message=str(exc))
+                self._write_health()   # refresh logs/.../health.txt every cycle (hourly)
                 wait = _seconds_until_next_bar(self.cfg.timeframe, self.cfg.broker_tz,
                                                self.cfg.cycle_grace_seconds)
                 self.events.emit("heartbeat", message=f"sleeping {wait:.0f}s until next bar")

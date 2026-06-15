@@ -52,6 +52,8 @@ def main(argv: list[str] | None = None) -> int:
 
     sub.add_parser("reconcile", help="compare paper (logged) fills vs real broker orders")
 
+    sub.add_parser("health", help="liveness + strategy-correctness snapshot -> logs/.../health.txt")
+
     sub.add_parser("info", help="show resolved config + frozen universe")
 
     args = parser.parse_args(argv)
@@ -65,6 +67,13 @@ def main(argv: list[str] | None = None) -> int:
         from .reporting import generate_report
         path = generate_report(cfg, period=args.period, anchor=args.date)
         print(f"report written: {path}")
+        return 0
+    if args.cmd == "health":
+        from .health import run_health
+        text, path = run_health(cfg)
+        print(text)
+        if path:
+            print(f"\nwritten to: {path}  (committed via git — pull it to read remotely)")
         return 0
     if args.cmd == "reconcile":
         from .reconcile import run_reconcile
