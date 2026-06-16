@@ -1,14 +1,14 @@
 ================================================================
- statarb_live HEALTH  —  generated 2026-06-16 12:01:00 UTC
+ statarb_live HEALTH  —  generated 2026-06-16 16:01:00 UTC
 ================================================================
 
 [1] LIVENESS
-  events           : 80  (2026-06-15T12:12:04 -> 2026-06-16T12:01:00)
+  events           : 92  (2026-06-15T12:12:04 -> 2026-06-16T16:01:00)
   last event       : cycle_end  (0 min ago)
-  last cycle_end   : eq=100,749 open=15 +0 -0 gross=1.36x regime=calm
+  last cycle_end   : eq=100,699 open=15 +0 -0 gross=1.12x regime=calm
   last skip        : no new bar since 2026-06-15 14:00:00+03:00
   last bot_start   : mode=paper broker=mt5 live_orders=True pairs=['CHFJPY~EURJPY', 'CADCHF~EURCAD', 'AUDJPY~EU
-  event counts     : {'bot_start': 1, 'live_orders_enabled': 1, 'symbols_warmed_up': 1, 'equity_synced': 1, 'state_recovered': 1, 'broker_reconciled': 1, 'cycle_start': 25, 'cycle_end': 24, 'heartbeat': 24, 'cycle_skipped': 1}
+  event counts     : {'bot_start': 1, 'live_orders_enabled': 1, 'symbols_warmed_up': 1, 'equity_synced': 1, 'state_recovered': 1, 'broker_reconciled': 1, 'cycle_start': 29, 'cycle_end': 28, 'heartbeat': 28, 'cycle_skipped': 1}
   errors (all)     : 0
 
 [2] STRATEGY (must be the FROZEN NB38 config)
@@ -29,7 +29,7 @@
      - CARRY:AUDUSD     short z@open=0.0  regime=calm
      - CARRY:CADCHF     long  z@open=0.0  regime=calm
      - CARRY:EURCAD     short z@open=0.0  regime=calm
-  last equity      : 100,748.56  gross=1.29x net=0.20x  regime=calm (mult=1.48)
+  last equity      : 100,699.44  gross=1.30x net=0.20x  regime=calm (mult=1.15)
   live orders      : 18 sent, fill_ok=100%
 
 [4] PAPER (simulated) vs REAL broker fills
