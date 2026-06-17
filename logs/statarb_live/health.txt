@@ -1,15 +1,18 @@
 ================================================================
- statarb_live HEALTH  —  generated 2026-06-16 20:01:00 UTC
+ statarb_live HEALTH  —  generated 2026-06-17 00:01:00 UTC
 ================================================================
 
 [1] LIVENESS
-  events           : 104  (2026-06-15T12:12:04 -> 2026-06-16T20:01:00)
+  events           : 119  (2026-06-15T12:12:04 -> 2026-06-17T00:01:00)
   last event       : cycle_end  (0 min ago)
-  last cycle_end   : eq=100,731 open=15 +0 -0 gross=1.30x regime=calm
+  last cycle_end   : eq=100,740 open=15 +0 -0 gross=1.37x regime=calm
   last skip        : no new bar since 2026-06-15 14:00:00+03:00
   last bot_start   : mode=paper broker=mt5 live_orders=True pairs=['CHFJPY~EURJPY', 'CADCHF~EURCAD', 'AUDJPY~EU
-  event counts     : {'bot_start': 1, 'live_orders_enabled': 1, 'symbols_warmed_up': 1, 'equity_synced': 1, 'state_recovered': 1, 'broker_reconciled': 1, 'cycle_start': 33, 'cycle_end': 32, 'heartbeat': 32, 'cycle_skipped': 1}
-  errors (all)     : 0
+  event counts     : {'bot_start': 1, 'live_orders_enabled': 1, 'symbols_warmed_up': 1, 'equity_synced': 1, 'state_recovered': 1, 'broker_reconciled': 1, 'cycle_start': 37, 'cycle_end': 35, 'heartbeat': 36, 'cycle_skipped': 1, 'live_close_rejected': 2, 'cycle_error': 1, 'pair_open': 1}
+  errors (all)     : 3
+     ! 2026-06-16T21:00:59 live_close_rejected: ticket 40967318: retcode=10018
+     ! 2026-06-16T21:00:59 live_close_rejected: ticket 40967319: retcode=10018
+     ! 2026-06-16T21:00:59 cycle_error: (builtins.TypeError) SQLite DateTime type only accepts Python da
 
 [2] STRATEGY (must be the FROZEN NB38 config)
   version          : nb38-phase4-frozen-2026
@@ -23,22 +26,22 @@
   open positions   : 15
      - CADCHF~EURCAD    long  z@open=1.2512416250443945  regime=calm
      - AUDUSD~USDCAD    short z@open=0.8504144623937088  regime=calm
-     - EURCAD~EURGBP    long  z@open=2.6336541024769904  regime=calm
      - CARRY:AUDCAD     short z@open=0.0  regime=calm
      - CARRY:AUDNZD     short z@open=0.0  regime=calm
      - CARRY:AUDUSD     short z@open=0.0  regime=calm
      - CARRY:CADCHF     long  z@open=0.0  regime=calm
      - CARRY:EURCAD     short z@open=0.0  regime=calm
-  last equity      : 100,731.28  gross=1.29x net=0.20x  regime=calm (mult=1.38)
-  live orders      : 18 sent, fill_ok=100%
+     - CARRY:EURCHF     long  z@open=0.0  regime=calm
+  last equity      : 100,740.37  gross=1.12x net=0.06x  regime=calm (mult=1.48)
+  live orders      : 22 sent, fill_ok=91%
 
 [4] PAPER (simulated) vs REAL broker fills
-  real fills        : 18 ok / 18 sent (fill rate 1.0)
-  price gap (pips)  : median 8.14  p95 23.3   (real fill - simulated fill)
-  slippage (pips)   : simulated -6.93  vs  real 9.5
-  time gap (s)      : log->real -0.0  signal->real -7137.3
-  latency (ms)      : simulated 50.4  vs  real 302.7
+  real fills        : 20 ok / 22 sent (fill rate 0.909)
+  price gap (pips)  : median 8.73  p95 23.16   (real fill - simulated fill)
+  slippage (pips)   : simulated 0.1  vs  real 13.5
+  time gap (s)      : log->real -0.0  signal->real -7136.9
+  latency (ms)      : simulated 50.4  vs  real 285.0
 
 ================================================================
- VERDICT: ✅  HEALTHY — running the frozen strategy, no errors
+ VERDICT: ⚠️  ATTENTION — 3 error events
 ================================================================
