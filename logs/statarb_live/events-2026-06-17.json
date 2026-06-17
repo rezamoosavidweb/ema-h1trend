@@ -25,3 +25,15 @@
 {"ts": "2026-06-17T08:00:30.037081+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260617T080030", "message": "as_of=None", "payload": {}}
 {"ts": "2026-06-17T08:01:00.635818+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260617T080030", "message": "eq=100,716 open=15 +0 -0 gross=1.32x regime=calm", "payload": {"payload": {"opened": [], "closed": []}}}
 {"ts": "2026-06-17T08:01:00.718151+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3569s until next bar", "payload": {}}
+{"ts": "2026-06-17T09:00:30.027626+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260617T090030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-06-17T09:01:00.421268+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260617T090030", "message": "eq=100,686 open=15 +0 -0 gross=1.17x regime=calm", "payload": {"payload": {"opened": [], "closed": []}}}
+{"ts": "2026-06-17T09:01:00.503867+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3569s until next bar", "payload": {}}
+{"ts": "2026-06-17T10:00:30.044151+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260617T100030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-06-17T10:01:02.170254+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260617T100030", "message": "eq=100,701 open=15 +0 -0 gross=1.21x regime=calm", "payload": {"payload": {"opened": [], "closed": []}}}
+{"ts": "2026-06-17T10:01:02.262972+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3568s until next bar", "payload": {}}
+{"ts": "2026-06-17T11:00:30.039548+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260617T110030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-06-17T11:01:04.044900+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260617T110030", "message": "eq=100,691 open=15 +0 -0 gross=1.34x regime=calm", "payload": {"payload": {"opened": [], "closed": []}}}
+{"ts": "2026-06-17T11:01:04.135686+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3566s until next bar", "payload": {}}
+{"ts": "2026-06-17T12:00:30.038339+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260617T120030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-06-17T12:01:01.601200+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260617T120030", "message": "eq=100,700 open=15 +0 -0 gross=1.37x regime=calm", "payload": {"payload": {"opened": [], "closed": []}}}
+{"ts": "2026-06-17T12:01:01.692381+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3568s until next bar", "payload": {}}
