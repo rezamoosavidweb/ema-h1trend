@@ -1,14 +1,14 @@
 ================================================================
- statarb_live HEALTH  —  generated 2026-06-18 04:00:59 UTC
+ statarb_live HEALTH  —  generated 2026-06-18 08:01:00 UTC
 ================================================================
 
 [1] LIVENESS
-  events           : 205  (2026-06-15T12:12:04 -> 2026-06-18T04:00:59)
+  events           : 217  (2026-06-15T12:12:04 -> 2026-06-18T08:01:00)
   last event       : cycle_end  (0 min ago)
-  last cycle_end   : eq=100,738 open=15 +0 -0 gross=1.21x regime=calm
+  last cycle_end   : eq=100,739 open=15 +0 -0 gross=1.21x regime=calm
   last skip        : no new bar since 2026-06-15 14:00:00+03:00
   last bot_start   : mode=paper broker=mt5 live_orders=True pairs=['CHFJPY~EURJPY', 'CADCHF~EURCAD', 'AUDJPY~EU
-  event counts     : {'bot_start': 1, 'live_orders_enabled': 1, 'symbols_warmed_up': 1, 'equity_synced': 1, 'state_recovered': 1, 'broker_reconciled': 1, 'cycle_start': 65, 'cycle_end': 61, 'heartbeat': 64, 'cycle_skipped': 1, 'live_close_rejected': 2, 'cycle_error': 3, 'pair_open': 3}
+  event counts     : {'bot_start': 1, 'live_orders_enabled': 1, 'symbols_warmed_up': 1, 'equity_synced': 1, 'state_recovered': 1, 'broker_reconciled': 1, 'cycle_start': 69, 'cycle_end': 65, 'heartbeat': 68, 'cycle_skipped': 1, 'live_close_rejected': 2, 'cycle_error': 3, 'pair_open': 3}
   errors (all)     : 5
      ! 2026-06-16T21:00:59 live_close_rejected: ticket 40967319: retcode=10018
      ! 2026-06-16T21:00:59 cycle_error: (builtins.TypeError) SQLite DateTime type only accepts Python da
@@ -33,7 +33,7 @@
      - CARRY:EURCHF     long  z@open=0.0  regime=calm
      - CARRY:EURGBP     short z@open=0.0  regime=calm
      - CARRY:EURUSD     short z@open=0.0  regime=calm
-  last equity      : 100,737.90  gross=0.82x net=0.05x  regime=calm (mult=1.27)
+  last equity      : 100,738.71  gross=0.82x net=0.05x  regime=calm (mult=1.28)
   live orders      : 30 sent, fill_ok=93%
 
 [4] PAPER (simulated) vs REAL broker fills
