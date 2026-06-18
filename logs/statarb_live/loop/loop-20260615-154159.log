@@ -1,1 +1,120 @@
 [Mon 06/15/2026 15:41:59.23] launching runner -
+C:\Users\Administrator\Desktop\tob\ema-h1trend\.venv\Lib\site-packages\statsmodels\base\model.py:607: ConvergenceWarning: Maximum Likelihood optimization failed to converge. Check mle_retvals
+  warnings.warn("Maximum Likelihood optimization failed to "
+C:\Users\Administrator\Desktop\tob\ema-h1trend\.venv\Lib\site-packages\statsmodels\base\model.py:607: ConvergenceWarning: Maximum Likelihood optimization failed to converge. Check mle_retvals
+  warnings.warn("Maximum Likelihood optimization failed to "
+C:\Users\Administrator\Desktop\tob\ema-h1trend\.venv\Lib\site-packages\statsmodels\base\model.py:607: ConvergenceWarning: Maximum Likelihood optimization failed to converge. Check mle_retvals
+  warnings.warn("Maximum Likelihood optimization failed to "
+C:\Users\Administrator\Desktop\tob\ema-h1trend\.venv\Lib\site-packages\statsmodels\base\model.py:607: ConvergenceWarning: Maximum Likelihood optimization failed to converge. Check mle_retvals
+  warnings.warn("Maximum Likelihood optimization failed to "
+12:12:04 INFO     bot_start: mode=paper broker=mt5 live_orders=True pairs=['CHFJPY~EURJPY', 'CADCHF~EURCAD', 'AUDJPY~EURJPY', 'AUDUSD~USDCAD', 'AUDJPY~CHFJPY', 'EURCAD~EURGBP'] strategy=nb38-phase4-frozen-2026
+12:12:04 WARNING  live_orders_enabled: LIVE ORDERS ON — real market orders will be sent to the demo account (magic=29000000, comment=sal_v1)
+12:12:04 INFO     symbols_warmed_up: 21 symbols selected, 0 missing
+12:12:04 INFO     equity_synced: sizing on REAL account equity $100,732.66 (balance $100,738.76) — paper sim matched to it
+12:12:04 INFO     state_recovered: recovered 15 positions
+12:12:04 INFO     broker_reconciled: book=15 real_was=18 orphans_closed=0
+12:12:04 INFO     [20260615T121204] cycle_start: as_of=None
+12:12:35 INFO     [20260615T121204] cycle_end: eq=100,733 open=15 +0 -0 gross=1.36x regime=calm
+12:12:35 INFO     heartbeat: sleeping 2874s until next bar
+13:00:30 INFO     [20260615T130030] cycle_start: as_of=None
+13:00:56 INFO     [20260615T130030] cycle_skipped: no new bar since 2026-06-15 14:00:00+03:00
+13:00:56 INFO     heartbeat: sleeping 3573s until next bar
+14:00:30 INFO     [20260615T140030] cycle_start: as_of=None
+14:00:59 INFO     [20260615T140030] cycle_end: eq=100,729 open=15 +0 -0 gross=1.32x regime=calm
+14:00:59 INFO     heartbeat: sleeping 3570s until next bar
+15:00:30 INFO     [20260615T150030] cycle_start: as_of=None
+15:00:59 INFO     [20260615T150030] cycle_end: eq=100,718 open=15 +0 -0 gross=1.15x regime=calm
+15:00:59 INFO     heartbeat: sleeping 3571s until next bar
+16:00:30 INFO     [20260615T160030] cycle_start: as_of=None
+16:00:59 INFO     [20260615T160030] cycle_end: eq=100,652 open=15 +0 -0 gross=0.98x regime=calm
+16:00:59 INFO     heartbeat: sleeping 3571s until next bar
+17:00:30 INFO     [20260615T170030] cycle_start: as_of=None
+17:00:59 INFO     [20260615T170030] cycle_end: eq=100,673 open=15 +0 -0 gross=1.31x regime=calm
+17:00:59 INFO     heartbeat: sleeping 3571s until next bar
+18:00:30 INFO     [20260615T180030] cycle_start: as_of=None
+18:01:00 INFO     [20260615T180030] cycle_end: eq=100,687 open=15 +0 -0 gross=1.36x regime=calm
+18:01:00 INFO     heartbeat: sleeping 3569s until next bar
+19:00:30 INFO     [20260615T190030] cycle_start: as_of=None
+19:00:59 INFO     [20260615T190030] cycle_end: eq=100,687 open=15 +0 -0 gross=1.33x regime=calm
+19:00:59 INFO     heartbeat: sleeping 3570s until next bar
+20:00:30 INFO     [20260615T200030] cycle_start: as_of=None
+20:01:00 INFO     [20260615T200030] cycle_end: eq=100,687 open=15 +0 -0 gross=1.32x regime=calm
+20:01:00 INFO     heartbeat: sleeping 3570s until next bar
+21:00:30 INFO     [20260615T210030] cycle_start: as_of=None
+21:00:58 INFO     [20260615T210030] cycle_end: eq=100,692 open=15 +0 -0 gross=0.95x regime=calm
+21:00:58 INFO     heartbeat: sleeping 3571s until next bar
+22:00:30 INFO     [20260615T220030] cycle_start: as_of=None
+22:00:59 INFO     [20260615T220030] cycle_end: eq=100,689 open=15 +0 -0 gross=0.60x regime=crisis
+22:00:59 INFO     heartbeat: sleeping 3571s until next bar
+23:00:30 INFO     [20260615T230030] cycle_start: as_of=None
+23:00:58 INFO     [20260615T230030] cycle_end: eq=100,678 open=15 +0 -0 gross=1.31x regime=calm
+23:00:58 INFO     heartbeat: sleeping 3571s until next bar
+00:00:30 INFO     [20260616T000030] cycle_start: as_of=None
+00:00:59 INFO     [20260616T000030] cycle_end: eq=100,704 open=15 +0 -0 gross=1.36x regime=calm
+00:00:59 INFO     heartbeat: sleeping 3571s until next bar
+01:00:30 INFO     [20260616T010030] cycle_start: as_of=None
+01:00:58 INFO     [20260616T010030] cycle_end: eq=100,701 open=15 +0 -0 gross=1.34x regime=calm
+01:00:59 INFO     heartbeat: sleeping 3571s until next bar
+02:00:30 INFO     [20260616T020030] cycle_start: as_of=None
+02:00:59 INFO     [20260616T020030] cycle_end: eq=100,705 open=15 +0 -0 gross=1.26x regime=calm
+02:00:59 INFO     heartbeat: sleeping 3571s until next bar
+03:00:30 INFO     [20260616T030030] cycle_start: as_of=None
+03:00:59 INFO     [20260616T030030] cycle_end: eq=100,729 open=15 +0 -0 gross=1.06x regime=calm
+03:00:59 INFO     heartbeat: sleeping 3571s until next bar
+04:00:30 INFO     [20260616T040030] cycle_start: as_of=None
+04:00:59 INFO     [20260616T040030] cycle_end: eq=100,731 open=15 +0 -0 gross=1.10x regime=calm
+04:00:59 INFO     heartbeat: sleeping 3571s until next bar
+05:00:30 INFO     [20260616T050030] cycle_start: as_of=None
+05:00:59 INFO     [20260616T050030] cycle_end: eq=100,733 open=15 +0 -0 gross=1.33x regime=calm
+05:00:59 INFO     heartbeat: sleeping 3570s until next bar
+06:00:30 INFO     [20260616T060030] cycle_start: as_of=None
+06:01:00 INFO     [20260616T060030] cycle_end: eq=100,764 open=15 +0 -0 gross=1.36x regime=calm
+06:01:00 INFO     heartbeat: sleeping 3570s until next bar
+07:00:30 INFO     [20260616T070030] cycle_start: as_of=None
+07:01:01 INFO     [20260616T070030] cycle_end: eq=100,762 open=15 +0 -0 gross=1.36x regime=calm
+07:01:01 INFO     heartbeat: sleeping 3569s until next bar
+08:00:30 INFO     [20260616T080030] cycle_start: as_of=None
+08:01:00 INFO     [20260616T080030] cycle_end: eq=100,757 open=15 +0 -0 gross=1.30x regime=calm
+08:01:00 INFO     heartbeat: sleeping 3570s until next bar
+09:00:30 INFO     [20260616T090030] cycle_start: as_of=None
+09:00:59 INFO     [20260616T090030] cycle_end: eq=100,766 open=15 +0 -0 gross=1.18x regime=calm
+09:00:59 INFO     heartbeat: sleeping 3571s until next bar
+10:00:30 INFO     [20260616T100030] cycle_start: as_of=None
+10:00:59 INFO     [20260616T100030] cycle_end: eq=100,775 open=15 +0 -0 gross=1.20x regime=calm
+10:00:59 INFO     heartbeat: sleeping 3571s until next bar
+11:00:30 INFO     [20260616T110030] cycle_start: as_of=None
+11:01:00 INFO     [20260616T110030] cycle_end: eq=100,767 open=15 +0 -0 gross=1.28x regime=calm
+11:01:00 INFO     heartbeat: sleeping 3570s until next bar
+12:00:30 INFO     [20260616T120030] cycle_start: as_of=None
+12:01:00 INFO     [20260616T120030] cycle_end: eq=100,749 open=15 +0 -0 gross=1.36x regime=calm
+12:01:00 INFO     heartbeat: sleeping 3570s until next bar
+13:00:30 INFO     [20260616T130030] cycle_start: as_of=None
+13:01:01 INFO     [20260616T130030] cycle_end: eq=100,769 open=15 +0 -0 gross=1.31x regime=calm
+13:01:01 INFO     heartbeat: sleeping 3569s until next bar
+14:00:30 INFO     [20260616T140030] cycle_start: as_of=None
+14:01:00 INFO     [20260616T140030] cycle_end: eq=100,766 open=15 +0 -0 gross=1.27x regime=calm
+14:01:00 INFO     heartbeat: sleeping 3570s until next bar
+15:00:30 INFO     [20260616T150030] cycle_start: as_of=None
+15:01:00 INFO     [20260616T150030] cycle_end: eq=100,716 open=15 +0 -0 gross=0.63x regime=crisis
+15:01:00 INFO     heartbeat: sleeping 3570s until next bar
+16:00:30 INFO     [20260616T160030] cycle_start: as_of=None
+16:01:00 INFO     [20260616T160030] cycle_end: eq=100,699 open=15 +0 -0 gross=1.12x regime=calm
+16:01:01 INFO     heartbeat: sleeping 3569s until next bar
+17:00:30 INFO     [20260616T170030] cycle_start: as_of=None
+17:00:59 INFO     [20260616T170030] cycle_end: eq=100,718 open=15 +0 -0 gross=1.09x regime=calm
+17:00:59 INFO     heartbeat: sleeping 3570s until next bar
+18:00:30 INFO     [20260616T180030] cycle_start: as_of=None
+18:00:59 INFO     [20260616T180030] cycle_end: eq=100,720 open=15 +0 -0 gross=1.33x regime=calm
+18:00:59 INFO     heartbeat: sleeping 3570s until next bar
+19:00:29 INFO     [20260616T190029] cycle_start: as_of=None
+19:01:00 INFO     [20260616T190029] cycle_end: eq=100,730 open=15 +0 -0 gross=1.35x regime=calm
+19:01:00 INFO     heartbeat: sleeping 3570s until next bar
+20:00:30 INFO     [20260616T200030] cycle_start: as_of=None
+20:01:00 INFO     [20260616T200030] cycle_end: eq=100,731 open=15 +0 -0 gross=1.30x regime=calm
+20:01:00 INFO     heartbeat: sleeping 3570s until next bar
+21:00:30 INFO     [20260616T210030] cycle_start: as_of=None
+21:00:59 ERROR    [20260616T210030] live_close_rejected: ticket 40967318: retcode=10018
+21:00:59 ERROR    [20260616T210030] live_close_rejected: ticket 40967319: retcode=10018
+21:00:59 ERROR    cycle_error: (builtins.TypeError) SQLite DateTime type only accepts Python datetime and date objects as input.
+[SQL: INSERT INTO trades (position_id, pair_key, y_symbol, x_symbol, side, signal_ts, entry_ts, exit_ts, regime, carry_value, zscore_entry, hedge_ratio, position_size, gross_notional, entry_slippage_bps, exit_slippage_bps, realized_pnl, reversion_pnl, carry_pnl, cost_pnl, bars_held, exit_reason, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]C:\Users\Administrator\Desktop\tob\ema-h1trend\.venv\Lib\site-packages\statsmodels\base\model.py:607: ConvergenceWarning: Maximum Likelihood optimization failed to converge. Check mle_retvals
+  warnings.warn("Maximum Likelihood optimization failed to "
