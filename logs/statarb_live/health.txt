@@ -1,14 +1,14 @@
 ================================================================
- statarb_live HEALTH  —  generated 2026-06-19 08:01:00 UTC
+ statarb_live HEALTH  —  generated 2026-06-19 12:01:01 UTC
 ================================================================
 
 [1] LIVENESS
-  events           : 305  (2026-06-15T12:12:04 -> 2026-06-19T08:01:00)
+  events           : 319  (2026-06-15T12:12:04 -> 2026-06-19T12:01:01)
   last event       : cycle_end  (0 min ago)
-  last cycle_end   : eq=100,749 open=15 +0 -0 gross=1.26x regime=calm
+  last cycle_end   : eq=100,677 open=15 +0 -0 gross=1.36x regime=calm
   last skip        : no new bar since 2026-06-15 14:00:00+03:00
   last bot_start   : mode=paper broker=mt5 live_orders=True pairs=['CHFJPY~EURJPY', 'CADCHF~EURCAD', 'AUDJPY~EU
-  event counts     : {'bot_start': 1, 'live_orders_enabled': 1, 'symbols_warmed_up': 1, 'equity_synced': 1, 'state_recovered': 1, 'broker_reconciled': 1, 'cycle_start': 93, 'cycle_end': 89, 'heartbeat': 92, 'cycle_skipped': 1, 'live_close_rejected': 6, 'cycle_error': 3, 'pair_open': 9, 'pair_close': 6}
+  event counts     : {'bot_start': 1, 'live_orders_enabled': 1, 'symbols_warmed_up': 1, 'equity_synced': 1, 'state_recovered': 1, 'broker_reconciled': 1, 'cycle_start': 97, 'cycle_end': 93, 'heartbeat': 96, 'cycle_skipped': 1, 'live_close_rejected': 6, 'cycle_error': 3, 'pair_open': 10, 'pair_close': 7}
   errors (all)     : 9
      ! 2026-06-18T21:01:00 live_close_rejected: ticket 41366857: retcode=10018
      ! 2026-06-18T21:01:00 live_close_rejected: ticket 41366859: retcode=10018
@@ -33,23 +33,23 @@
      - CARRY:EURCHF     long  z@open=0.0  regime=calm
      - CARRY:EURGBP     short z@open=0.0  regime=calm
      - CARRY:EURUSD     short z@open=0.0  regime=calm
-  last equity      : 100,749.07  gross=1.01x net=-0.58x  regime=calm (mult=1.34)
-  live orders      : 54 sent, fill_ok=89%
-  trades (total 6) — last 5:
-     CADCHF~EURCAD    pnl=  +21.68 (rev=+25.52 carry=+0.56 cost=-4.40) z_exit
+  last equity      : 100,677.42  gross=0.90x net=-0.48x  regime=calm (mult=1.47)
+  live orders      : 58 sent, fill_ok=90%
+  trades (total 7) — last 5:
      AUDUSD~USDCAD    pnl=   -6.18 (rev=-2.42 carry=-0.09 cost=-3.68) z_exit
      AUDUSD~USDCAD    pnl=  +16.68 (rev=+20.83 carry=-0.04 cost=-4.11) z_exit
      EURCAD~EURGBP    pnl=  -25.59 (rev=-22.35 carry=-0.10 cost=-3.14) z_exit
      CADCHF~EURCAD    pnl=  -16.20 (rev=-5.17 carry=+0.31 cost=-11.34) z_exit
-  realized PnL     : -53.46
+     EURCAD~EURGBP    pnl=  -17.38 (rev=-13.80 carry=+0.24 cost=-3.82) z_exit
+  realized PnL     : -70.84
 
 [4] PAPER (simulated) vs REAL broker fills
-  real fills        : 48 ok / 54 sent (fill rate 0.889)
-  price gap (pips)  : median 22.2  p95 197.97   (real fill - simulated fill)
+  real fills        : 52 ok / 58 sent (fill rate 0.897)
+  price gap (pips)  : median 22.2  p95 182.29   (real fill - simulated fill)
   slippage (pips)   : simulated -7.2  vs  real 20.5
-  time gap (s)      : log->real -0.0  signal->real -5337.5
-  latency (ms)      : simulated 49.6  vs  real 174.3
+  time gap (s)      : log->real -0.0  signal->real -3540.4
+  latency (ms)      : simulated 49.3  vs  real 175.9
 
 ================================================================
- VERDICT: ⚠️  ATTENTION — 9 error events; live order fill rate 89%
+ VERDICT: ⚠️  ATTENTION — 9 error events; live order fill rate 90%
 ================================================================
