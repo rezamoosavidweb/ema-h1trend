@@ -1,19 +1,19 @@
 ================================================================
- statarb_live HEALTH  —  generated 2026-06-18 20:01:00 UTC
+ statarb_live HEALTH  —  generated 2026-06-19 00:01:00 UTC
 ================================================================
 
 [1] LIVENESS
-  events           : 259  (2026-06-15T12:12:04 -> 2026-06-18T20:01:00)
+  events           : 281  (2026-06-15T12:12:04 -> 2026-06-19T00:01:00)
   last event       : cycle_end  (0 min ago)
-  last cycle_end   : eq=100,790 open=15 +0 -0 gross=1.31x regime=calm
+  last cycle_end   : eq=100,700 open=15 +0 -0 gross=1.36x regime=calm
   last skip        : no new bar since 2026-06-15 14:00:00+03:00
   last bot_start   : mode=paper broker=mt5 live_orders=True pairs=['CHFJPY~EURJPY', 'CADCHF~EURCAD', 'AUDJPY~EU
-  event counts     : {'bot_start': 1, 'live_orders_enabled': 1, 'symbols_warmed_up': 1, 'equity_synced': 1, 'state_recovered': 1, 'broker_reconciled': 1, 'cycle_start': 81, 'cycle_end': 77, 'heartbeat': 80, 'cycle_skipped': 1, 'live_close_rejected': 2, 'cycle_error': 3, 'pair_open': 6, 'pair_close': 3}
-  errors (all)     : 5
-     ! 2026-06-16T21:00:59 live_close_rejected: ticket 40967319: retcode=10018
-     ! 2026-06-16T21:00:59 cycle_error: (builtins.TypeError) SQLite DateTime type only accepts Python da
-     ! 2026-06-18T01:01:00 cycle_error: (builtins.TypeError) SQLite DateTime type only accepts Python da
-     ! 2026-06-18T02:00:59 cycle_error: (builtins.TypeError) SQLite DateTime type only accepts Python da
+  event counts     : {'bot_start': 1, 'live_orders_enabled': 1, 'symbols_warmed_up': 1, 'equity_synced': 1, 'state_recovered': 1, 'broker_reconciled': 1, 'cycle_start': 85, 'cycle_end': 81, 'heartbeat': 84, 'cycle_skipped': 1, 'live_close_rejected': 6, 'cycle_error': 3, 'pair_open': 9, 'pair_close': 6}
+  errors (all)     : 9
+     ! 2026-06-18T21:01:00 live_close_rejected: ticket 41366857: retcode=10018
+     ! 2026-06-18T21:01:00 live_close_rejected: ticket 41366859: retcode=10018
+     ! 2026-06-18T21:01:00 live_close_rejected: ticket 41366860: retcode=10018
+     ! 2026-06-18T21:01:00 live_close_rejected: ticket 41366862: retcode=10018
 
 [2] STRATEGY (must be the FROZEN NB38 config)
   version          : nb38-phase4-frozen-2026
@@ -33,21 +33,23 @@
      - CARRY:EURCHF     long  z@open=0.0  regime=calm
      - CARRY:EURGBP     short z@open=0.0  regime=calm
      - CARRY:EURUSD     short z@open=0.0  regime=calm
-  last equity      : 100,790.09  gross=0.93x net=0.10x  regime=calm (mult=1.41)
-  live orders      : 42 sent, fill_ok=95%
-  trades (total 3) — last 3:
-     EURCAD~EURGBP    pnl=  -43.85 (rev=-39.69 carry=-0.59 cost=-3.57) z_exit
+  last equity      : 100,699.62  gross=1.01x net=-0.58x  regime=calm (mult=1.48)
+  live orders      : 54 sent, fill_ok=89%
+  trades (total 6) — last 5:
      CADCHF~EURCAD    pnl=  +21.68 (rev=+25.52 carry=+0.56 cost=-4.40) z_exit
      AUDUSD~USDCAD    pnl=   -6.18 (rev=-2.42 carry=-0.09 cost=-3.68) z_exit
-  realized PnL     : -28.35
+     AUDUSD~USDCAD    pnl=  +16.68 (rev=+20.83 carry=-0.04 cost=-4.11) z_exit
+     EURCAD~EURGBP    pnl=  -25.59 (rev=-22.35 carry=-0.10 cost=-3.14) z_exit
+     CADCHF~EURCAD    pnl=  -16.20 (rev=-5.17 carry=+0.31 cost=-11.34) z_exit
+  realized PnL     : -53.46
 
 [4] PAPER (simulated) vs REAL broker fills
-  real fills        : 40 ok / 42 sent (fill rate 0.952)
-  price gap (pips)  : median 11.84  p95 225.68   (real fill - simulated fill)
-  slippage (pips)   : simulated 0.1  vs  real 17.5
-  time gap (s)      : log->real -0.0  signal->real -7135.2
-  latency (ms)      : simulated 50.4  vs  real 175.9
+  real fills        : 48 ok / 54 sent (fill rate 0.889)
+  price gap (pips)  : median 22.2  p95 197.97   (real fill - simulated fill)
+  slippage (pips)   : simulated -7.2  vs  real 20.5
+  time gap (s)      : log->real -0.0  signal->real -5337.5
+  latency (ms)      : simulated 49.6  vs  real 174.3
 
 ================================================================
- VERDICT: ⚠️  ATTENTION — 5 error events
+ VERDICT: ⚠️  ATTENTION — 9 error events; live order fill rate 89%
 ================================================================
