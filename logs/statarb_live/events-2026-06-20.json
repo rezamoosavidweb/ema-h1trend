@@ -1,0 +1,3 @@
+{"ts": "2026-06-20T00:00:30.037025+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260620T000030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-06-20T00:00:57.383101+00:00", "event_type": "cycle_skipped", "severity": "warning", "cycle_id": "20260620T000030", "message": "stale data: last bar 2026-06-19 22:00:00+03:00 is 5.0 bars behind now \u2014 not trading", "payload": {"payload": {"last_ts": "2026-06-19 22:00:00+03:00", "bars_behind": 5.0}}}
+{"ts": "2026-06-20T00:00:57.474025+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3573s until next bar", "payload": {}}
