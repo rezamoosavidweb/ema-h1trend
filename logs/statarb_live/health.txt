@@ -1,14 +1,14 @@
 ================================================================
- statarb_live HEALTH  —  generated 2026-06-21 08:00:58 UTC
+ statarb_live HEALTH  —  generated 2026-06-21 12:00:58 UTC
 ================================================================
 
 [1] LIVENESS
-  events           : 457  (2026-06-15T12:12:04 -> 2026-06-21T08:00:58)
+  events           : 469  (2026-06-15T12:12:04 -> 2026-06-21T12:00:58)
   last event       : cycle_skipped  (0 min ago)
   last cycle_end   : eq=100,602 open=15 +0 -0 gross=1.31x regime=calm
-  last skip        : stale data: last bar 2026-06-19 22:00:00+03:00 is 37.0 bars behind now
+  last skip        : stale data: last bar 2026-06-19 22:00:00+03:00 is 41.0 bars behind now
   last bot_start   : mode=paper broker=mt5 live_orders=True pairs=['CHFJPY~EURJPY', 'CADCHF~EURCAD', 'AUDJPY~EU
-  event counts     : {'bot_start': 1, 'live_orders_enabled': 1, 'symbols_warmed_up': 1, 'equity_synced': 1, 'state_recovered': 1, 'broker_reconciled': 1, 'cycle_start': 141, 'cycle_end': 102, 'heartbeat': 140, 'cycle_skipped': 36, 'live_close_rejected': 6, 'cycle_error': 3, 'pair_open': 13, 'pair_close': 10}
+  event counts     : {'bot_start': 1, 'live_orders_enabled': 1, 'symbols_warmed_up': 1, 'equity_synced': 1, 'state_recovered': 1, 'broker_reconciled': 1, 'cycle_start': 145, 'cycle_end': 102, 'heartbeat': 144, 'cycle_skipped': 40, 'live_close_rejected': 6, 'cycle_error': 3, 'pair_open': 13, 'pair_close': 10}
   errors (all)     : 9
      ! 2026-06-18T21:01:00 live_close_rejected: ticket 41366857: retcode=10018
      ! 2026-06-18T21:01:00 live_close_rejected: ticket 41366859: retcode=10018
