@@ -1,14 +1,14 @@
 ================================================================
- statarb_live HEALTH  —  generated 2026-06-22 12:01:01 UTC
+ statarb_live HEALTH  —  generated 2026-06-22 16:01:00 UTC
 ================================================================
 
 [1] LIVENESS
-  events           : 541  (2026-06-15T12:12:04 -> 2026-06-22T12:01:01)
+  events           : 553  (2026-06-15T12:12:04 -> 2026-06-22T16:01:00)
   last event       : cycle_end  (0 min ago)
-  last cycle_end   : eq=100,678 open=15 +0 -0 gross=1.36x regime=calm
+  last cycle_end   : eq=100,745 open=15 +0 -0 gross=0.67x regime=crisis
   last skip        : stale data: last bar 2026-06-19 23:00:00+03:00 is 50.0 bars behind now
   last bot_start   : mode=paper broker=mt5 live_orders=True pairs=['CHFJPY~EURJPY', 'CADCHF~EURCAD', 'AUDJPY~EU
-  event counts     : {'bot_start': 1, 'live_orders_enabled': 1, 'symbols_warmed_up': 1, 'equity_synced': 1, 'state_recovered': 1, 'broker_reconciled': 1, 'cycle_start': 169, 'cycle_end': 116, 'heartbeat': 168, 'cycle_skipped': 50, 'live_close_rejected': 6, 'cycle_error': 3, 'pair_open': 13, 'pair_close': 10}
+  event counts     : {'bot_start': 1, 'live_orders_enabled': 1, 'symbols_warmed_up': 1, 'equity_synced': 1, 'state_recovered': 1, 'broker_reconciled': 1, 'cycle_start': 173, 'cycle_end': 120, 'heartbeat': 172, 'cycle_skipped': 50, 'live_close_rejected': 6, 'cycle_error': 3, 'pair_open': 13, 'pair_close': 10}
   errors (all)     : 9
      ! 2026-06-18T21:01:00 live_close_rejected: ticket 41366857: retcode=10018
      ! 2026-06-18T21:01:00 live_close_rejected: ticket 41366859: retcode=10018
@@ -33,7 +33,7 @@
      - CARRY:EURCHF     long  z@open=0.0  regime=calm
      - CARRY:EURGBP     short z@open=0.0  regime=calm
      - CARRY:EURUSD     short z@open=0.0  regime=calm
-  last equity      : 100,677.59  gross=0.76x net=-0.43x  regime=calm (mult=1.48)
+  last equity      : 100,744.79  gross=0.76x net=-0.43x  regime=crisis (mult=0.53)
   live orders      : 70 sent, fill_ok=91%
   trades (total 10) — last 5:
      CADCHF~EURCAD    pnl=  -16.20 (rev=-5.17 carry=+0.31 cost=-11.34) z_exit
