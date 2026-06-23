@@ -1,0 +1,3 @@
+{"ts": "2026-06-23T00:00:30.037734+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260623T000030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-06-23T00:01:00.035596+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260623T000030", "message": "eq=100,791 open=15 +0 -0 gross=1.36x regime=calm", "payload": {"payload": {"opened": [], "closed": []}}}
+{"ts": "2026-06-23T00:01:00.150248+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3570s until next bar", "payload": {}}
