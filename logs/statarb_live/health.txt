@@ -1,14 +1,14 @@
 ================================================================
- statarb_live HEALTH  —  generated 2026-06-26 00:01:01 UTC
+ statarb_live HEALTH  —  generated 2026-06-26 04:01:00 UTC
 ================================================================
 
 [1] LIVENESS
-  events           : 799  (2026-06-15T12:12:04 -> 2026-06-26T00:01:01)
+  events           : 811  (2026-06-15T12:12:04 -> 2026-06-26T04:01:00)
   last event       : cycle_end  (0 min ago)
-  last cycle_end   : eq=101,171 open=15 +0 -0 gross=1.36x regime=calm
+  last cycle_end   : eq=101,248 open=15 +0 -0 gross=0.94x regime=calm
   last skip        : stale data: last bar 2026-06-19 23:00:00+03:00 is 50.0 bars behind now
   last bot_start   : mode=paper broker=mt5 live_orders=True pairs=['CHFJPY~EURJPY', 'CADCHF~EURCAD', 'AUDJPY~EU
-  event counts     : {'bot_start': 1, 'live_orders_enabled': 1, 'symbols_warmed_up': 1, 'equity_synced': 1, 'state_recovered': 1, 'broker_reconciled': 1, 'cycle_start': 253, 'cycle_end': 200, 'heartbeat': 252, 'cycle_skipped': 50, 'live_close_rejected': 6, 'cycle_error': 3, 'pair_open': 16, 'pair_close': 13}
+  event counts     : {'bot_start': 1, 'live_orders_enabled': 1, 'symbols_warmed_up': 1, 'equity_synced': 1, 'state_recovered': 1, 'broker_reconciled': 1, 'cycle_start': 257, 'cycle_end': 204, 'heartbeat': 256, 'cycle_skipped': 50, 'live_close_rejected': 6, 'cycle_error': 3, 'pair_open': 16, 'pair_close': 13}
   errors (all)     : 9
      ! 2026-06-18T21:01:00 live_close_rejected: ticket 41366857: retcode=10018
      ! 2026-06-18T21:01:00 live_close_rejected: ticket 41366859: retcode=10018
@@ -33,7 +33,7 @@
      - CARRY:EURCHF     long  z@open=0.0  regime=calm
      - CARRY:EURGBP     short z@open=0.0  regime=calm
      - CARRY:EURUSD     short z@open=0.0  regime=calm
-  last equity      : 101,171.26  gross=1.23x net=-0.72x  regime=calm (mult=1.48)
+  last equity      : 101,247.79  gross=1.23x net=-0.72x  regime=calm (mult=0.90)
   live orders      : 82 sent, fill_ok=93%
   trades (total 13) — last 5:
      AUDUSD~USDCAD    pnl=  -36.88 (rev=-31.90 carry=-0.14 cost=-4.84) z_exit
