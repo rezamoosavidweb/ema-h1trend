@@ -25,3 +25,17 @@
 {"ts": "2026-06-26T08:00:30.033966+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260626T080030", "message": "as_of=None", "payload": {}}
 {"ts": "2026-06-26T08:01:02.589203+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260626T080030", "message": "eq=101,193 open=15 +0 -0 gross=1.28x regime=calm", "payload": {"payload": {"opened": [], "closed": []}}}
 {"ts": "2026-06-26T08:01:02.944391+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3567s until next bar", "payload": {}}
+{"ts": "2026-06-26T09:00:30.042446+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260626T090030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-06-26T09:01:01.282998+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260626T090030", "message": "eq=101,146 open=15 +0 -0 gross=1.19x regime=calm", "payload": {"payload": {"opened": [], "closed": []}}}
+{"ts": "2026-06-26T09:01:01.409618+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3569s until next bar", "payload": {}}
+{"ts": "2026-06-26T10:00:30.035260+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260626T100030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-06-26T10:01:01.820998+00:00", "event_type": "pair_close", "severity": "info", "cycle_id": "20260626T100030", "message": "EURCAD~EURGBP pnl=7.72 (z_exit)", "payload": {"payload": {"reversion": 9.499999999997845, "carry": 2.4026444951923076, "cost": -4.186397578661128, "bars": 83}}}
+{"ts": "2026-06-26T10:01:01.827407+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260626T100030", "message": "eq=101,109 open=14 +0 -1 gross=0.30x regime=crisis", "payload": {"payload": {"opened": [], "closed": ["EURCAD~EURGBP"]}}}
+{"ts": "2026-06-26T10:01:01.971725+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3568s until next bar", "payload": {}}
+{"ts": "2026-06-26T11:00:30.034737+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260626T110030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-06-26T11:01:01.745066+00:00", "event_type": "pair_open", "severity": "info", "cycle_id": "20260626T110030", "message": "EURCAD~EURGBP short gross=29,339", "payload": {"payload": {"z": 0.38191305285097255, "kind": "reversion"}}}
+{"ts": "2026-06-26T11:01:01.749724+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260626T110030", "message": "eq=101,086 open=15 +1 -0 gross=1.27x regime=calm", "payload": {"payload": {"opened": ["EURCAD~EURGBP"], "closed": []}}}
+{"ts": "2026-06-26T11:01:01.901239+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3568s until next bar", "payload": {}}
+{"ts": "2026-06-26T12:00:30.032193+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260626T120030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-06-26T12:01:02.491567+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260626T120030", "message": "eq=101,103 open=15 +0 -0 gross=1.36x regime=calm", "payload": {"payload": {"opened": [], "closed": []}}}
+{"ts": "2026-06-26T12:01:02.617181+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3567s until next bar", "payload": {}}
