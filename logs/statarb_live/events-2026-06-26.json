@@ -79,3 +79,12 @@
 {"ts": "2026-06-26T20:01:03.661466+00:00", "event_type": "pair_open", "severity": "info", "cycle_id": "20260626T200030", "message": "EURCAD~EURGBP short gross=29,303", "payload": {"payload": {"z": -0.023132007430140714, "kind": "reversion"}}}
 {"ts": "2026-06-26T20:01:03.668445+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260626T200030", "message": "eq=101,070 open=15 +3 -0 gross=1.29x regime=calm", "payload": {"payload": {"opened": ["CADCHF~EURCAD", "AUDUSD~USDCAD", "EURCAD~EURGBP"], "closed": []}}}
 {"ts": "2026-06-26T20:01:03.820309+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3566s until next bar", "payload": {}}
+{"ts": "2026-06-26T21:00:30.029263+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260626T210030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-06-26T21:01:00.694691+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260626T210030", "message": "eq=101,098 open=15 +0 -0 gross=1.30x regime=calm", "payload": {"payload": {"opened": [], "closed": []}}}
+{"ts": "2026-06-26T21:01:00.809331+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3569s until next bar", "payload": {}}
+{"ts": "2026-06-26T22:00:30.036475+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260626T220030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-06-26T22:00:58.862374+00:00", "event_type": "cycle_skipped", "severity": "warning", "cycle_id": "20260626T220030", "message": "stale data: last bar 2026-06-26 22:00:00+03:00 is 3.0 bars behind now \u2014 not trading", "payload": {"payload": {"last_ts": "2026-06-26 22:00:00+03:00", "bars_behind": 3.0}}}
+{"ts": "2026-06-26T22:00:59.011545+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3571s until next bar", "payload": {}}
+{"ts": "2026-06-26T23:00:30.042401+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260626T230030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-06-26T23:00:57.885078+00:00", "event_type": "cycle_skipped", "severity": "warning", "cycle_id": "20260626T230030", "message": "stale data: last bar 2026-06-26 22:00:00+03:00 is 4.0 bars behind now \u2014 not trading", "payload": {"payload": {"last_ts": "2026-06-26 22:00:00+03:00", "bars_behind": 4.0}}}
+{"ts": "2026-06-26T23:00:57.988174+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3572s until next bar", "payload": {}}
