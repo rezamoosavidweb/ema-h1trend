@@ -1,14 +1,14 @@
 ================================================================
- statarb_live HEALTH  —  generated 2026-06-28 04:00:57 UTC
+ statarb_live HEALTH  —  generated 2026-06-28 08:00:58 UTC
 ================================================================
 
 [1] LIVENESS
-  events           : 973  (2026-06-15T12:12:04 -> 2026-06-28T04:00:57)
+  events           : 985  (2026-06-15T12:12:04 -> 2026-06-28T08:00:58)
   last event       : cycle_skipped  (0 min ago)
   last cycle_end   : eq=101,098 open=15 +0 -0 gross=1.30x regime=calm
-  last skip        : stale data: last bar 2026-06-26 22:00:00+03:00 is 33.0 bars behind now
+  last skip        : stale data: last bar 2026-06-26 22:00:00+03:00 is 37.0 bars behind now
   last bot_start   : mode=paper broker=mt5 live_orders=True pairs=['CHFJPY~EURJPY', 'CADCHF~EURCAD', 'AUDJPY~EU
-  event counts     : {'bot_start': 1, 'live_orders_enabled': 1, 'symbols_warmed_up': 1, 'equity_synced': 1, 'state_recovered': 1, 'broker_reconciled': 1, 'cycle_start': 305, 'cycle_end': 221, 'heartbeat': 304, 'cycle_skipped': 81, 'live_close_rejected': 10, 'cycle_error': 3, 'pair_open': 23, 'pair_close': 20}
+  event counts     : {'bot_start': 1, 'live_orders_enabled': 1, 'symbols_warmed_up': 1, 'equity_synced': 1, 'state_recovered': 1, 'broker_reconciled': 1, 'cycle_start': 309, 'cycle_end': 221, 'heartbeat': 308, 'cycle_skipped': 85, 'live_close_rejected': 10, 'cycle_error': 3, 'pair_open': 23, 'pair_close': 20}
   errors (all)     : 13
      ! 2026-06-26T15:01:02 live_close_rejected: ticket 41588505: no open position 41588505
      ! 2026-06-26T15:01:02 live_close_rejected: ticket 41588507: no open position 41588507
