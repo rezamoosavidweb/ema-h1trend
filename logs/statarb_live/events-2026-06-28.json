@@ -1,3 +1,15 @@
 {"ts": "2026-06-28T00:00:30.036466+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260628T000030", "message": "as_of=None", "payload": {}}
 {"ts": "2026-06-28T00:00:57.501377+00:00", "event_type": "cycle_skipped", "severity": "warning", "cycle_id": "20260628T000030", "message": "stale data: last bar 2026-06-26 22:00:00+03:00 is 29.0 bars behind now \u2014 not trading", "payload": {"payload": {"last_ts": "2026-06-26 22:00:00+03:00", "bars_behind": 29.0}}}
 {"ts": "2026-06-28T00:00:57.611899+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3572s until next bar", "payload": {}}
+{"ts": "2026-06-28T01:00:30.037777+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260628T010030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-06-28T01:00:57.677422+00:00", "event_type": "cycle_skipped", "severity": "warning", "cycle_id": "20260628T010030", "message": "stale data: last bar 2026-06-26 22:00:00+03:00 is 30.0 bars behind now \u2014 not trading", "payload": {"payload": {"last_ts": "2026-06-26 22:00:00+03:00", "bars_behind": 30.0}}}
+{"ts": "2026-06-28T01:00:57.783942+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3572s until next bar", "payload": {}}
+{"ts": "2026-06-28T02:00:30.036700+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260628T020030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-06-28T02:00:56.414421+00:00", "event_type": "cycle_skipped", "severity": "warning", "cycle_id": "20260628T020030", "message": "feed not ok; missing=['EURCAD']", "payload": {"payload": {"dropped_rows": 0}}}
+{"ts": "2026-06-28T02:00:56.534797+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3573s until next bar", "payload": {}}
+{"ts": "2026-06-28T03:00:30.036285+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260628T030030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-06-28T03:00:57.514769+00:00", "event_type": "cycle_skipped", "severity": "warning", "cycle_id": "20260628T030030", "message": "stale data: last bar 2026-06-26 22:00:00+03:00 is 32.0 bars behind now \u2014 not trading", "payload": {"payload": {"last_ts": "2026-06-26 22:00:00+03:00", "bars_behind": 32.0}}}
+{"ts": "2026-06-28T03:00:57.625321+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3572s until next bar", "payload": {}}
+{"ts": "2026-06-28T04:00:30.035795+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260628T040030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-06-28T04:00:57.322720+00:00", "event_type": "cycle_skipped", "severity": "warning", "cycle_id": "20260628T040030", "message": "stale data: last bar 2026-06-26 22:00:00+03:00 is 33.0 bars behind now \u2014 not trading", "payload": {"payload": {"last_ts": "2026-06-26 22:00:00+03:00", "bars_behind": 33.0}}}
+{"ts": "2026-06-28T04:00:57.450780+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3573s until next bar", "payload": {}}
