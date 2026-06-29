@@ -61,3 +61,12 @@
 {"ts": "2026-06-28T20:00:30.034933+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260628T200030", "message": "as_of=None", "payload": {}}
 {"ts": "2026-06-28T20:00:59.510673+00:00", "event_type": "cycle_skipped", "severity": "warning", "cycle_id": "20260628T200030", "message": "stale data: last bar 2026-06-26 22:00:00+03:00 is 49.0 bars behind now \u2014 not trading", "payload": {"payload": {"last_ts": "2026-06-26 22:00:00+03:00", "bars_behind": 49.0}}}
 {"ts": "2026-06-28T20:00:59.626370+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3570s until next bar", "payload": {}}
+{"ts": "2026-06-28T21:00:30.032736+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260628T210030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-06-28T21:00:58.064776+00:00", "event_type": "cycle_skipped", "severity": "warning", "cycle_id": "20260628T210030", "message": "stale data: last bar 2026-06-26 22:00:00+03:00 is 50.0 bars behind now \u2014 not trading", "payload": {"payload": {"last_ts": "2026-06-26 22:00:00+03:00", "bars_behind": 50.0}}}
+{"ts": "2026-06-28T21:00:58.202637+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3572s until next bar", "payload": {}}
+{"ts": "2026-06-28T22:00:30.043728+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260628T220030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-06-28T22:00:57.616146+00:00", "event_type": "cycle_skipped", "severity": "warning", "cycle_id": "20260628T220030", "message": "stale data: last bar 2026-06-26 23:00:00+03:00 is 50.0 bars behind now \u2014 not trading", "payload": {"payload": {"last_ts": "2026-06-26 23:00:00+03:00", "bars_behind": 50.0}}}
+{"ts": "2026-06-28T22:00:57.734997+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3572s until next bar", "payload": {}}
+{"ts": "2026-06-28T23:00:30.038588+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260628T230030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-06-28T23:00:59.813174+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260628T230030", "message": "eq=101,123 open=15 +0 -0 gross=0.88x regime=calm", "payload": {"payload": {"opened": [], "closed": []}}}
+{"ts": "2026-06-28T23:00:59.921465+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3570s until next bar", "payload": {}}
