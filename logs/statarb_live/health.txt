@@ -1,19 +1,19 @@
 ================================================================
- statarb_live HEALTH  —  generated 2026-07-01 16:01:01 UTC
+ statarb_live HEALTH  —  generated 2026-07-01 20:01:04 UTC
 ================================================================
 
 [1] LIVENESS
-  events           : 1237  (2026-06-15T12:12:04 -> 2026-07-01T16:01:01)
+  events           : 1257  (2026-06-15T12:12:04 -> 2026-07-01T20:01:04)
   last event       : cycle_end  (0 min ago)
-  last cycle_end   : eq=101,009 open=15 +0 -0 gross=0.79x regime=crisis
+  last cycle_end   : eq=101,040 open=12 +0 -3 gross=0.29x regime=crisis
   last skip        : stale data: last bar 2026-07-01 14:00:00+03:00 is 3.0 bars behind now 
   last bot_start   : mode=paper broker=mt5 live_orders=True pairs=['CHFJPY~EURJPY', 'CADCHF~EURCAD', 'AUDJPY~EU
-  event counts     : {'bot_start': 1, 'live_orders_enabled': 1, 'symbols_warmed_up': 1, 'equity_synced': 1, 'state_recovered': 1, 'broker_reconciled': 1, 'cycle_start': 389, 'cycle_end': 285, 'heartbeat': 388, 'cycle_skipped': 101, 'live_close_rejected': 16, 'cycle_error': 3, 'pair_open': 26, 'pair_close': 23}
-  errors (all)     : 19
-     ! 2026-06-30T21:00:59 live_close_rejected: ticket 42000357: retcode=10018
-     ! 2026-06-30T21:00:59 live_close_rejected: ticket 42000358: retcode=10018
-     ! 2026-06-30T21:00:59 live_close_rejected: ticket 42000359: retcode=10018
-     ! 2026-06-30T21:00:59 live_close_rejected: ticket 42000361: retcode=10018
+  event counts     : {'bot_start': 1, 'live_orders_enabled': 1, 'symbols_warmed_up': 1, 'equity_synced': 1, 'state_recovered': 1, 'broker_reconciled': 1, 'cycle_start': 393, 'cycle_end': 289, 'heartbeat': 392, 'cycle_skipped': 101, 'live_close_rejected': 21, 'cycle_error': 3, 'pair_open': 26, 'pair_close': 26}
+  errors (all)     : 24
+     ! 2026-07-01T20:01:04 live_close_rejected: ticket 42197351: no open position 42197351
+     ! 2026-07-01T20:01:04 live_close_rejected: ticket 42197352: no open position 42197352
+     ! 2026-07-01T20:01:04 live_close_rejected: ticket 42197354: no open position 42197354
+     ! 2026-07-01T20:01:04 live_close_rejected: ticket 42197355: no open position 42197355
 
 [2] STRATEGY (must be the FROZEN NB38 config)
   version          : nb38-phase4-frozen-2026
@@ -24,7 +24,7 @@
   matches NB38     : YES ✓
 
 [3] BOOK / ACCOUNT (from DB)
-  open positions   : 15
+  open positions   : 12
      - CARRY:AUDCAD     short z@open=0.0  regime=calm
      - CARRY:AUDNZD     short z@open=0.0  regime=calm
      - CARRY:AUDUSD     short z@open=0.0  regime=calm
@@ -33,23 +33,23 @@
      - CARRY:EURCHF     long  z@open=0.0  regime=calm
      - CARRY:EURGBP     short z@open=0.0  regime=calm
      - CARRY:EURUSD     short z@open=0.0  regime=calm
-  last equity      : 101,008.54  gross=1.24x net=-0.72x  regime=crisis (mult=0.69)
-  live orders      : 122 sent, fill_ok=87%
-  trades (total 23) — last 5:
-     AUDUSD~USDCAD    pnl=   +3.79 (rev=+6.38 carry=-0.01 cost=-2.58) z_exit
-     EURCAD~EURGBP    pnl=  +11.94 (rev=+13.24 carry=+0.03 cost=-1.33) z_exit
-     CADCHF~EURCAD    pnl=  -31.29 (rev=-20.21 carry=-3.46 cost=-7.62) z_exit
+  last equity      : 101,039.79  gross=0.24x net=-0.11x  regime=crisis (mult=0.02)
+  live orders      : 128 sent, fill_ok=84%
+  trades (total 26) — last 5:
      AUDUSD~USDCAD    pnl=  -62.29 (rev=-55.89 carry=-0.58 cost=-5.82) z_exit
      EURCAD~EURGBP    pnl=  -74.61 (rev=-71.92 carry=+1.33 cost=-4.01) z_exit
-  realized PnL     : -57.94
+     CADCHF~EURCAD    pnl=  +15.10 (rev=+24.32 carry=-1.42 cost=-7.80) z_exit
+     AUDUSD~USDCAD    pnl=  +20.09 (rev=+26.50 carry=-0.22 cost=-6.19) z_exit
+     EURCAD~EURGBP    pnl=  +76.85 (rev=+80.54 carry=+0.58 cost=-4.28) z_exit
+  realized PnL     : +54.11
 
 [4] PAPER (simulated) vs REAL broker fills
-  real fills        : 106 ok / 122 sent (fill rate 0.869)
-  price gap (pips)  : median 15.24  p95 167.04   (real fill - simulated fill)
-  slippage (pips)   : simulated -7.17  vs  real 16.0
+  real fills        : 107 ok / 128 sent (fill rate 0.836)
+  price gap (pips)  : median 13.74  p95 166.38   (real fill - simulated fill)
+  slippage (pips)   : simulated -7.09  vs  real 16.0
   time gap (s)      : log->real -0.0  signal->real -3539.4
-  latency (ms)      : simulated 49.6  vs  real 174.4
+  latency (ms)      : simulated 49.6  vs  real 174.6
 
 ================================================================
- VERDICT: ⚠️  ATTENTION — 19 error events; live order fill rate 87%
+ VERDICT: ⚠️  ATTENTION — 24 error events; live order fill rate 84%
 ================================================================
