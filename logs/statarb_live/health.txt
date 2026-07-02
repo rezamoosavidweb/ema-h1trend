@@ -1,19 +1,19 @@
 ================================================================
- statarb_live HEALTH  —  generated 2026-07-01 20:01:04 UTC
+ statarb_live HEALTH  —  generated 2026-07-02 00:01:00 UTC
 ================================================================
 
 [1] LIVENESS
-  events           : 1257  (2026-06-15T12:12:04 -> 2026-07-01T20:01:04)
+  events           : 1278  (2026-06-15T12:12:04 -> 2026-07-02T00:01:00)
   last event       : cycle_end  (0 min ago)
-  last cycle_end   : eq=101,040 open=12 +0 -3 gross=0.29x regime=crisis
+  last cycle_end   : eq=101,040 open=15 +0 -0 gross=1.36x regime=calm
   last skip        : stale data: last bar 2026-07-01 14:00:00+03:00 is 3.0 bars behind now 
   last bot_start   : mode=paper broker=mt5 live_orders=True pairs=['CHFJPY~EURJPY', 'CADCHF~EURCAD', 'AUDJPY~EU
-  event counts     : {'bot_start': 1, 'live_orders_enabled': 1, 'symbols_warmed_up': 1, 'equity_synced': 1, 'state_recovered': 1, 'broker_reconciled': 1, 'cycle_start': 393, 'cycle_end': 289, 'heartbeat': 392, 'cycle_skipped': 101, 'live_close_rejected': 21, 'cycle_error': 3, 'pair_open': 26, 'pair_close': 26}
-  errors (all)     : 24
-     ! 2026-07-01T20:01:04 live_close_rejected: ticket 42197351: no open position 42197351
-     ! 2026-07-01T20:01:04 live_close_rejected: ticket 42197352: no open position 42197352
-     ! 2026-07-01T20:01:04 live_close_rejected: ticket 42197354: no open position 42197354
-     ! 2026-07-01T20:01:04 live_close_rejected: ticket 42197355: no open position 42197355
+  event counts     : {'bot_start': 1, 'live_orders_enabled': 1, 'symbols_warmed_up': 1, 'equity_synced': 1, 'state_recovered': 1, 'broker_reconciled': 1, 'cycle_start': 397, 'cycle_end': 293, 'heartbeat': 396, 'cycle_skipped': 101, 'live_close_rejected': 21, 'cycle_error': 3, 'pair_open': 29, 'pair_close': 26, 'live_order_rejected': 6}
+  errors (all)     : 30
+     ! 2026-07-01T21:01:01 live_order_rejected: AUDUSD sell 0.21: retcode=10018
+     ! 2026-07-01T21:01:01 live_order_rejected: USDCAD sell 0.12: retcode=10018
+     ! 2026-07-01T21:01:01 live_order_rejected: EURCAD sell 0.15: retcode=10018
+     ! 2026-07-01T21:01:01 live_order_rejected: EURGBP sell 0.04: retcode=10018
 
 [2] STRATEGY (must be the FROZEN NB38 config)
   version          : nb38-phase4-frozen-2026
@@ -24,7 +24,7 @@
   matches NB38     : YES ✓
 
 [3] BOOK / ACCOUNT (from DB)
-  open positions   : 12
+  open positions   : 15
      - CARRY:AUDCAD     short z@open=0.0  regime=calm
      - CARRY:AUDNZD     short z@open=0.0  regime=calm
      - CARRY:AUDUSD     short z@open=0.0  regime=calm
@@ -33,8 +33,8 @@
      - CARRY:EURCHF     long  z@open=0.0  regime=calm
      - CARRY:EURGBP     short z@open=0.0  regime=calm
      - CARRY:EURUSD     short z@open=0.0  regime=calm
-  last equity      : 101,039.79  gross=0.24x net=-0.11x  regime=crisis (mult=0.02)
-  live orders      : 128 sent, fill_ok=84%
+  last equity      : 101,040.21  gross=1.12x net=-0.65x  regime=calm (mult=1.48)
+  live orders      : 134 sent, fill_ok=80%
   trades (total 26) — last 5:
      AUDUSD~USDCAD    pnl=  -62.29 (rev=-55.89 carry=-0.58 cost=-5.82) z_exit
      EURCAD~EURGBP    pnl=  -74.61 (rev=-71.92 carry=+1.33 cost=-4.01) z_exit
@@ -44,12 +44,12 @@
   realized PnL     : +54.11
 
 [4] PAPER (simulated) vs REAL broker fills
-  real fills        : 107 ok / 128 sent (fill rate 0.836)
+  real fills        : 107 ok / 134 sent (fill rate 0.799)
   price gap (pips)  : median 13.74  p95 166.38   (real fill - simulated fill)
   slippage (pips)   : simulated -7.09  vs  real 16.0
   time gap (s)      : log->real -0.0  signal->real -3539.4
   latency (ms)      : simulated 49.6  vs  real 174.6
 
 ================================================================
- VERDICT: ⚠️  ATTENTION — 24 error events; live order fill rate 84%
+ VERDICT: ⚠️  ATTENTION — 30 error events; live order fill rate 80%
 ================================================================
