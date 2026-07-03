@@ -67,3 +67,12 @@
 {"ts": "2026-07-02T20:01:09.006449+00:00", "event_type": "pair_open", "severity": "info", "cycle_id": "20260702T200030", "message": "EURCAD~EURGBP short gross=29,364", "payload": {"payload": {"z": 0.34002733908290406, "kind": "reversion"}}}
 {"ts": "2026-07-02T20:01:09.012436+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260702T200030", "message": "eq=100,937 open=15 +3 -0 gross=1.31x regime=calm", "payload": {"payload": {"opened": ["CADCHF~EURCAD", "AUDUSD~USDCAD", "EURCAD~EURGBP"], "closed": []}}}
 {"ts": "2026-07-02T20:01:09.174437+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3561s until next bar", "payload": {}}
+{"ts": "2026-07-02T21:00:30.036533+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260702T210030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-07-02T21:01:05.585417+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260702T210030", "message": "eq=100,940 open=15 +0 -0 gross=1.06x regime=calm", "payload": {"payload": {"opened": [], "closed": []}}}
+{"ts": "2026-07-02T21:01:05.736644+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3564s until next bar", "payload": {}}
+{"ts": "2026-07-02T22:00:30.031017+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260702T220030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-07-02T22:00:58.000267+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260702T220030", "message": "eq=100,956 open=15 +0 -0 gross=1.20x regime=calm", "payload": {"payload": {"opened": [], "closed": []}}}
+{"ts": "2026-07-02T22:00:58.112565+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3572s until next bar", "payload": {}}
+{"ts": "2026-07-02T23:00:30.040410+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260702T230030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-07-02T23:01:01.792124+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260702T230030", "message": "eq=100,962 open=15 +0 -0 gross=0.94x regime=calm", "payload": {"payload": {"opened": [], "closed": []}}}
+{"ts": "2026-07-02T23:01:01.925168+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3568s until next bar", "payload": {}}
