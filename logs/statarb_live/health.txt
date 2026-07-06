@@ -1,14 +1,14 @@
 ================================================================
- statarb_live HEALTH  —  generated 2026-07-06 12:01:01 UTC
+ statarb_live HEALTH  —  generated 2026-07-06 16:01:00 UTC
 ================================================================
 
 [1] LIVENESS
-  events           : 1608  (2026-06-15T12:12:04 -> 2026-07-06T12:01:01)
+  events           : 1620  (2026-06-15T12:12:04 -> 2026-07-06T16:01:00)
   last event       : cycle_end  (0 min ago)
-  last cycle_end   : eq=100,799 open=15 +0 -0 gross=1.36x regime=calm
+  last cycle_end   : eq=100,775 open=15 +0 -0 gross=0.86x regime=calm
   last skip        : stale data: last bar 2026-07-03 23:00:00+03:00 is 50.0 bars behind now
   last bot_start   : mode=paper broker=mt5 live_orders=True pairs=['CHFJPY~EURJPY', 'CADCHF~EURCAD', 'AUDJPY~EU
-  event counts     : {'bot_start': 1, 'live_orders_enabled': 1, 'symbols_warmed_up': 1, 'equity_synced': 1, 'state_recovered': 1, 'broker_reconciled': 1, 'cycle_start': 505, 'cycle_end': 352, 'heartbeat': 504, 'cycle_skipped': 150, 'live_close_rejected': 21, 'cycle_error': 3, 'pair_open': 32, 'pair_close': 29, 'live_order_rejected': 6}
+  event counts     : {'bot_start': 1, 'live_orders_enabled': 1, 'symbols_warmed_up': 1, 'equity_synced': 1, 'state_recovered': 1, 'broker_reconciled': 1, 'cycle_start': 509, 'cycle_end': 356, 'heartbeat': 508, 'cycle_skipped': 150, 'live_close_rejected': 21, 'cycle_error': 3, 'pair_open': 32, 'pair_close': 29, 'live_order_rejected': 6}
   errors (all)     : 30
      ! 2026-07-01T21:01:01 live_order_rejected: AUDUSD sell 0.21: retcode=10018
      ! 2026-07-01T21:01:01 live_order_rejected: USDCAD sell 0.12: retcode=10018
@@ -33,7 +33,7 @@
      - CARRY:EURCHF     long  z@open=0.0  regime=calm
      - CARRY:EURGBP     short z@open=0.0  regime=calm
      - CARRY:EURUSD     short z@open=0.0  regime=calm
-  last equity      : 100,799.00  gross=1.21x net=-0.70x  regime=calm (mult=1.46)
+  last equity      : 100,775.05  gross=1.21x net=-0.70x  regime=calm (mult=0.78)
   live orders      : 140 sent, fill_ok=81%
   trades (total 29) — last 5:
      AUDUSD~USDCAD    pnl=  +20.09 (rev=+26.50 carry=-0.22 cost=-6.19) z_exit
