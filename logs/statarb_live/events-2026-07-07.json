@@ -61,3 +61,12 @@
 {"ts": "2026-07-07T20:00:30.037156+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260707T200030", "message": "as_of=None", "payload": {}}
 {"ts": "2026-07-07T20:01:01.574225+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260707T200030", "message": "eq=100,864 open=15 +0 -0 gross=1.34x regime=calm", "payload": {"payload": {"opened": [], "closed": []}}}
 {"ts": "2026-07-07T20:01:01.709297+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3568s until next bar", "payload": {}}
+{"ts": "2026-07-07T21:00:30.035162+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260707T210030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-07-07T21:00:59.624976+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260707T210030", "message": "eq=100,865 open=15 +0 -0 gross=1.22x regime=calm", "payload": {"payload": {"opened": [], "closed": []}}}
+{"ts": "2026-07-07T21:00:59.754656+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3570s until next bar", "payload": {}}
+{"ts": "2026-07-07T22:00:30.037004+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260707T220030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-07-07T22:01:01.279420+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260707T220030", "message": "eq=100,899 open=15 +0 -0 gross=0.55x regime=crisis", "payload": {"payload": {"opened": [], "closed": []}}}
+{"ts": "2026-07-07T22:01:01.413943+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3569s until next bar", "payload": {}}
+{"ts": "2026-07-07T23:00:30.037035+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260707T230030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-07-07T23:00:59.989233+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260707T230030", "message": "eq=100,944 open=15 +0 -0 gross=1.32x regime=calm", "payload": {"payload": {"opened": [], "closed": []}}}
+{"ts": "2026-07-07T23:01:00.128398+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3570s until next bar", "payload": {}}
