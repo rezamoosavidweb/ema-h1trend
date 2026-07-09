@@ -1,0 +1,6 @@
+{"ts": "2026-07-09T00:00:30.034207+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260709T000030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-07-09T00:01:02.011952+00:00", "event_type": "pair_open", "severity": "info", "cycle_id": "20260709T000030", "message": "CADCHF~EURCAD short gross=36,617", "payload": {"payload": {"z": 0.7523129162488338, "kind": "reversion"}}}
+{"ts": "2026-07-09T00:01:02.360284+00:00", "event_type": "pair_open", "severity": "info", "cycle_id": "20260709T000030", "message": "AUDUSD~USDCAD short gross=36,468", "payload": {"payload": {"z": -0.514017091012199, "kind": "reversion"}}}
+{"ts": "2026-07-09T00:01:02.708605+00:00", "event_type": "pair_open", "severity": "info", "cycle_id": "20260709T000030", "message": "EURCAD~EURGBP short gross=33,384", "payload": {"payload": {"z": -1.1724093102035589, "kind": "reversion"}}}
+{"ts": "2026-07-09T00:01:02.712977+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260709T000030", "message": "eq=100,946 open=15 +3 -0 gross=1.38x regime=calm", "payload": {"payload": {"opened": ["CADCHF~EURCAD", "AUDUSD~USDCAD", "EURCAD~EURGBP"], "closed": []}}}
+{"ts": "2026-07-09T00:01:02.851307+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3567s until next bar", "payload": {}}
