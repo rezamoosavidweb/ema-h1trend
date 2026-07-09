@@ -4,3 +4,15 @@
 {"ts": "2026-07-09T00:01:02.708605+00:00", "event_type": "pair_open", "severity": "info", "cycle_id": "20260709T000030", "message": "EURCAD~EURGBP short gross=33,384", "payload": {"payload": {"z": -1.1724093102035589, "kind": "reversion"}}}
 {"ts": "2026-07-09T00:01:02.712977+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260709T000030", "message": "eq=100,946 open=15 +3 -0 gross=1.38x regime=calm", "payload": {"payload": {"opened": ["CADCHF~EURCAD", "AUDUSD~USDCAD", "EURCAD~EURGBP"], "closed": []}}}
 {"ts": "2026-07-09T00:01:02.851307+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3567s until next bar", "payload": {}}
+{"ts": "2026-07-09T01:00:30.035283+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260709T010030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-07-09T01:01:01.689126+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260709T010030", "message": "eq=100,925 open=15 +0 -0 gross=1.37x regime=calm", "payload": {"payload": {"opened": [], "closed": []}}}
+{"ts": "2026-07-09T01:01:01.835356+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3568s until next bar", "payload": {}}
+{"ts": "2026-07-09T02:00:30.036601+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260709T020030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-07-09T02:01:00.507040+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260709T020030", "message": "eq=100,943 open=15 +0 -0 gross=1.32x regime=calm", "payload": {"payload": {"opened": [], "closed": []}}}
+{"ts": "2026-07-09T02:01:00.650329+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3569s until next bar", "payload": {}}
+{"ts": "2026-07-09T03:00:30.035439+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260709T030030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-07-09T03:00:59.858367+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260709T030030", "message": "eq=100,951 open=15 +0 -0 gross=0.59x regime=crisis", "payload": {"payload": {"opened": [], "closed": []}}}
+{"ts": "2026-07-09T03:00:59.996874+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3570s until next bar", "payload": {}}
+{"ts": "2026-07-09T04:00:30.037955+00:00", "event_type": "cycle_start", "severity": "info", "cycle_id": "20260709T040030", "message": "as_of=None", "payload": {}}
+{"ts": "2026-07-09T04:01:00.204888+00:00", "event_type": "cycle_end", "severity": "info", "cycle_id": "20260709T040030", "message": "eq=100,943 open=15 +0 -0 gross=1.11x regime=calm", "payload": {"payload": {"opened": [], "closed": []}}}
+{"ts": "2026-07-09T04:01:00.348658+00:00", "event_type": "heartbeat", "severity": "info", "cycle_id": null, "message": "sleeping 3570s until next bar", "payload": {}}
